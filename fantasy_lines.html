@@ -305,9 +305,9 @@
 
   <div class="method-box">
     <strong>Line methodology:</strong>
-    Spread &amp; total derived from blended score projection (40% season avg + 60% last-2-week avg).
-    Moneyline win probability derived from 6-week all-play win % — a stronger season-long quality signal.
-    Standard −110 juice applied to spread &amp; total. ~4.8% overround on moneyline.
+    Spread &amp; total magnitude derived from blended score projection (40% season avg + 60% last-2-week avg).
+    Moneyline win probability is a hybrid: 70% all-play win % (season quality) + 30% projected scores (recent form).
+    Spread direction is constrained to match the ML favorite. Standard −110 juice on spread &amp; total. ~4.8% overround on ML.
     <strong>For entertainment only.</strong>
   </div>
 
@@ -402,31 +402,25 @@ function fmtSpread(val) {
 function computeLines(keyA, keyB) {
   const tA = TEAMS[keyA], tB = TEAMS[keyB];
   const projA = projScore(keyA), projB = projScore(keyB);
-  const total  = projA + projB;
 
-  // Spread (from projections)
-  const rawSpread = projA - projB;  // positive = A favored
-  const spreadA = -Math.round(rawSpread * 2) / 2;  // A's spread (neg = favorite)
-  // Flip: if A is projected higher, A's spread is negative (gives points)
-  const spA = rawSpread >= 0 ? -Math.abs(Math.round(rawSpread * 2 + 1) / 2) : Math.abs(Math.round(-rawSpread * 2 + 1) / 2);
-  // Simpler:
-  const halfPt = Math.abs(rawSpread) < 0.5 ? 0.5 : 0.5;
-  const spreadFav = -(Math.floor(Math.abs(rawSpread)) + halfPt);
-  const spreadDog =  (Math.floor(Math.abs(rawSpread)) + halfPt);
-
-  const aIsFavByProj = rawSpread >= 0;
-  const spreadLineA  = aIsFavByProj ? spreadFav : spreadDog;
-  const spreadLineB  = aIsFavByProj ? spreadDog : spreadFav;
-
-  // Total (from projections, nearest 0.5)
-  const totalLine = Math.round(total * 2) / 2;
-
-  // Win probability (from projected scores — same signal as spread/total)
-  const pA = projA / (projA + projB);
+  // ML win probability: 70% all-play %, 30% projected scores (blended)
+  const apRatioA  = (tA.apW / AP_TOTAL) / (tA.apW / AP_TOTAL + tB.apW / AP_TOTAL);
+  const projRatioA = projA / (projA + projB);
+  const pA = 0.70 * apRatioA + 0.30 * projRatioA;
   const pB = 1 - pA;
 
   const mlA = toAmericanML(pA);
   const mlB = toAmericanML(pB);
+
+  // Spread: magnitude from projected score difference, direction forced to match ML
+  const aIsMLFav  = pA >= pB;
+  const spreadMag = Math.floor(Math.abs(projA - projB)) + 0.5; // always a half-point
+  const spreadLineA = aIsMLFav ? -spreadMag : +spreadMag;
+  const spreadLineB = aIsMLFav ? +spreadMag : -spreadMag;
+
+  // Total from projected scores
+  const total     = projA + projB;
+  const totalLine = Math.round(total * 2) / 2;
 
   return { projA, projB, total, totalLine, spreadLineA, spreadLineB, mlA, mlB, pA, pB };
 }

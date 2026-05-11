@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vista Hills — Points Breakdown by Category</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  h2 { margin-bottom: 4px; }
+  .subtitle { color: #aaa; margin: 0 0 16px; font-size: 13px; text-align: center; }
+  #wrap { max-width: 100%; overflow-x: auto; }
+  #capture { background: #1a1a2e; padding: 20px 30px; display: inline-block; }
+  table { border-collapse: collapse; font-size: 11.5px; white-space: nowrap; }
+
+  /* Header rows */
+  .group-header th { padding: 4px 6px; text-align: center; font-size: 10px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; }
+  .group-bat-pos  { background: #1a3a2a; color: #4ade80; }
+  .group-bat-neg  { background: #3a1a1a; color: #f87171; }
+  .group-pit-pos  { background: #1a2a3a; color: #60a5fa; }
+  .group-pit-neg  { background: #2a1a3a; color: #c084fc; }
+  .group-total    { background: #16213e; color: #facc15; }
+
+  th.col-header {
+    background: #16213e; color: #bbb; font-weight: normal;
+    padding: 6px 6px 4px; text-align: center; cursor: pointer;
+    border-bottom: 2px solid #333; user-select: none;
+    min-width: 58px; position: relative;
+  }
+  th.col-header:hover { background: #1e2f4e; color: #eee; }
+  th.col-header.sorted-asc  { color: #facc15; border-bottom-color: #facc15; }
+  th.col-header.sorted-desc { color: #facc15; border-bottom-color: #facc15; }
+  .sort-arrow { font-size: 9px; margin-left: 2px; }
+
+  th.team-header { background: #16213e; color: #bbb; font-weight: normal; padding: 6px 10px; text-align: left; border-bottom: 2px solid #333; min-width: 200px; position: sticky; left: 0; z-index: 10; }
+  .group-header .team-header-grp { background: #1a1a2e; border: none; }
+
+  /* Data cells */
+  td { padding: 5px 6px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+  td.team-cell { text-align: left; padding: 5px 10px; position: sticky; left: 0; background: #1a1a2e; z-index: 5; border-right: 1px solid #333; }
+  td.team-cell:hover { background: #1e2535; }
+  .score-val { font-weight: bold; font-size: 11.5px; }
+  .rank-badge { font-size: 9px; color: rgba(255,255,255,0.5); margin-left: 2px; font-weight: normal; }
+  .rank-badge.r1 { color: #4ade80; }
+  .rank-badge.r12 { color: #f87171; }
+
+  /* Rank-based cell backgrounds */
+  .rnk-1  { background: rgba(74,222,128,0.30); }
+  .rnk-2  { background: rgba(74,222,128,0.20); }
+  .rnk-3  { background: rgba(74,222,128,0.12); }
+  .rnk-4  { background: rgba(74,222,128,0.06); }
+  .rnk-5  { background: rgba(255,255,255,0.03); }
+  .rnk-6  { background: rgba(255,255,255,0.02); }
+  .rnk-7  { background: rgba(255,255,255,0.02); }
+  .rnk-8  { background: rgba(255,255,255,0.03); }
+  .rnk-9  { background: rgba(248,113,113,0.06); }
+  .rnk-10 { background: rgba(248,113,113,0.12); }
+  .rnk-11 { background: rgba(248,113,113,0.20); }
+  .rnk-12 { background: rgba(248,113,113,0.30); }
+
+  td.total-cell { background: #16213e !important; font-weight: bold; border-left: 1px solid #333; }
+  td.subtotal-cell { background: rgba(22,33,62,0.7) !important; font-size: 11px; border-left: 1px solid #222; }
+
+  tr:hover td { filter: brightness(1.12); }
+  tr:hover td.team-cell { background: #1e2535; filter: none; }
+
+  #downloadBtn { margin: 14px 0 0; padding: 8px 22px; background: #457b9d; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  #downloadBtn:hover { background: #2a9d8f; }
+  .note { font-size: 11px; color: #666; margin-top: 10px; text-align: center; max-width: 980px; }
+</style>
+</head>
+<body>
+<div id="capture">
+<h2>Vista Hills — Points Breakdown by Category (Matchups 1–6, 2026)</h2>
+<p class="subtitle">Click any column to sort &nbsp;|&nbsp; Cell color = rank within category (green = most pts, red = least) &nbsp;|&nbsp; Rank shown as #N</p>
+<div id="wrap">
+<table id="main-table">
+  <thead id="table-head"></thead>
+  <tbody id="table-body"></tbody>
+</table>
+</div>
+<p class="note">Rank #1 = most points from that category (including negative categories: rank #1 = fewest points lost). Scoring: R+1, 1B+1, 2B+2, 3B+3, HR+4, RBI+2, GWRBI+1, BB+1, K−1, HBP+1, SAC+1, SB+2, CS−0.5 | IP+3, H−1, ER−2, BB−1, HB−1, K+1, QS+2, SO+3, W+8, L−2, SV+4.5, BS−2, HD+2</p>
+</div>
+<button id="downloadBtn" onclick="downloadExcel()">⬇ Download Excel</button>
+
+<script>
+// ── Raw season stats (through Matchup 6) ─────────────────────────────────────
+// Order: r, 1b, 2b, 3b, hr, rbi, gw, bbB, kB, hbp, sac, sb, cs,
+//        ip, hP, er, bbP, hb, kP, qs, so, w, l, sv, bs, hd
+const RAW = [
+  { name:"Ima Ride For My MF McGGonicle", color:"#e63946",
+    r:321,s:338,d:109,t:15,hr:88,rbi:308,gw:38,bbB:265,kB:519,hbp:35,sac:20,sb:59,cs:14,
+    ip:469.1,hP:391,er:184,bbP:171,hb:15,kP:443,qs:36,so:0,w:36,l:29,sv:7,bs:6,hd:22 },
+  { name:"Mike and Mike In The Mornin'", color:"#457b9d",
+    r:249,s:269,d:87,t:4,hr:64,rbi:268,gw:29,bbB:197,kB:556,hbp:30,sac:17,sb:53,cs:13,
+    ip:550.0,hP:457,er:208,bbP:175,hb:24,kP:585,qs:38,so:0,w:31,l:28,sv:16,bs:2,hd:5 },
+  { name:"Thicc Bois", color:"#f4a261",
+    r:212,s:317,d:90,t:8,hr:57,rbi:230,gw:27,bbB:174,kB:432,hbp:21,sac:29,sb:44,cs:13,
+    ip:490.1,hP:419,er:199,bbP:185,hb:15,kP:435,qs:30,so:0,w:31,l:35,sv:25,bs:6,hd:5 },
+  { name:"All ARRAEZ for the JUDGE", color:"#6a4c93",
+    r:293,s:323,d:105,t:8,hr:71,rbi:275,gw:29,bbB:255,kB:457,hbp:14,sac:26,sb:37,cs:10,
+    ip:537.0,hP:514,er:265,bbP:188,hb:25,kP:462,qs:30,so:0,w:32,l:40,sv:18,bs:6,hd:19 },
+  { name:"WITTnessing Greatness", color:"#2a9d8f",
+    r:269,s:349,d:107,t:7,hr:69,rbi:260,gw:42,bbB:198,kB:459,hbp:14,sac:16,sb:30,cs:13,
+    ip:545.1,hP:506,er:249,bbP:183,hb:30,kP:487,qs:28,so:0,w:33,l:33,sv:16,bs:7,hd:16 },
+  { name:"Jung H King", color:"#ff6b6b",
+    r:277,s:323,d:80,t:13,hr:67,rbi:248,gw:27,bbB:243,kB:452,hbp:21,sac:15,sb:38,cs:14,
+    ip:483.2,hP:399,er:212,bbP:202,hb:24,kP:507,qs:25,so:0,w:33,l:30,sv:22,bs:4,hd:4 },
+  { name:"Back 2 Back CY Young", color:"#e9c46a",
+    r:298,s:320,d:91,t:5,hr:78,rbi:280,gw:34,bbB:241,kB:554,hbp:20,sac:24,sb:35,cs:8,
+    ip:569.0,hP:559,er:291,bbP:232,hb:25,kP:534,qs:29,so:0,w:24,l:43,sv:9,bs:9,hd:25 },
+  { name:"Dom's House of Fun", color:"#a8dadc",
+    r:270,s:309,d:92,t:5,hr:57,rbi:218,gw:30,bbB:209,kB:425,hbp:29,sac:15,sb:38,cs:4,
+    ip:538.0,hP:495,er:250,bbP:217,hb:19,kP:458,qs:28,so:0,w:32,l:38,sv:10,bs:5,hd:26 },
+  { name:"Stop looking at me Kwan", color:"#4cc9f0",
+    r:269,s:337,d:91,t:2,hr:68,rbi:250,gw:34,bbB:210,kB:450,hbp:20,sac:21,sb:35,cs:13,
+    ip:512.1,hP:493,er:242,bbP:205,hb:15,kP:556,qs:30,so:0,w:29,l:32,sv:10,bs:6,hd:20 },
+  { name:"Raleighing My Way", color:"#52b788",
+    r:260,s:300,d:99,t:9,hr:70,rbi:230,gw:29,bbB:234,kB:558,hbp:24,sac:17,sb:31,cs:15,
+    ip:475.0,hP:444,er:215,bbP:175,hb:31,kP:475,qs:25,so:0,w:31,l:31,sv:25,bs:5,hd:7 },
+  { name:"MANNY MEN", color:"#f77f00",
+    r:307,s:336,d:100,t:11,hr:75,rbi:261,gw:32,bbB:267,kB:538,hbp:29,sac:18,sb:68,cs:20,
+    ip:546.2,hP:470,er:244,bbP:216,hb:25,kP:541,qs:34,so:1,w:34,l:30,sv:25,bs:8,hd:8 },
+  { name:"16 percent", color:"#90be6d",
+    r:296,s:303,d:81,t:9,hr:85,rbi:261,gw:28,bbB:257,kB:551,hbp:19,sac:10,sb:56,cs:11,
+    ip:553.1,hP:522,er:263,bbP:228,hb:16,kP:554,qs:23,so:0,w:39,l:34,sv:21,bs:6,hd:9 },
+];
+
+// ── Column definitions ────────────────────────────────────────────────────────
+const COLS = [
+  // id, label, multiplier, group, description
+  { id:'r',   label:'R',    mult:1,    group:'bat+', desc:'Runs (×1)' },
+  { id:'s',   label:'1B',   mult:1,    group:'bat+', desc:'Singles (×1)' },
+  { id:'d',   label:'2B',   mult:2,    group:'bat+', desc:'Doubles (×2)' },
+  { id:'t',   label:'3B',   mult:3,    group:'bat+', desc:'Triples (×3)' },
+  { id:'hr',  label:'HR',   mult:4,    group:'bat+', desc:'Home Runs (×4)' },
+  { id:'rbi', label:'RBI',  mult:2,    group:'bat+', desc:'RBI (×2)' },
+  { id:'gw',  label:'GWRBI',mult:1,    group:'bat+', desc:'Game-Winning RBI (×1)' },
+  { id:'bbB', label:'BB',   mult:1,    group:'bat+', desc:'Walks (×1)' },
+  { id:'hbp', label:'HBP',  mult:1,    group:'bat+', desc:'Hit by Pitch (×1)' },
+  { id:'sac', label:'SAC',  mult:1,    group:'bat+', desc:'Sacrifices (×1)' },
+  { id:'sb',  label:'SB',   mult:2,    group:'bat+', desc:'Stolen Bases (×2)' },
+  { id:'kB',  label:'K',    mult:-1,   group:'bat-', desc:'Strikeouts (×−1)' },
+  { id:'cs',  label:'CS',   mult:-0.5, group:'bat-', desc:'Caught Stealing (×−0.5)' },
+  { id:'ip',  label:'IP',   mult:3,    group:'pit+', desc:'Innings Pitched (×3)' },
+  { id:'kP',  label:'K',    mult:1,    group:'pit+', desc:'Strikeouts (×1)' },
+  { id:'qs',  label:'QS',   mult:2,    group:'pit+', desc:'Quality Starts (×2)' },
+  { id:'so',  label:'SHO',  mult:3,    group:'pit+', desc:'Shutouts (×3)' },
+  { id:'w',   label:'W',    mult:8,    group:'pit+', desc:'Wins (×8)' },
+  { id:'sv',  label:'SV',   mult:4.5,  group:'pit+', desc:'Saves (×4.5)' },
+  { id:'hd',  label:'HD',   mult:2,    group:'pit+', desc:'Holds (×2)' },
+  { id:'hP',  label:'H',    mult:-1,   group:'pit-', desc:'Hits Allowed (×−1)' },
+  { id:'er',  label:'ER',   mult:-2,   group:'pit-', desc:'Earned Runs (×−2)' },
+  { id:'bbP', label:'BB',   mult:-1,   group:'pit-', desc:'Walks Issued (×−1)' },
+  { id:'hb',  label:'HB',   mult:-1,   group:'pit-', desc:'Hit Batters (×−1)' },
+  { id:'l',   label:'L',    mult:-2,   group:'pit-', desc:'Losses (×−2)' },
+  { id:'bs',  label:'BS',   mult:-2,   group:'pit-', desc:'Blown Saves (×−2)' },
+];
+
+const GROUP_META = {
+  'bat+': { label: 'Batting — Positive', cls: 'group-bat-pos', span: 11 },
+  'bat-': { label: 'Batting — Negative', cls: 'group-bat-neg', span: 2  },
+  'pit+': { label: 'Pitching — Positive', cls: 'group-pit-pos', span: 7 },
+  'pit-': { label: 'Pitching — Negative', cls: 'group-pit-neg', span: 6 },
+};
+
+// ── Compute points for each team ──────────────────────────────────────────────
+const data = RAW.map(t => {
+  const pts = {};
+  COLS.forEach(c => { pts[c.id] = +(t[c.id] * c.mult).toFixed(1); });
+  pts.batPos = COLS.filter(c=>c.group==='bat+').reduce((s,c)=>s+pts[c.id],0);
+  pts.batNeg = COLS.filter(c=>c.group==='bat-').reduce((s,c)=>s+pts[c.id],0);
+  pts.pitPos = COLS.filter(c=>c.group==='pit+').reduce((s,c)=>s+pts[c.id],0);
+  pts.pitNeg = COLS.filter(c=>c.group==='pit-').reduce((s,c)=>s+pts[c.id],0);
+  pts.batTot = pts.batPos + pts.batNeg;
+  pts.pitTot = pts.pitPos + pts.pitNeg;
+  pts.total  = pts.batTot + pts.pitTot;
+  return { ...t, pts };
+});
+
+// ── Compute ranks for each column ─────────────────────────────────────────────
+const ranks = {};
+[...COLS.map(c=>c.id), 'batPos','batNeg','batTot','pitPos','pitNeg','pitTot','total'].forEach(id => {
+  const vals = data.map(t => t.pts[id]);
+  const sorted = [...vals].sort((a,b) => b - a);
+  ranks[id] = vals.map(v => sorted.indexOf(v) + 1);
+});
+
+// ── Sort state ─────────────────────────────────────────────────────────────────
+let sortId = 'total', sortDir = -1; // -1=desc
+
+function getRankClass(r) { return `rnk-${Math.min(12,Math.max(1,r))}`; }
+function getRankBadge(r) {
+  const cls = r === 1 ? 'r1' : r === 12 ? 'r12' : '';
+  return `<span class="rank-badge ${cls}">#${r}</span>`;
+}
+function fmtPts(v) {
+  if (v === 0) return '0';
+  return v > 0 ? '+' + v.toFixed(v % 1 === 0 ? 0 : 1)
+               : v.toFixed(v % 1 === 0 ? 0 : 1);
+}
+
+function buildHeaders() {
+  const head = document.getElementById('table-head');
+  head.innerHTML = '';
+
+  // Row 1: group labels
+  const grpRow = document.createElement('tr');
+  grpRow.className = 'group-header';
+  grpRow.innerHTML = `<th class="team-header-grp" style="background:#1a1a2e;border:none;"></th>`;
+  const groups = ['bat+','bat-','pit+','pit-'];
+  groups.forEach(g => {
+    const m = GROUP_META[g];
+    grpRow.innerHTML += `<th colspan="${m.span}" class="${m.cls}">${m.label}</th>`;
+  });
+  // subtotals + total
+  grpRow.innerHTML += `<th colspan="3" class="group-bat-pos" style="border-left:1px solid #333;">Bat</th>`;
+  grpRow.innerHTML += `<th colspan="3" class="group-pit-pos" style="border-left:1px solid #222;">Pit</th>`;
+  grpRow.innerHTML += `<th colspan="1" class="group-total" style="border-left:1px solid #333;">Total</th>`;
+  head.appendChild(grpRow);
+
+  // Row 2: column headers
+  const colRow = document.createElement('tr');
+  colRow.innerHTML = `<th class="team-header" onclick="sort('name')">Team</th>`;
+  COLS.forEach(c => {
+    const active = sortId === c.id;
+    const arrow = active ? (sortDir === -1 ? ' ▼' : ' ▲') : '';
+    colRow.innerHTML += `<th class="col-header ${active?'sorted-desc':''}" onclick="sort('${c.id}')" title="${c.desc}">${c.label}<span class="sort-arrow">${arrow}</span></th>`;
+  });
+  const extras = [
+    {id:'batPos',lbl:'Bat+'}, {id:'batNeg',lbl:'Bat−'}, {id:'batTot',lbl:'Bat Total'},
+    {id:'pitPos',lbl:'Pit+'}, {id:'pitNeg',lbl:'Pit−'}, {id:'pitTot',lbl:'Pit Total'},
+    {id:'total', lbl:'PF Total'},
+  ];
+  extras.forEach((e,i) => {
+    const active = sortId === e.id;
+    const arrow = active ? (sortDir === -1 ? ' ▼' : ' ▲') : '';
+    const border = (i===0||i===3||i===6) ? 'border-left:1px solid #333;' : 'border-left:1px solid #222;';
+    const cls = i === 6 ? 'col-header total-cell' : 'col-header subtotal-cell';
+    colRow.innerHTML += `<th class="${cls} ${active?'sorted-desc':''}" style="${border}" onclick="sort('${e.id}')">${e.lbl}<span class="sort-arrow">${arrow}</span></th>`;
+  });
+  head.appendChild(colRow);
+}
+
+function buildBody() {
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+
+  const sorted = data.slice().sort((a, b) => {
+    const va = a.pts[sortId] ?? a.name;
+    const vb = b.pts[sortId] ?? b.name;
+    if (typeof va === 'string') return sortDir * va.localeCompare(vb);
+    return sortDir * (vb - va);
+  });
+
+  sorted.forEach(t => {
+    const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${t.color};margin-right:6px;vertical-align:middle;"></span>`;
+    let row = `<tr><td class="team-cell">${dot}${t.name}</td>`;
+
+    COLS.forEach((c, ci) => {
+      const v = t.pts[c.id];
+      const r = ranks[c.id][data.indexOf(t)];
+      row += `<td class="${getRankClass(r)}"><span class="score-val">${fmtPts(v)}</span>${getRankBadge(r)}</td>`;
+    });
+
+    // subtotals
+    const subs = ['batPos','batNeg','batTot','pitPos','pitNeg','pitTot','total'];
+    subs.forEach((id, i) => {
+      const v = t.pts[id];
+      const r = ranks[id] ? ranks[id][data.indexOf(t)] : null;
+      const border = (i===0||i===3||i===6) ? 'border-left:1px solid #333;' : 'border-left:1px solid #222;';
+      const cellCls = i === 6 ? 'total-cell' : 'subtotal-cell';
+      const rankBg  = r ? getRankClass(r) : '';
+      row += `<td class="${cellCls} ${rankBg}" style="${border}">${fmtPts(v)}${r?getRankBadge(r):''}</td>`;
+    });
+
+    row += `</tr>`;
+    tbody.innerHTML += row;
+  });
+}
+
+function sort(id) {
+  if (sortId === id) {
+    sortDir = -sortDir;
+  } else {
+    sortId = id;
+    sortDir = -1; // default descending (higher pts = better = top)
+  }
+  buildHeaders();
+  buildBody();
+}
+
+// Initial render
+buildHeaders();
+buildBody();
+
+// ── Download Excel (HTML table → .xls, no library needed) ────────────────────
+function rankColor(rank) {
+  const n = data.length;
+  const t = (rank - 1) / (n - 1);
+  let r, g, b;
+  if (t < 0.5) {
+    const u = t * 2;
+    r = Math.round(74  + u * (250 - 74));
+    g = Math.round(222 + u * (204 - 222));
+    b = Math.round(128 + u * (21  - 128));
+  } else {
+    const u = (t - 0.5) * 2;
+    r = Math.round(250 + u * (248 - 250));
+    g = Math.round(204 + u * (113 - 204));
+    b = Math.round(21  + u * (113 - 21));
+  }
+  const lf = 0.45;
+  r = Math.round(r + (255 - r) * lf);
+  g = Math.round(g + (255 - g) * lf);
+  b = Math.round(b + (255 - b) * lf);
+  return `rgb(${r},${g},${b})`;
+}
+
+function downloadExcel() {
+  const allIds    = [...COLS.map(c => c.id), 'batPos','batNeg','batTot','pitPos','pitNeg','pitTot','total'];
+  const allLabels = [...COLS.map(c => `${c.label} (${c.desc})`),
+    'Bat+','Bat−','Bat Total','Pit+','Pit−','Pit Total','PF Total'];
+
+  const hdrStyle = 'background:#2C3E5A;color:#CCC;font-weight:bold;padding:6px 8px;border:1px solid #555;white-space:nowrap;';
+  const baseCell = 'padding:5px 8px;text-align:center;border:1px solid #ddd;white-space:nowrap;';
+
+  let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:x="urn:schemas-microsoft-com:office:excel"
+    xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8">
+<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>
+<x:ExcelWorksheet><x:Name>Breakdown</x:Name>
+<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+</head><body><table>`;
+
+  // Header row
+  html += `<tr><th style="${hdrStyle}text-align:left;">Team</th>`;
+  allLabels.forEach(lbl => { html += `<th style="${hdrStyle}text-align:center;">${lbl}</th>`; });
+  html += '</tr>';
+
+  // Data rows
+  data.forEach(t => {
+    const idx = data.indexOf(t);
+    html += `<tr><td style="font-weight:bold;padding:5px 10px;border:1px solid #ddd;">${t.name}</td>`;
+    allIds.forEach(id => {
+      const v    = t.pts[id];
+      const rank = ranks[id] ? ranks[id][idx] : null;
+      const sign = v > 0 ? '+' : '';
+      const val  = v % 1 === 0 ? `${sign}${v}` : `${sign}${v.toFixed(1)}`;
+      const text = rank ? `${val}  #${rank}` : val;
+      const bg   = rank ? `background:${rankColor(rank)};` : '';
+      html += `<td style="${baseCell}${bg}">${text}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</table></body></html>';
+
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const link = document.createElement('a');
+  link.download = 'vista_hills_breakdown.xls';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+</script>
+</body>
+</html>

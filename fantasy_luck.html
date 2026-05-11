@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vista Hills — Luck Analysis</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  h2 { margin-bottom: 4px; }
+  .subtitle { color: #aaa; margin: 0 0 20px; font-size: 13px; text-align: center; }
+  .charts { display: flex; gap: 30px; align-items: flex-start; }
+  .chart-wrap { display: flex; flex-direction: column; align-items: center; }
+  .chart-title { font-size: 13px; color: #ccc; margin-bottom: 6px; font-weight: bold; }
+  #capture { background: #1a1a2e; padding: 24px 40px; display: inline-flex; flex-direction: column; align-items: center; }
+  #downloadBtn { margin: 14px 0 0; padding: 8px 22px; background: #457b9d; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  #downloadBtn:hover { background: #2a9d8f; }
+  .note { font-size: 11px; color: #777; margin-top: 10px; text-align: center; max-width: 900px; }
+  #ap-table { border-collapse: collapse; width: 430px; font-size: 12px; }
+  #ap-table th { background: #16213e; color: #aaa; font-weight: normal; padding: 7px 10px; text-align: right; border-bottom: 1px solid #333; }
+  #ap-table th:first-child { text-align: left; }
+  #ap-table td { padding: 6px 10px; text-align: right; border-bottom: 1px solid #222; }
+  #ap-table td:first-child { text-align: left; color: #eee; }
+  #ap-table tr:hover td { background: rgba(255,255,255,0.04); }
+  .luck-pos { color: #4ade80; font-weight: bold; }
+  .luck-neg { color: #f87171; font-weight: bold; }
+  .luck-neu { color: #aaa; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+<div id="capture">
+<h2>Vista Hills — Luck Analysis (Matchups 1–6, 2026)</h2>
+<p class="subtitle">All-play method: each team's score ranked against all 11 opponents each week &nbsp;|&nbsp; Expected wins derived from all-play W%</p>
+<div class="charts">
+  <div class="chart-wrap">
+    <div class="chart-title">All-Play Records (sorted by quality)</div>
+    <table id="ap-table">
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th>All-Play</th>
+          <th>AP W%</th>
+          <th>Wk6 AP</th>
+          <th>Actual</th>
+          <th>Luck</th>
+        </tr>
+      </thead>
+      <tbody id="ap-tbody"></tbody>
+    </table>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title">Luck Score (Actual − Expected Wins)</div>
+    <canvas id="bar" width="430" height="430"></canvas>
+  </div>
+</div>
+<p class="note">All-play record: 6 weeks × 11 opponents = 66 games per team. Expected wins = all-play W% × 6. Luck = Actual − Expected. Zero-sum: league total luck = 0.</p>
+</div>
+<button id="downloadBtn" onclick="downloadChart()">⬇ Download PNG</button>
+
+<script>
+// ── Raw weekly scores by matchup ──────────────────────────────────────────────
+const matchups = [
+  // Matchup 1
+  { "Raleighing My Way": 505.0, "16 percent": 595.5, "Jung H King": 812.5, "Stop looking at me Kwan": 643.0,
+    "Ima Ride For My MF McGGonicle": 755.0, "MANNY MEN": 723.0, "All ARRAEZ for the JUDGE": 646.5,
+    "WITTnessing Greatness": 656.5, "Dom's House of Fun": 603.5, "Back 2 Back CY Young": 522.5,
+    "Mike and Mike In The Mornin'": 567.5, "Thicc Bois": 506.0 },
+  // Matchup 2
+  { "Jung H King": 334.0, "Raleighing My Way": 484.0, "16 percent": 484.5, "Ima Ride For My MF McGGonicle": 538.5,
+    "Stop looking at me Kwan": 390.0, "All ARRAEZ for the JUDGE": 537.0, "MANNY MEN": 546.5,
+    "Dom's House of Fun": 300.5, "WITTnessing Greatness": 354.5, "Mike and Mike In The Mornin'": 467.5,
+    "Back 2 Back CY Young": 325.5, "Thicc Bois": 363.0 },
+  // Matchup 3
+  { "Raleighing My Way": 321.5, "Ima Ride For My MF McGGonicle": 554.0, "All ARRAEZ for the JUDGE": 296.0,
+    "Jung H King": 475.5, "Dom's House of Fun": 510.5, "16 percent": 468.0, "Mike and Mike In The Mornin'": 475.0,
+    "Stop looking at me Kwan": 377.5, "Thicc Bois": 481.5, "MANNY MEN": 401.0,
+    "Back 2 Back CY Young": 478.0, "WITTnessing Greatness": 394.0 },
+  // Matchup 4
+  { "All ARRAEZ for the JUDGE": 391.5, "Raleighing My Way": 429.5, "Ima Ride For My MF McGGonicle": 411.0,
+    "Dom's House of Fun": 310.0, "Jung H King": 392.0, "Mike and Mike In The Mornin'": 461.5,
+    "16 percent": 458.0, "Thicc Bois": 501.5, "Stop looking at me Kwan": 369.0,
+    "Back 2 Back CY Young": 469.0, "MANNY MEN": 501.0, "WITTnessing Greatness": 508.0 },
+  // Matchup 5
+  { "Raleighing My Way": 407.0, "Dom's House of Fun": 438.5, "Mike and Mike In The Mornin'": 449.0,
+    "All ARRAEZ for the JUDGE": 494.5, "Thicc Bois": 327.5, "Ima Ride For My MF McGGonicle": 409.5,
+    "Back 2 Back CY Young": 476.5, "Jung H King": 276.5, "WITTnessing Greatness": 469.5,
+    "16 percent": 434.0, "MANNY MEN": 409.0, "Stop looking at me Kwan": 414.5 },
+  // Matchup 6
+  { "16 percent": 392.0, "Stop looking at me Kwan": 467.5, "Mike and Mike In The Mornin'": 401.0,
+    "Raleighing My Way": 351.0, "Dom's House of Fun": 375.0, "Thicc Bois": 379.5,
+    "All ARRAEZ for the JUDGE": 413.5, "Back 2 Back CY Young": 326.0,
+    "Ima Ride For My MF McGGonicle": 443.5, "WITTnessing Greatness": 381.0,
+    "Jung H King": 457.5, "MANNY MEN": 429.0 }
+];
+
+const actualWins = {
+  "Ima Ride For My MF McGGonicle": 6, "Mike and Mike In The Mornin'": 5,
+  "Thicc Bois": 4, "All ARRAEZ for the JUDGE": 3, "WITTnessing Greatness": 3,
+  "Jung H King": 3, "Back 2 Back CY Young": 3, "Dom's House of Fun": 3,
+  "Stop looking at me Kwan": 2, "Raleighing My Way": 2, "MANNY MEN": 1, "16 percent": 1
+};
+
+const teams = Object.keys(actualWins);
+const n = teams.length; // 12
+const weeks = matchups.length; // 5
+
+// ── All-play wins ─────────────────────────────────────────────────────────────
+const apWins = Object.fromEntries(teams.map(t => [t, 0]));
+const wk6ApWins = Object.fromEntries(teams.map(t => [t, 0]));
+matchups.forEach((week, idx) => {
+  const sorted = [...teams].sort((a, b) => week[b] - week[a]);
+  sorted.forEach((t, rank) => {
+    apWins[t] += (n - 1 - rank);
+    if (idx === matchups.length - 1) wk6ApWins[t] = (n - 1 - rank);
+  });
+});
+
+const totalGames = weeks * (n - 1); // 66
+const results = teams.map(t => ({
+  name: t,
+  short: t.length > 20 ? t.substring(0, 18) + '…' : t,
+  apW: apWins[t],
+  apPct: apWins[t] / totalGames,
+  expectedW: (apWins[t] / totalGames) * weeks,
+  actualW: actualWins[t],
+  luck: actualWins[t] - (apWins[t] / totalGames) * weeks,
+  wk6Ap: wk6ApWins[t],
+}));
+
+const colors = {
+  "Ima Ride For My MF McGGonicle": "#e63946",
+  "Mike and Mike In The Mornin'":  "#457b9d",
+  "WITTnessing Greatness":         "#2a9d8f",
+  "Back 2 Back CY Young":          "#e9c46a",
+  "Thicc Bois":                    "#f4a261",
+  "Dom's House of Fun":            "#a8dadc",
+  "All ARRAEZ for the JUDGE":      "#6a4c93",
+  "Jung H King":                   "#ff6b6b",
+  "Raleighing My Way":             "#52b788",
+  "MANNY MEN":                     "#f77f00",
+  "16 percent":                    "#90be6d",
+  "Stop looking at me Kwan":       "#4cc9f0",
+};
+
+// ── All-play table ────────────────────────────────────────────────────────────
+const byQuality = [...results].sort((a, b) => b.apW - a.apW);
+const tbody = document.getElementById('ap-tbody');
+byQuality.forEach((r, i) => {
+  const luckFmt = (r.luck >= 0 ? '+' : '') + r.luck.toFixed(2);
+  const luckClass = r.luck > 0.1 ? 'luck-pos' : r.luck < -0.1 ? 'luck-neg' : 'luck-neu';
+  const dot = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${colors[r.name]};margin-right:6px;vertical-align:middle;"></span>`;
+  tbody.innerHTML += `<tr>
+    <td>${dot}${r.name}</td>
+    <td style="color:#ccc">${r.apW}–${totalGames - r.apW}</td>
+    <td style="color:#ccc">.${Math.round(r.apPct * 1000).toString().padStart(3,'0')}</td>
+    <td style="color:#ccc">${r.wk6Ap}–${(n - 1) - r.wk6Ap}</td>
+    <td style="color:#ccc">${r.actualW}–${weeks - r.actualW}</td>
+    <td class="${luckClass}">${luckFmt}</td>
+  </tr>`;
+});
+
+// ── Bar: Luck scores sorted ───────────────────────────────────────────────────
+const sorted = [...results].sort((a, b) => b.luck - a.luck);
+const barCtx = document.getElementById('bar').getContext('2d');
+new Chart(barCtx, {
+  type: 'bar',
+  data: {
+    labels: sorted.map(r => r.short),
+    datasets: [{
+      label: 'Luck Score',
+      data: sorted.map(r => +r.luck.toFixed(2)),
+      backgroundColor: sorted.map(r => r.luck >= 0 ? 'rgba(74,222,128,0.75)' : 'rgba(248,113,113,0.75)'),
+      borderColor:     sorted.map(r => r.luck >= 0 ? '#4ade80' : '#f87171'),
+      borderWidth: 1.5,
+    }]
+  },
+  options: {
+    responsive: false,
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            const r = sorted[ctx.dataIndex];
+            return [`Luck: ${r.luck >= 0 ? '+' : ''}${r.luck.toFixed(2)}`,
+                    `Actual: ${r.actualW}W   Expected: ${r.expectedW.toFixed(2)}W`,
+                    `All-play: ${r.apW}–${totalGames - r.apW}`];
+          }
+        }
+      },
+      annotation: {
+        annotations: {
+          zeroLine: { type: 'line', scaleID: 'x', value: 0,
+            borderColor: 'rgba(255,255,255,0.4)', borderWidth: 1.5 }
+        }
+      }
+    },
+    scales: {
+      x: { title: { display: true, text: 'Luck (Actual − Expected Wins)', color: '#ccc', font: { size: 12 } },
+           min: -2.5, max: 2.5, grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#ccc' } },
+      y: { ticks: { color: '#ccc', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+    }
+  }
+});
+
+// ── Download ──────────────────────────────────────────────────────────────────
+function downloadChart() {
+  const target = document.getElementById('capture');
+  html2canvas(target, {
+    backgroundColor: '#1a1a2e',
+    scale: 2,
+    width: target.scrollWidth,
+    height: target.scrollHeight,
+    windowWidth: target.scrollWidth,
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'vista_hills_luck.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+</script>
+</body>
+</html>

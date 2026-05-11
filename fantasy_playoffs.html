@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vista Hills — Playoff Odds</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  h2 { margin-bottom: 4px; }
+  .subtitle { color: #aaa; margin: 0 0 6px; font-size: 13px; text-align: center; }
+  .caveat { color: #f0a500; font-size: 12px; margin: 0 0 18px; text-align: center; }
+  #capture { background: #1a1a2e; padding: 24px 40px; display: inline-flex; flex-direction: column; align-items: center; }
+  .charts { display: flex; gap: 30px; align-items: flex-start; }
+  .chart-wrap { display: flex; flex-direction: column; align-items: center; }
+  .chart-title { font-size: 13px; color: #ccc; margin-bottom: 6px; font-weight: bold; }
+  #downloadBtn { margin: 14px 0 0; padding: 8px 22px; background: #457b9d; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  #downloadBtn:hover { background: #2a9d8f; }
+  .note { font-size: 11px; color: #666; margin-top: 10px; text-align: center; max-width: 900px; }
+  #detail-table { border-collapse: collapse; width: 340px; font-size: 12px; }
+  #detail-table th { background: #16213e; color: #aaa; font-weight: normal; padding: 7px 10px; text-align: right; border-bottom: 1px solid #333; }
+  #detail-table th:first-child { text-align: left; }
+  #detail-table td { padding: 6px 10px; text-align: right; border-bottom: 1px solid #222; }
+  #detail-table td:first-child { text-align: left; color: #eee; }
+  #detail-table tr:hover td { background: rgba(255,255,255,0.04); }
+  .odds-hi  { color: #4ade80; font-weight: bold; }
+  .odds-mid { color: #facc15; font-weight: bold; }
+  .odds-lo  { color: #f87171; font-weight: bold; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+<div id="capture">
+<h2>Vista Hills — Playoff Odds (2026)</h2>
+<p class="subtitle">10,000-season Monte Carlo simulation &nbsp;|&nbsp; Matchups 7–19 simulated using actual schedule &nbsp;|&nbsp; Win probability from 6-week all-play W%</p>
+<p class="caveat">Top 6 of 12 qualify for playoffs &nbsp;|&nbsp; Tiebreakers by all-play W% (proxy for PF) &nbsp;|&nbsp; Simulation does not account for roster changes or injury recovery</p>
+<div class="charts">
+  <div class="chart-wrap">
+    <div class="chart-title">Detail (sorted by playoff odds)</div>
+    <table id="detail-table">
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th>Now</th>
+          <th>Proj Fin</th>
+          <th>Playoff%</th>
+        </tr>
+      </thead>
+      <tbody id="detail-tbody"></tbody>
+    </table>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title">Playoff Probability (%)</div>
+    <canvas id="bar" width="470" height="440"></canvas>
+  </div>
+</div>
+<p class="note">P(A beats B) = apW%_A ÷ (apW%_A + apW%_B) each matchup. All-play W% computed from 6 weeks of head-to-head scoring vs all 11 opponents. Actual matchup schedule (M7–M19) used — not random draw.</p>
+</div>
+<button id="downloadBtn" onclick="downloadChart()">⬇ Download PNG</button>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const PLAYOFF_SPOTS = 6;   // top N teams make playoffs — verify in league settings
+const SIMS = 10000;
+const TOTAL_WEEKS = 19;
+
+// ── Team data after Week 6 ────────────────────────────────────────────────────
+// apW = all-play wins over 6 weeks (out of 66 = 6 × 11 opponents)
+const TEAMS = {
+  IR: { name: "Ima Ride For My MF McGGonicle",   wins: 6, apW: 48, color: "#e63946" },
+  MN: { name: "MANNY MEN",                        wins: 1, apW: 44, color: "#f77f00" },
+  WG: { name: "WITTnessing Greatness",            wins: 3, apW: 38, color: "#2a9d8f" },
+  MM: { name: "Mike and Mike In The Mornin'",     wins: 5, apW: 36, color: "#457b9d" },
+  AA: { name: "All ARRAEZ for the JUDGE",         wins: 3, apW: 36, color: "#6a4c93" },
+  SP: { name: "16 percent",                       wins: 1, apW: 34, color: "#90be6d" },
+  JK: { name: "Jung H King",                      wins: 3, apW: 33, color: "#ff6b6b" },
+  SK: { name: "Stop looking at me Kwan",          wins: 2, apW: 30, color: "#4cc9f0" },
+  BB: { name: "Back 2 Back CY Young",             wins: 3, apW: 29, color: "#e9c46a" },
+  TB: { name: "Thicc Bois",                       wins: 4, apW: 28, color: "#f4a261" },
+  DH: { name: "Dom's House of Fun",               wins: 3, apW: 24, color: "#a8dadc" },
+  RM: { name: "Raleighing My Way",                wins: 2, apW: 16, color: "#52b788" },
+};
+
+// ── Remaining schedule (Matchups 7–19) ───────────────────────────────────────
+const schedule = [
+  // M7  (May 11–17)
+  ["SP","JK"],["RM","TB"],["BB","MM"],["WG","DH"],["MN","AA"],["SK","IR"],
+  // M8  (May 18–24)
+  ["AA","SP"],["BB","RM"],["TB","WG"],["MM","MN"],["DH","SK"],["IR","JK"],
+  // M9  (May 25–31)
+  ["SP","MM"],["RM","WG"],["MN","BB"],["SK","TB"],["JK","DH"],["IR","AA"],
+  // M10 (Jun 1–7)
+  ["BB","SP"],["MN","RM"],["WG","SK"],["TB","JK"],["MM","IR"],["DH","AA"],
+  // M11 (Jun 8–14)
+  ["SP","MN"],["RM","SK"],["JK","WG"],["IR","BB"],["AA","TB"],["DH","MM"],
+  // M12 (Jun 15–21)
+  ["SP","RM"],["SK","JK"],["MN","IR"],["WG","AA"],["BB","DH"],["TB","MM"],
+  // M13 (Jun 22–28)
+  ["IR","SP"],["RM","JK"],["AA","SK"],["DH","MN"],["MM","WG"],["TB","BB"],
+  // M14 (Jun 29–Jul 5)
+  ["SP","DH"],["IR","RM"],["JK","AA"],["SK","MM"],["MN","TB"],["WG","BB"],
+  // M15 (Jul 6–19)
+  ["TB","SP"],["RM","AA"],["DH","IR"],["MM","JK"],["BB","SK"],["WG","MN"],
+  // M16 (Jul 20–26)
+  ["SP","WG"],["DH","RM"],["AA","MM"],["IR","TB"],["JK","BB"],["SK","MN"],
+  // M17 (Jul 27–Aug 2)
+  ["SK","SP"],["RM","MM"],["TB","DH"],["BB","AA"],["WG","IR"],["MN","JK"],
+  // M18 (Aug 3–9)
+  ["JK","SP"],["TB","RM"],["MM","BB"],["DH","WG"],["AA","MN"],["IR","SK"],
+  // M19 (Aug 10–16)
+  ["SP","AA"],["RM","BB"],["WG","TB"],["MN","MM"],["SK","DH"],["JK","IR"],
+];
+
+// ── Monte Carlo simulation ────────────────────────────────────────────────────
+const keys = Object.keys(TEAMS);
+const AP_TOTAL = 66; // 6 weeks × 11 opponents
+
+const playoffCount  = Object.fromEntries(keys.map(k => [k, 0]));
+const winSum        = Object.fromEntries(keys.map(k => [k, 0]));
+
+for (let s = 0; s < SIMS; s++) {
+  const wins = Object.fromEntries(keys.map(k => [k, TEAMS[k].wins]));
+
+  for (const [a, b] of schedule) {
+    const pa = TEAMS[a].apW / AP_TOTAL;
+    const pb = TEAMS[b].apW / AP_TOTAL;
+    if (Math.random() < pa / (pa + pb)) wins[a]++; else wins[b]++;
+  }
+
+  // Sort: wins desc, tiebreak by apW (proxy for season PF)
+  const ranked = keys.slice().sort((a, b) =>
+    wins[b] !== wins[a] ? wins[b] - wins[a] : TEAMS[b].apW - TEAMS[a].apW
+  );
+  for (let i = 0; i < PLAYOFF_SPOTS; i++) playoffCount[ranked[i]]++;
+  keys.forEach(k => winSum[k] += wins[k]);
+}
+
+// ── Build results array sorted by playoff odds ────────────────────────────────
+const results = keys.map(k => ({
+  key: k,
+  name: TEAMS[k].name,
+  color: TEAMS[k].color,
+  wins: TEAMS[k].wins,
+  losses: 6 - TEAMS[k].wins + (19 - 6 - (TOTAL_WEEKS - 6)),  // current losses
+  apPct: TEAMS[k].apW / AP_TOTAL,
+  odds: playoffCount[k] / SIMS,
+  expWins: winSum[k] / SIMS,
+})).map(r => ({ ...r, losses: 6 - r.wins }))
+  .sort((a, b) => b.odds - a.odds);
+
+// ── Detail table ──────────────────────────────────────────────────────────────
+const tbody = document.getElementById('detail-tbody');
+results.forEach(r => {
+  const pct = (r.odds * 100).toFixed(1);
+  const cls = r.odds >= 0.60 ? 'odds-hi' : r.odds >= 0.30 ? 'odds-mid' : 'odds-lo';
+  const dot = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${r.color};margin-right:6px;vertical-align:middle;"></span>`;
+  const expL = (TOTAL_WEEKS - r.expWins).toFixed(1);
+  tbody.innerHTML += `<tr>
+    <td>${dot}${r.name}</td>
+    <td style="color:#ccc">${r.wins}–${r.losses}</td>
+    <td style="color:#ccc">${r.expWins.toFixed(1)}–${expL}</td>
+    <td class="${cls}">${pct}%</td>
+  </tr>`;
+});
+
+// ── Bar chart ─────────────────────────────────────────────────────────────────
+const barCtx = document.getElementById('bar').getContext('2d');
+new Chart(barCtx, {
+  type: 'bar',
+  data: {
+    labels: results.map(r => r.name.length > 24 ? r.name.substring(0, 22) + '…' : r.name),
+    datasets: [{
+      data: results.map(r => +(r.odds * 100).toFixed(1)),
+      backgroundColor: results.map(r => r.color + 'bb'),
+      borderColor:     results.map(r => r.color),
+      borderWidth: 1.5,
+    }]
+  },
+  options: {
+    responsive: false,
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            const r = results[ctx.dataIndex];
+            return [
+              `Playoff odds: ${(r.odds * 100).toFixed(1)}%`,
+              `Current: ${r.wins}–${r.losses}`,
+              `Projected finish: ${r.expWins.toFixed(1)}–${(TOTAL_WEEKS - r.expWins).toFixed(1)}`,
+              `All-play quality: .${Math.round(r.apPct * 1000).toString().padStart(3,'0')}`,
+            ];
+          }
+        }
+      },
+      annotation: {
+        annotations: {
+          cutoff: {
+            type: 'line', scaleID: 'x', value: 50,
+            borderColor: 'rgba(255,255,255,0.35)', borderWidth: 1.5, borderDash: [5, 4],
+            label: { content: '50%', display: true, position: 'start',
+                     color: '#aaa', font: { size: 10 }, padding: 3,
+                     backgroundColor: 'rgba(0,0,0,0.4)' }
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        min: 0, max: 100,
+        title: { display: true, text: 'Playoff Probability (%)', color: '#ccc', font: { size: 12 } },
+        grid: { color: 'rgba(255,255,255,0.08)' },
+        ticks: { color: '#ccc', callback: v => v + '%' }
+      },
+      y: { ticks: { color: '#ccc', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+    }
+  }
+});
+
+// ── Download ──────────────────────────────────────────────────────────────────
+function downloadChart() {
+  const target = document.getElementById('capture');
+  html2canvas(target, {
+    backgroundColor: '#1a1a2e', scale: 2,
+    width: target.scrollWidth, height: target.scrollHeight,
+    windowWidth: target.scrollWidth,
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'vista_hills_playoff_odds.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vista Hills Fantasy Baseball — Hitting vs Pitching</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  h2 { margin-bottom: 4px; }
+  .subtitle { color: #aaa; margin-top: 0; font-size: 13px; text-align: center; }
+  #chart-container { position: relative; width: 820px; height: 700px; }
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 10px; font-size: 12px; color: #aaa; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .bubble { border-radius: 50%; display: inline-block; opacity: 0.8; }
+  #downloadBtn { margin-top: 14px; padding: 8px 22px; background: #457b9d; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  #downloadBtn:hover { background: #2a9d8f; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+<div id="capture" style="background:#1a1a2e; padding: 24px 40px; display:inline-flex; flex-direction:column; align-items:center;">
+<h2>Vista Hills — Hitting vs. Pitching (Matchups 1–6, 2026)</h2>
+<p class="subtitle">Axes = z-scores (SDs from league mean) &nbsp;|&nbsp; Bubble size = wins &nbsp;|&nbsp; n=12 (descriptive only)</p>
+<div id="chart-container">
+  <canvas id="myChart"></canvas>
+</div>
+<button id="downloadBtn" onclick="downloadChart()">⬇ Download PNG</button>
+<div class="legend">
+  <span style="color:#aaa; font-size:12px;">Bubble size = wins:</span>
+  <span class="legend-item"><span class="bubble" style="width:10px;height:10px;background:#aaa;"></span> 1 win</span>
+  <span class="legend-item"><span class="bubble" style="width:14px;height:14px;background:#aaa;"></span> 2 wins</span>
+  <span class="legend-item"><span class="bubble" style="width:18px;height:18px;background:#aaa;"></span> 3 wins</span>
+  <span class="legend-item"><span class="bubble" style="width:22px;height:22px;background:#aaa;"></span> 4 wins</span>
+  <span class="legend-item"><span class="bubble" style="width:26px;height:26px;background:#aaa;"></span> 5 wins</span>
+  <span class="legend-item"><span class="bubble" style="width:30px;height:30px;background:#aaa;"></span> 6 wins</span>
+</div>
+</div>
+
+<script>
+const raw = [
+  { name: "Ima Ride For My MF McGGonicle",    hit: 1840.0, pit: 1270.8, w: 6 },
+  { name: "Mike and Mike In The Mornin'",     hit: 1312.5, pit: 1509.0, w: 5 },
+  { name: "Thicc Bois",                       hit: 1321.5, pit: 1236.8, w: 4 },
+  { name: "All ARRAEZ for the JUDGE",         hit: 1620.0, pit: 1159.0, w: 3 },
+  { name: "WITTnessing Greatness",            hit: 1513.5, pit: 1249.3, w: 3 },
+  { name: "Jung H King",                      hit: 1486.0, pit: 1260.6, w: 3 },
+  { name: "Back 2 Back CY Young",             hit: 1518.0, pit: 1079.5, w: 3 },
+  { name: "Dom's House of Fun",               hit: 1374.0, pit: 1164.0, w: 3 },
+  { name: "Stop looking at me Kwan",          hit: 1464.5, pit: 1196.3, w: 2 },
+  { name: "Raleighing My Way",                hit: 1325.5, pit: 1172.5, w: 2 },
+  { name: "MANNY MEN MANNY MANNY MANNY MEN", hit: 1632.0, pit: 1376.1, w: 1 },
+  { name: "16 percent",                       hit: 1519.5, pit: 1311.8, w: 1 },
+];
+
+const n = raw.length;
+const mean = arr => arr.reduce((a, b) => a + b, 0) / n;
+const sd = (arr, m) => Math.sqrt(arr.reduce((a, b) => a + (b - m) ** 2, 0) / n);
+
+const hits = raw.map(t => t.hit);
+const pits = raw.map(t => t.pit);
+const mHit = mean(hits), mPit = mean(pits);
+const sHit = sd(hits, mHit), sPit = sd(pits, mPit);
+
+const teams = raw.map(t => ({
+  ...t,
+  zHit: (t.hit - mHit) / sHit,
+  zPit: (t.pit - mPit) / sPit,
+}));
+
+// Pearson r (on z-scores: r = mean of zx*zy)
+const r = teams.reduce((s, t) => s + t.zHit * t.zPit, 0) / n;
+
+// Regression line on z-score space: zy = r * zx (passes through origin)
+const xMin = -3, xMax = 3;
+const regLine = [{ x: xMin, y: r * xMin }, { x: xMax, y: r * xMax }];
+
+const colors = [
+  "#e63946","#457b9d","#2a9d8f","#e9c46a","#f4a261",
+  "#a8dadc","#6a4c93","#ff6b6b","#52b788","#f77f00",
+  "#90be6d","#4cc9f0"
+];
+
+// Bubble radius scaled to wins (1–5)
+const winRadius = w => 7 + (w - 1) * 4;  // 7, 11, 15, 19, 23
+
+const ctx = document.getElementById('myChart').getContext('2d');
+new Chart(ctx, {
+  type: 'scatter',
+  data: {
+    datasets: [
+      // Regression line
+      {
+        label: `Regression (r = ${r.toFixed(2)})`,
+        data: regLine,
+        type: 'line',
+        borderColor: 'rgba(255,255,255,0.5)',
+        borderWidth: 1.5,
+        borderDash: [4, 4],
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+      },
+      // Team dots
+      ...teams.map((t, i) => ({
+        label: t.name,
+        data: [{ x: t.zHit, y: t.zPit }],
+        backgroundColor: colors[i] + 'cc',
+        borderColor: colors[i],
+        borderWidth: 2,
+        pointRadius: winRadius(t.w),
+        pointHoverRadius: winRadius(t.w) + 3,
+      }))
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          filter: item => item.datasetIndex === 0,
+          color: 'rgba(255,255,255,0.6)',
+          font: { size: 12 },
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            if (ctx.datasetIndex === 0) return null;
+            const t = teams[ctx.datasetIndex - 1];
+            return [
+              t.name,
+              `Hitting z: ${t.zHit.toFixed(2)}  (${t.hit} pts)`,
+              `Pitching z: ${t.zPit.toFixed(2)}  (${t.pit} pts)`,
+              `Record: ${t.w}-${5 - t.w}`,
+            ];
+          }
+        }
+      },
+      annotation: {
+        annotations: {
+          vLine: {
+            type: 'line', scaleID: 'x', value: 0,
+            borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1.5, borderDash: [6, 4],
+          },
+          hLine: {
+            type: 'line', scaleID: 'y', value: 0,
+            borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1.5, borderDash: [6, 4],
+          },
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: 'Hitting (standard deviations from mean)', color: '#ccc', font: { size: 13 } },
+        min: -3, max: 3,
+        grid: { color: 'rgba(255,255,255,0.08)' },
+        ticks: {
+          color: '#ccc',
+          callback: v => v.toFixed(1) + 'σ'
+        }
+      },
+      y: {
+        title: { display: true, text: 'Pitching (standard deviations from mean)', color: '#ccc', font: { size: 13 } },
+        min: -3, max: 3,
+        grid: { color: 'rgba(255,255,255,0.08)' },
+        ticks: {
+          color: '#ccc',
+          callback: v => v.toFixed(1) + 'σ'
+        }
+      }
+    }
+  },
+  plugins: [{
+    id: 'teamLabels',
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      ctx.save();
+      // Skip dataset 0 (regression line)
+      chart.data.datasets.forEach((ds, i) => {
+        if (i === 0) return;
+        const meta = chart.getDatasetMeta(i);
+        if (!meta.hidden && meta.data.length) {
+          const pt = meta.data[0];
+          const t = teams[i - 1];
+          const r = winRadius(t.w);
+          ctx.font = '10.5px Arial';
+          ctx.fillStyle = '#fff';
+
+          const chartArea = chart.chartArea;
+          const labelWidth = ctx.measureText(t.name).width;
+
+          // Determine horizontal alignment based on proximity to edges
+          let tx = pt.x;
+          let align = 'center';
+          if (pt.x + labelWidth / 2 > chartArea.right) {
+            tx = pt.x - r - 4;
+            align = 'right';
+          } else if (pt.x - labelWidth / 2 < chartArea.left) {
+            tx = pt.x + r + 4;
+            align = 'left';
+          }
+
+          // Determine vertical position based on proximity to top
+          let ty;
+          if (pt.y - r - 4 < chartArea.top + 12) {
+            ty = pt.y + r + 14;
+          } else {
+            ty = pt.y - r - 4;
+          }
+
+          ctx.textAlign = align;
+          ctx.fillText(t.name, tx, ty);
+        }
+      });
+      ctx.restore();
+    }
+  }]
+});
+function downloadChart() {
+  const chartCanvas = document.getElementById('myChart');
+  const dpr = window.devicePixelRatio || 1;
+
+  // Chart canvas actual pixel dims (already scaled by dpr by Chart.js)
+  const cw = chartCanvas.width;
+  const ch = chartCanvas.height;
+
+  const pad       = 40  * dpr;
+  const titleH    = 36  * dpr;
+  const subtitleH = 22  * dpr;
+  const legendH   = 40  * dpr;
+  const gap       = 14  * dpr;
+
+  const W = cw + 2 * pad;
+  const H = pad + titleH + gap + subtitleH + gap + ch + gap + legendH + pad;
+
+  const out = document.createElement('canvas');
+  out.width  = W;
+  out.height = H;
+  const c = out.getContext('2d');
+
+  // Background
+  c.fillStyle = '#1a1a2e';
+  c.fillRect(0, 0, W, H);
+
+  // Title
+  c.fillStyle   = '#eeeeee';
+  c.font        = `bold ${20 * dpr}px Arial`;
+  c.textAlign   = 'center';
+  c.textBaseline = 'alphabetic';
+  c.fillText('Vista Hills — Hitting vs. Pitching (2026)', W / 2, pad + titleH);
+
+  // Subtitle
+  c.fillStyle = '#aaaaaa';
+  c.font      = `${13 * dpr}px Arial`;
+  c.fillText(
+    'Axes = z-scores (SDs from league mean)  |  Bubble size = wins  |  n=12 (descriptive only)',
+    W / 2, pad + titleH + gap + subtitleH
+  );
+
+  // Chart
+  const chartY = pad + titleH + gap + subtitleH + gap;
+  c.drawImage(chartCanvas, pad, chartY);
+
+  // Legend
+  const legendY = chartY + ch + gap + legendH * 0.65;
+  const entries = [
+    { r: 5 * dpr, label: '1 win'  },
+    { r: 7 * dpr, label: '2 wins' },
+    { r: 9 * dpr, label: '3 wins' },
+    { r: 11 * dpr, label: '4 wins' },
+    { r: 13 * dpr, label: '5 wins' },
+    { r: 15 * dpr, label: '6 wins' },
+  ];
+
+  c.font      = `${12 * dpr}px Arial`;
+  c.textAlign = 'left';
+  const prefix    = 'Bubble size = wins:   ';
+  const prefixW   = c.measureText(prefix).width;
+  const spacer    = 10 * dpr;
+  const entryW    = entries.reduce((s, e) => s + e.r * 2 + spacer + c.measureText(e.label + '   ').width, 0);
+  let lx = (W - prefixW - entryW) / 2;
+
+  c.fillStyle = '#aaaaaa';
+  c.fillText(prefix, lx, legendY);
+  lx += prefixW;
+
+  entries.forEach(e => {
+    c.beginPath();
+    c.arc(lx + e.r, legendY - e.r * 0.4, e.r, 0, Math.PI * 2);
+    c.fillStyle = '#aaaaaa';
+    c.fill();
+    lx += e.r * 2 + spacer;
+    c.fillStyle = '#aaaaaa';
+    c.fillText(e.label + '   ', lx, legendY);
+    lx += c.measureText(e.label + '   ').width;
+  });
+
+  // Download
+  const link = document.createElement('a');
+  link.download = 'vista_hills_hitting_vs_pitching.png';
+  link.href = out.toDataURL('image/png');
+  link.click();
+}
+</script>
+</body>
+</html>

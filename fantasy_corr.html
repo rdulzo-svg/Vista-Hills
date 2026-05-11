@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vista Hills — Category Correlation</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 20px 60px;
+  }
+
+  /* ── Password gate ── */
+  #gate {
+    position: fixed;
+    inset: 0;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+  #gate h2 { font-size: 20px; margin-bottom: 6px; }
+  #gate p  { color: #888; font-size: 13px; margin-bottom: 22px; }
+  #gate input {
+    background: #16213e;
+    border: 1px solid #3a3a5a;
+    border-radius: 8px;
+    color: #eee;
+    font-size: 15px;
+    padding: 10px 16px;
+    width: 260px;
+    text-align: center;
+    letter-spacing: 2px;
+    outline: none;
+    margin-bottom: 12px;
+  }
+  #gate input:focus { border-color: #457b9d; }
+  #gate button {
+    background: #457b9d;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 36px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 260px;
+    transition: background 0.15s;
+  }
+  #gate button:hover { background: #2a9d8f; }
+  #gate .err { color: #f87171; font-size: 12px; margin-top: 10px; min-height: 16px; }
+  #gate .lock { font-size: 40px; margin-bottom: 16px; }
+
+  /* ── Main content ── */
+  #content { width: 100%; max-width: 860px; }
+  h2 { font-size: 22px; font-weight: bold; margin-bottom: 4px; text-align: center; }
+  .subtitle { color: #aaa; font-size: 13px; margin-bottom: 6px; text-align: center; }
+  .caveat   { color: #f0a500; font-size: 12px; margin-bottom: 24px; text-align: center; }
+
+  .chart-wrap { background: #16213e; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid #2a2a4a; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: #16213e; color: #aaa; font-weight: normal; padding: 8px 12px; text-align: right; border-bottom: 1px solid #333; }
+  th:first-child, th:nth-child(2) { text-align: left; }
+  td { padding: 7px 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  td:first-child, td:nth-child(2) { text-align: left; }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+
+  .bar-inline {
+    display: inline-block;
+    height: 8px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+  .sig-yes { color: #4ade80; font-weight: bold; }
+  .sig-no  { color: #555; }
+
+  .group-tag {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    vertical-align: middle;
+  }
+  .tag-bat-pos { background: rgba(74,222,128,0.15); color: #4ade80; }
+  .tag-bat-neg { background: rgba(248,113,113,0.15); color: #f87171; }
+  .tag-pit-pos { background: rgba(96,165,250,0.15); color: #60a5fa; }
+  .tag-pit-neg { background: rgba(192,132,252,0.15); color: #c084fc; }
+
+  .note { font-size: 11px; color: #555; margin-top: 16px; text-align: center; line-height: 1.6; }
+  a.back-link { color: #557b9d; font-size: 12px; text-decoration: none; margin-bottom: 20px; display: block; text-align: center; }
+  a.back-link:hover { color: #60a5fa; }
+</style>
+</head>
+<body>
+
+<!-- Password gate -->
+<div id="gate">
+  <div class="lock">🔒</div>
+  <h2>Vista Hills Analytics</h2>
+  <p>This page is restricted. Enter the password to continue.</p>
+  <input type="password" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter') tryUnlock()" autofocus />
+  <button onclick="tryUnlock()">Unlock</button>
+  <div class="err" id="pwErr"></div>
+</div>
+
+<!-- Main content (hidden until unlocked) -->
+<div id="content" style="display:none">
+  <a class="back-link" href="index.html">← Back to Vista Hills</a>
+  <h2>Category Correlation with Winning</h2>
+  <p class="subtitle">Pearson r between each category's points and actual wins across all 12 teams</p>
+  <p class="caveat">n = 12 teams &nbsp;|&nbsp; Significance threshold: |r| ≥ 0.576 (p &lt; 0.05, two-tailed) &nbsp;|&nbsp; Through Matchup 6</p>
+
+  <div class="chart-wrap">
+    <canvas id="corrChart" height="480"></canvas>
+  </div>
+
+  <table id="corrTable">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Group</th>
+        <th>r</th>
+        <th>Strength</th>
+        <th>Significant?</th>
+      </tr>
+    </thead>
+    <tbody id="corrBody"></tbody>
+  </table>
+
+  <p class="note">
+    Pearson r ranges from −1 (perfectly inverse) to +1 (perfectly predictive).<br>
+    A positive r means teams with more points from that category tend to win more.<br>
+    A negative r means more points → fewer wins (common for categories that punish bad performance).<br>
+    Significance tested at α = 0.05 with df = 10 (n − 2). |r| ≥ 0.576 required.
+  </p>
+</div>
+
+<script>
+// ── Password check ────────────────────────────────────────────────────────────
+const _k = btoa('vistahills26');
+function tryUnlock() {
+  const val = document.getElementById('pwInput').value;
+  if (btoa(val) === _k) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    sessionStorage.setItem('vh_auth', _k);
+  } else {
+    const err = document.getElementById('pwErr');
+    err.textContent = 'Incorrect password.';
+    document.getElementById('pwInput').value = '';
+    setTimeout(() => { err.textContent = ''; }, 2500);
+  }
+}
+if (sessionStorage.getItem('vh_auth') === _k) {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+const RAW = [
+  { name:"Ima Ride For My MF McGGonicle", wins:6,
+    r:321,s:338,d:109,t:15,hr:88,rbi:308,gw:38,bbB:265,kB:519,hbp:35,sac:20,sb:59,cs:14,
+    ip:469.1,hP:391,er:184,bbP:171,hb:15,kP:443,qs:36,so:0,w:36,l:29,sv:7,bs:6,hd:22 },
+  { name:"Mike and Mike In The Mornin'",  wins:5,
+    r:249,s:269,d:87,t:4,hr:64,rbi:268,gw:29,bbB:197,kB:556,hbp:30,sac:17,sb:53,cs:13,
+    ip:550.0,hP:457,er:208,bbP:175,hb:24,kP:585,qs:38,so:0,w:31,l:28,sv:16,bs:2,hd:5 },
+  { name:"Thicc Bois",                    wins:4,
+    r:212,s:317,d:90,t:8,hr:57,rbi:230,gw:27,bbB:174,kB:432,hbp:21,sac:29,sb:44,cs:13,
+    ip:490.1,hP:419,er:199,bbP:185,hb:15,kP:435,qs:30,so:0,w:31,l:35,sv:25,bs:6,hd:5 },
+  { name:"All ARRAEZ for the JUDGE",      wins:3,
+    r:293,s:323,d:105,t:8,hr:71,rbi:275,gw:29,bbB:255,kB:457,hbp:14,sac:26,sb:37,cs:10,
+    ip:537.0,hP:514,er:265,bbP:188,hb:25,kP:462,qs:30,so:0,w:32,l:40,sv:18,bs:6,hd:19 },
+  { name:"WITTnessing Greatness",         wins:3,
+    r:269,s:349,d:107,t:7,hr:69,rbi:260,gw:42,bbB:198,kB:459,hbp:14,sac:16,sb:30,cs:13,
+    ip:545.1,hP:506,er:249,bbP:183,hb:30,kP:487,qs:28,so:0,w:33,l:33,sv:16,bs:7,hd:16 },
+  { name:"Jung H King",                   wins:3,
+    r:277,s:323,d:80,t:13,hr:67,rbi:248,gw:27,bbB:243,kB:452,hbp:21,sac:15,sb:38,cs:14,
+    ip:483.2,hP:399,er:212,bbP:202,hb:24,kP:507,qs:25,so:0,w:33,l:30,sv:22,bs:4,hd:4 },
+  { name:"Back 2 Back CY Young",          wins:3,
+    r:298,s:320,d:91,t:5,hr:78,rbi:280,gw:34,bbB:241,kB:554,hbp:20,sac:24,sb:35,cs:8,
+    ip:569.0,hP:559,er:291,bbP:232,hb:25,kP:534,qs:29,so:0,w:24,l:43,sv:9,bs:9,hd:25 },
+  { name:"Dom's House of Fun",            wins:3,
+    r:270,s:309,d:92,t:5,hr:57,rbi:218,gw:30,bbB:209,kB:425,hbp:29,sac:15,sb:38,cs:4,
+    ip:538.0,hP:495,er:250,bbP:217,hb:19,kP:458,qs:28,so:0,w:32,l:38,sv:10,bs:5,hd:26 },
+  { name:"Stop looking at me Kwan",       wins:2,
+    r:269,s:337,d:91,t:2,hr:68,rbi:250,gw:34,bbB:210,kB:450,hbp:20,sac:21,sb:35,cs:13,
+    ip:512.1,hP:493,er:242,bbP:205,hb:15,kP:556,qs:30,so:0,w:29,l:32,sv:10,bs:6,hd:20 },
+  { name:"Raleighing My Way",             wins:2,
+    r:260,s:300,d:99,t:9,hr:70,rbi:230,gw:29,bbB:234,kB:558,hbp:24,sac:17,sb:31,cs:15,
+    ip:475.0,hP:444,er:215,bbP:175,hb:31,kP:475,qs:25,so:0,w:31,l:31,sv:25,bs:5,hd:7 },
+  { name:"MANNY MEN",                     wins:1,
+    r:307,s:336,d:100,t:11,hr:75,rbi:261,gw:32,bbB:267,kB:538,hbp:29,sac:18,sb:68,cs:20,
+    ip:546.2,hP:470,er:244,bbP:216,hb:25,kP:541,qs:34,so:1,w:34,l:30,sv:25,bs:8,hd:8 },
+  { name:"16 percent",                    wins:1,
+    r:296,s:303,d:81,t:9,hr:85,rbi:261,gw:28,bbB:257,kB:551,hbp:19,sac:10,sb:56,cs:11,
+    ip:553.1,hP:522,er:263,bbP:228,hb:16,kP:554,qs:23,so:0,w:39,l:34,sv:21,bs:6,hd:9 },
+];
+
+const COLS = [
+  { id:'r',   label:'R',     mult:1,    group:'bat+', desc:'Runs' },
+  { id:'s',   label:'1B',    mult:1,    group:'bat+', desc:'Singles' },
+  { id:'d',   label:'2B',    mult:2,    group:'bat+', desc:'Doubles' },
+  { id:'t',   label:'3B',    mult:3,    group:'bat+', desc:'Triples' },
+  { id:'hr',  label:'HR',    mult:4,    group:'bat+', desc:'Home Runs' },
+  { id:'rbi', label:'RBI',   mult:2,    group:'bat+', desc:'RBI' },
+  { id:'gw',  label:'GWRBI', mult:1,    group:'bat+', desc:'GW RBI' },
+  { id:'bbB', label:'BB',    mult:1,    group:'bat+', desc:'Walks (bat)' },
+  { id:'hbp', label:'HBP',   mult:1,    group:'bat+', desc:'Hit by Pitch' },
+  { id:'sac', label:'SAC',   mult:1,    group:'bat+', desc:'Sacrifices' },
+  { id:'sb',  label:'SB',    mult:2,    group:'bat+', desc:'Stolen Bases' },
+  { id:'kB',  label:'K',     mult:-1,   group:'bat-', desc:'K (batting)' },
+  { id:'cs',  label:'CS',    mult:-0.5, group:'bat-', desc:'Caught Stealing' },
+  { id:'ip',  label:'IP',    mult:3,    group:'pit+', desc:'Innings Pitched' },
+  { id:'kP',  label:'K',     mult:1,    group:'pit+', desc:'K (pitching)' },
+  { id:'qs',  label:'QS',    mult:2,    group:'pit+', desc:'Quality Starts' },
+  { id:'so',  label:'SHO',   mult:3,    group:'pit+', desc:'Shutouts' },
+  { id:'w',   label:'W',     mult:8,    group:'pit+', desc:'Pitcher Wins' },
+  { id:'sv',  label:'SV',    mult:4.5,  group:'pit+', desc:'Saves' },
+  { id:'hd',  label:'HD',    mult:2,    group:'pit+', desc:'Holds' },
+  { id:'hP',  label:'H',     mult:-1,   group:'pit-', desc:'Hits Allowed' },
+  { id:'er',  label:'ER',    mult:-2,   group:'pit-', desc:'Earned Runs' },
+  { id:'bbP', label:'BB',    mult:-1,   group:'pit-', desc:'BB Issued' },
+  { id:'hb',  label:'HB',    mult:-1,   group:'pit-', desc:'Hit Batters' },
+  { id:'l',   label:'L',     mult:-2,   group:'pit-', desc:'Pitcher Losses' },
+  { id:'bs',  label:'BS',    mult:-2,   group:'pit-', desc:'Blown Saves' },
+];
+
+const GROUP_TAG = {
+  'bat+': 'tag-bat-pos', 'bat-': 'tag-bat-neg',
+  'pit+': 'tag-pit-pos', 'pit-': 'tag-pit-neg',
+};
+const GROUP_LABEL = {
+  'bat+': 'Bat +', 'bat-': 'Bat −', 'pit+': 'Pit +', 'pit-': 'Pit −',
+};
+
+// ── Pearson r ─────────────────────────────────────────────────────────────────
+function pearson(x, y) {
+  const n = x.length;
+  const mx = x.reduce((a,b)=>a+b,0)/n;
+  const my = y.reduce((a,b)=>a+b,0)/n;
+  const num = x.reduce((s,xi,i)=>s+(xi-mx)*(y[i]-my),0);
+  const dx  = Math.sqrt(x.reduce((s,xi)=>s+(xi-mx)**2,0));
+  const dy  = Math.sqrt(y.reduce((s,yi)=>s+(yi-my)**2,0));
+  return dx*dy===0 ? 0 : num/(dx*dy);
+}
+
+const wins = RAW.map(t => t.wins);
+
+// Compute points per category per team, then correlate with wins
+const results = COLS.map(col => {
+  const pts = RAW.map(t => t[col.id] * col.mult);
+  const r   = pearson(pts, wins);
+  return { ...col, r, absR: Math.abs(r) };
+});
+
+// Sort by absolute correlation descending
+results.sort((a,b) => b.absR - a.absR);
+
+const SIG_THRESHOLD = 0.576; // |r| for p<0.05, df=10
+
+// ── Chart ─────────────────────────────────────────────────────────────────────
+const barColors = results.map(c => {
+  if (c.r >= SIG_THRESHOLD)  return 'rgba(74,222,128,0.75)';
+  if (c.r <= -SIG_THRESHOLD) return 'rgba(248,113,113,0.75)';
+  return c.r >= 0 ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)';
+});
+
+const ctx = document.getElementById('corrChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: results.map(c => `${c.desc} (${c.label})`),
+    datasets: [{
+      data: results.map(c => +c.r.toFixed(3)),
+      backgroundColor: barColors,
+      borderColor: barColors.map(c => c.replace('0.75','1').replace('0.25','0.5')),
+      borderWidth: 1,
+    }]
+  },
+  options: {
+    responsive: true,
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            const c = results[ctx.dataIndex];
+            const sig = c.absR >= SIG_THRESHOLD ? ' ✓ significant' : ' (not significant)';
+            return [`r = ${c.r.toFixed(3)}${sig}`, `Category: ${c.desc}`];
+          }
+        }
+      },
+      annotation: {
+        annotations: {
+          sigPos: {
+            type: 'line', scaleID: 'x', value: SIG_THRESHOLD,
+            borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1.5, borderDash: [5,4],
+            label: { content: 'p<.05', display: true, position: 'end',
+                     color: '#aaa', font: { size: 9 }, padding: 2,
+                     backgroundColor: 'rgba(0,0,0,0.4)' }
+          },
+          sigNeg: {
+            type: 'line', scaleID: 'x', value: -SIG_THRESHOLD,
+            borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1.5, borderDash: [5,4],
+            label: { content: 'p<.05', display: true, position: 'end',
+                     color: '#aaa', font: { size: 9 }, padding: 2,
+                     backgroundColor: 'rgba(0,0,0,0.4)' }
+          },
+          zero: {
+            type: 'line', scaleID: 'x', value: 0,
+            borderColor: 'rgba(255,255,255,0.15)', borderWidth: 1,
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        min: -1, max: 1,
+        title: { display: true, text: 'Pearson r  (correlation with wins)', color: '#aaa', font: { size: 11 } },
+        grid: { color: 'rgba(255,255,255,0.06)' },
+        ticks: { color: '#aaa', callback: v => v.toFixed(1) }
+      },
+      y: {
+        ticks: { color: '#ccc', font: { size: 11 } },
+        grid: { color: 'rgba(255,255,255,0.04)' }
+      }
+    }
+  }
+});
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+const tbody = document.getElementById('corrBody');
+results.forEach(c => {
+  const sig = c.absR >= SIG_THRESHOLD;
+  const barW = Math.round(c.absR * 80);
+  const barColor = c.r >= 0 ? '#4ade80' : '#f87171';
+  const barOpacity = sig ? '1' : '0.35';
+  tbody.innerHTML += `<tr>
+    <td>${c.desc}</td>
+    <td><span class="group-tag ${GROUP_TAG[c.group]}">${GROUP_LABEL[c.group]}</span></td>
+    <td style="color:${c.r>=0?'#4ade80':'#f87171'};font-weight:bold">${c.r.toFixed(3)}</td>
+    <td>
+      <span class="bar-inline" style="width:${barW}px;background:${barColor};opacity:${barOpacity}"></span>
+    </td>
+    <td class="${sig?'sig-yes':'sig-no'}">${sig ? '✓ Yes' : 'No'}</td>
+  </tr>`;
+});
+</script>
+</body>
+</html>

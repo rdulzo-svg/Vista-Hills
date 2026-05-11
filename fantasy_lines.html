@@ -42,244 +42,164 @@
     top: 0;
     z-index: 100;
   }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-right: 24px;
-    border-right: 1px solid var(--border);
-    margin-right: 20px;
-  }
-  .brand-logo {
-    background: var(--green);
-    color: #000;
-    font-weight: 900;
-    font-size: 11px;
-    padding: 5px 8px;
-    border-radius: 4px;
-    letter-spacing: 0.5px;
-    line-height: 1;
-  }
+  .brand { display: flex; align-items: center; gap: 10px; padding-right: 24px; border-right: 1px solid var(--border); margin-right: 20px; }
+  .brand-logo { background: var(--green); color: #000; font-weight: 900; font-size: 11px; padding: 5px 8px; border-radius: 4px; letter-spacing: 0.5px; line-height: 1; }
   .brand-text { line-height: 1.2; }
   .brand-name { font-size: 14px; font-weight: 700; }
   .brand-sub  { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-  .nav-tabs {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-  }
-  .nav-tab {
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--dim);
-    border-bottom: 2px solid transparent;
-    cursor: default;
-    letter-spacing: 0.3px;
-  }
-  .nav-tab.active {
-    color: var(--text);
-    border-bottom-color: var(--green);
-  }
-  .header-right {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    color: var(--dim);
-  }
-  .open-pill {
-    background: var(--green-dim);
-    color: var(--green);
-    border: 1px solid rgba(30,199,95,0.3);
-    border-radius: 4px;
-    padding: 3px 8px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-  }
+  .nav-tabs { display: flex; align-items: stretch; gap: 0; }
+  .nav-tab { display: flex; align-items: center; padding: 0 16px; font-size: 12px; font-weight: 600; color: var(--dim); border-bottom: 2px solid transparent; cursor: default; letter-spacing: 0.3px; }
+  .nav-tab.active { color: var(--text); border-bottom-color: var(--green); }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--dim); }
+  .open-pill { background: var(--green-dim); color: var(--green); border: 1px solid rgba(30,199,95,0.3); border-radius: 4px; padding: 3px 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
 
   /* ── Page Body ── */
   .page-body { max-width: 820px; margin: 0 auto; padding: 18px 16px; }
-
-  .section-label {
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* ── Method box ── */
-  .method-box {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--gold);
-    border-radius: 6px;
-    padding: 11px 14px;
-    font-size: 11px;
-    color: var(--dim);
-    margin-bottom: 18px;
-    line-height: 1.7;
-  }
+  .section-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .method-box { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--gold); border-radius: 6px; padding: 11px 14px; font-size: 11px; color: var(--dim); margin-bottom: 18px; line-height: 1.7; }
   .method-box strong { color: var(--text); }
-
-  /* ── Column header row ── */
-  .col-headers {
-    display: grid;
-    grid-template-columns: 1fr 146px 146px 120px;
-    gap: 6px;
-    padding: 0 14px 6px;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    text-align: center;
-  }
+  .col-headers { display: grid; grid-template-columns: 1fr 146px 146px 120px; gap: 6px; padding: 0 14px 6px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; text-align: center; }
   .col-headers span:first-child { text-align: left; }
 
   /* ── Matchup card ── */
-  .matchup-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin-bottom: 8px;
-    overflow: hidden;
-  }
-  .card-header {
-    background: var(--card-hdr);
-    border-bottom: 1px solid var(--border);
-    padding: 7px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+  .matchup-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+  .card-header { background: var(--card-hdr); border-bottom: 1px solid var(--border); padding: 7px 14px; display: flex; align-items: center; gap: 10px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
   .card-header .mu-label { color: var(--dim); font-weight: 700; font-size: 11px; letter-spacing: 0.5px; }
-  .card-header .mu-date { color: var(--muted); }
   .card-header .spacer { flex: 1; }
-  .card-header .line-note {
-    font-size: 10px;
-    color: var(--gold);
-    font-style: italic;
-    text-transform: none;
-    letter-spacing: 0;
-  }
+  .preview-btn { background: rgba(30,199,95,0.1); border: 1px solid rgba(30,199,95,0.25); color: var(--green); border-radius: 4px; padding: 3px 10px; font-size: 10px; font-weight: 700; cursor: pointer; letter-spacing: 0.3px; transition: background 0.12s; }
+  .preview-btn:hover { background: rgba(30,199,95,0.2); }
 
   /* ── Team row ── */
-  .team-row {
-    display: grid;
-    grid-template-columns: 1fr 146px 146px 120px;
-    gap: 6px;
-    padding: 9px 14px;
-    align-items: center;
-    border-bottom: 1px solid var(--border-lt);
-  }
+  .team-row { display: grid; grid-template-columns: 1fr 146px 146px 120px; gap: 6px; padding: 9px 14px; align-items: center; border-bottom: 1px solid var(--border-lt); }
   .team-row:last-of-type { border-bottom: none; }
-
   .team-info { display: flex; align-items: center; gap: 9px; min-width: 0; }
   .team-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .team-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .team-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
-
-  /* ── Bet button ── */
-  .bet-btn {
-    background: var(--btn);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 8px 10px;
-    text-align: center;
-    cursor: default;
-    transition: background 0.12s, border-color 0.12s;
-    user-select: none;
-    min-width: 0;
-  }
+  .bet-btn { background: var(--btn); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; text-align: center; cursor: default; transition: background 0.12s; user-select: none; }
   .bet-btn:hover { background: var(--btn-hover); }
   .bet-btn.fav { border-color: rgba(30,199,95,0.35); }
-  .btn-line { font-size: 13px; font-weight: 700; display: block; line-height: 1.3; white-space: nowrap; }
-  .btn-odds { font-size: 11px; color: var(--dim); display: block; margin-top: 2px; line-height: 1; }
+  .btn-line { font-size: 13px; font-weight: 700; display: block; line-height: 1.3; }
+  .btn-odds { font-size: 11px; color: var(--dim); display: block; margin-top: 2px; }
   .btn-odds.pos { color: var(--green); }
   .btn-odds.neg { color: #f87171; }
-
-  /* ── Proj footer ── */
-  .proj-footer {
-    background: #111d2b;
-    border-top: 1px solid var(--border-lt);
-    padding: 6px 14px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 10px;
-    color: var(--muted);
-    flex-wrap: wrap;
-  }
+  .proj-footer { background: #111d2b; border-top: 1px solid var(--border-lt); padding: 6px 14px; display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--muted); flex-wrap: wrap; }
   .proj-item { display: flex; align-items: center; gap: 5px; }
   .proj-dot { width: 7px; height: 7px; border-radius: 50%; }
   .proj-val { color: var(--dim); font-weight: 600; }
   .proj-sep { color: var(--border); margin: 0 4px; }
 
   /* ── Best bets ── */
-  .best-bets-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 8px;
-    margin-top: 4px;
-  }
-  .best-bet-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--green);
-    border-radius: 6px;
-    padding: 12px 14px;
-  }
+  .best-bets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin-top: 4px; }
+  .best-bet-card { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--green); border-radius: 6px; padding: 12px 14px; }
   .bb-label { font-size: 9px; color: var(--green); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px; }
   .bb-pick { font-size: 14px; font-weight: 700; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
-  .bb-odds-badge {
-    background: var(--green-dim);
-    color: var(--green);
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 12px;
-    font-weight: 700;
-  }
+  .bb-odds-badge { background: var(--green-dim); color: var(--green); border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
   .bb-desc { font-size: 11px; color: var(--dim); line-height: 1.5; }
 
-  /* ── Disclaimer ── */
-  .disclaimer {
-    font-size: 10px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 28px;
-    line-height: 1.7;
-    max-width: 580px;
-    margin-left: auto;
-    margin-right: auto;
+  /* ── Preview panel ── */
+  #preview-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 200;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.22s;
   }
+  #preview-overlay.open { opacity: 1; pointer-events: all; }
 
+  #preview-panel {
+    position: fixed; top: 0; right: -440px; width: 420px; height: 100vh;
+    background: #111e2c;
+    border-left: 1px solid var(--border);
+    z-index: 201;
+    overflow-y: auto;
+    transition: right 0.25s cubic-bezier(0.4,0,0.2,1);
+    display: flex; flex-direction: column;
+  }
+  #preview-panel.open { right: 0; }
+
+  .pv-header {
+    background: #0a1118;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .pv-title { font-size: 12px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.8px; }
+  .pv-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .pv-close:hover { color: var(--text); }
+
+  .pv-teams {
+    display: grid; grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .pv-team {
+    padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .pv-team + .pv-team { border-left: 1px solid var(--border); }
+  .pv-team-name { font-size: 12px; font-weight: 700; line-height: 1.3; }
+  .pv-team-rec { font-size: 10px; color: var(--muted); }
+  .pv-team-ml { font-size: 20px; font-weight: 800; margin-top: 4px; }
+  .pv-team-ml.fav { color: var(--green); }
+  .pv-team-ml.dog { color: #f87171; }
+
+  .pv-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .pv-section-title { font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+
+  .spark-wrap { margin-bottom: 10px; }
+  .spark-label { font-size: 10px; color: var(--dim); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .spark-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-card { background: rgba(255,255,255,0.04); border-radius: 6px; padding: 10px 12px; }
+  .form-team { font-size: 10px; color: var(--dim); margin-bottom: 6px; font-weight: 600; }
+  .form-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
+  .form-label { color: var(--muted); }
+  .form-val { font-weight: 600; }
+  .trend-up   { color: var(--green); }
+  .trend-down { color: #f87171; }
+  .trend-flat { color: var(--gold); }
+
+  .cat-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .cat-table th { color: var(--muted); font-weight: normal; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 6px; text-align: center; border-bottom: 1px solid var(--border); }
+  .cat-table th:first-child { text-align: left; }
+  .cat-table td { padding: 5px 6px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .cat-table td:first-child { text-align: left; color: var(--dim); }
+  .cat-win-a { color: var(--green); font-weight: 700; }
+  .cat-win-b { color: #f87171; font-weight: 700; }
+  .cat-edge-badge { font-size: 9px; padding: 1px 6px; border-radius: 10px; }
+  .edge-a { background: rgba(30,199,95,0.15); color: var(--green); }
+  .edge-b { background: rgba(248,113,113,0.15); color: #f87171; }
+  .edge-tie { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+  .h2h-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 11px; }
+  .h2h-row:last-child { border-bottom: none; }
+  .h2h-mu { color: var(--muted); font-size: 10px; }
+  .h2h-score { color: var(--dim); }
+  .h2h-winner { font-weight: 700; }
+  .h2h-none { color: var(--muted); font-size: 12px; font-style: italic; }
+  .h2h-series { font-size: 11px; color: var(--dim); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+
+  .proj-big { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .proj-team-score { text-align: center; }
+  .proj-team-name { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .proj-score-big { font-size: 26px; font-weight: 800; }
+  .proj-vs { color: var(--muted); font-size: 13px; font-weight: 700; }
+  .proj-lines { display: flex; gap: 16px; justify-content: center; font-size: 11px; color: var(--dim); }
+  .proj-line-item { text-align: center; }
+  .proj-line-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .proj-line-val { font-weight: 700; font-size: 13px; }
+
+  /* ── Misc ── */
+  .disclaimer { font-size: 10px; color: var(--muted); text-align: center; margin-top: 28px; line-height: 1.7; max-width: 580px; margin-left: auto; margin-right: auto; }
   a.back-link { color: var(--muted); font-size: 11px; text-decoration: none; display: inline-block; margin-bottom: 14px; }
   a.back-link:hover { color: var(--dim); }
 </style>
 </head>
 <body>
 
-<!-- Site Header -->
 <header class="site-header">
   <div class="brand">
     <div class="brand-logo">VH</div>
@@ -299,131 +219,344 @@
   </div>
 </header>
 
-<!-- Page Body -->
 <div class="page-body">
   <a class="back-link" href="index.html">← Back to Vista Hills</a>
-
   <div class="method-box">
     <strong>Line methodology:</strong>
-    Spread &amp; total magnitude derived from blended score projection (40% season avg + 60% last-2-week avg).
-    Moneyline win probability is a hybrid: 70% all-play win % (season quality) + 30% projected scores (recent form).
-    Spread direction is constrained to match the ML favorite. Standard −110 juice on spread &amp; total. ~4.8% overround on ML.
-    <strong>For entertainment only.</strong>
+    Spread &amp; total magnitude from blended score projection (40% season avg + 60% last-2-week avg).
+    ML win probability: 70% all-play win % + 30% projected scores. Spread direction constrained to match ML favorite.
+    Standard −110 juice on spread &amp; total. ~4.8% overround on ML. <strong>For entertainment only.</strong>
   </div>
-
   <div class="section-label">Matchup 7 &nbsp;·&nbsp; May 11–17, 2026</div>
-
   <div class="col-headers">
-    <span>Team</span>
-    <span>Spread</span>
-    <span>Total</span>
-    <span>Moneyline</span>
+    <span>Team</span><span>Spread</span><span>Total</span><span>Moneyline</span>
   </div>
-
   <div id="matchups-container"></div>
-
   <div class="section-label" style="margin-top:26px">Model's Best Bets</div>
   <div class="best-bets-grid" id="best-bets"></div>
+  <p class="disclaimer">Vista Hills Fantasy Sportsbook is for entertainment purposes only. No real money wagering occurs.<br>
+  Lines generated from season scoring data through Matchup 6. Injury and roster changes not reflected.</p>
+</div>
 
-  <p class="disclaimer">
-    Vista Hills Fantasy Sportsbook is for entertainment purposes only. No real money wagering occurs.<br>
-    Lines generated from season scoring data through Matchup 6. Small sample size (n=6) means high variance.<br>
-    All-play win % used as talent proxy. Injury and roster changes not reflected.
-  </p>
+<!-- Preview panel -->
+<div id="preview-overlay" onclick="closePreview()"></div>
+<div id="preview-panel">
+  <div class="pv-header">
+    <span class="pv-title">Matchup Preview</span>
+    <button class="pv-close" onclick="closePreview()">✕</button>
+  </div>
+  <div id="preview-content"></div>
 </div>
 
 <script>
 // ── Team data ─────────────────────────────────────────────────────────────────
 const TEAMS = {
-  IR: { name: "Ima Ride For My MF McGGonicle", color: "#e63946", wins: 6, losses: 0, apW: 48,
-        scores: [755.0, 538.5, 554.0, 411.0, 409.5, 443.5] },
-  MN: { name: "MANNY MEN",                     color: "#f77f00", wins: 1, losses: 5, apW: 44,
-        scores: [723.0, 546.5, 401.0, 501.0, 409.0, 429.0] },
-  WG: { name: "WITTnessing Greatness",          color: "#2a9d8f", wins: 3, losses: 3, apW: 38,
-        scores: [656.5, 354.5, 394.0, 508.0, 469.5, 381.0] },
-  MM: { name: "Mike and Mike In The Mornin'",   color: "#457b9d", wins: 5, losses: 1, apW: 36,
-        scores: [567.5, 467.5, 475.0, 461.5, 449.0, 401.0] },
-  AA: { name: "All ARRAEZ for the JUDGE",       color: "#6a4c93", wins: 3, losses: 3, apW: 36,
-        scores: [646.5, 537.0, 296.0, 391.5, 494.5, 413.5] },
-  SP: { name: "16 percent",                     color: "#90be6d", wins: 1, losses: 5, apW: 34,
-        scores: [595.5, 484.5, 468.0, 458.0, 434.0, 392.0] },
-  JK: { name: "Jung H King",                    color: "#ff6b6b", wins: 3, losses: 3, apW: 33,
-        scores: [812.5, 334.0, 475.5, 392.0, 276.5, 457.5] },
-  SK: { name: "Stop looking at me Kwan",        color: "#4cc9f0", wins: 2, losses: 4, apW: 30,
-        scores: [643.0, 390.0, 377.5, 369.0, 414.5, 467.5] },
-  BB: { name: "Back 2 Back CY Young",           color: "#e9c46a", wins: 3, losses: 3, apW: 29,
-        scores: [522.5, 325.5, 478.0, 469.0, 476.5, 326.0] },
-  TB: { name: "Thicc Bois",                     color: "#f4a261", wins: 4, losses: 2, apW: 28,
-        scores: [506.0, 363.0, 481.5, 501.5, 327.5, 379.5] },
-  DH: { name: "Dom's House of Fun",             color: "#a8dadc", wins: 3, losses: 3, apW: 24,
-        scores: [603.5, 300.5, 510.5, 310.0, 438.5, 375.0] },
-  RM: { name: "Raleighing My Way",              color: "#52b788", wins: 2, losses: 4, apW: 16,
-        scores: [505.0, 484.0, 321.5, 429.5, 407.0, 351.0] },
+  IR: { name:"Ima Ride For My MF McGGonicle", color:"#e63946", wins:6, losses:0, apW:48, scores:[755.0,538.5,554.0,411.0,409.5,443.5] },
+  MN: { name:"MANNY MEN",                     color:"#f77f00", wins:1, losses:5, apW:44, scores:[723.0,546.5,401.0,501.0,409.0,429.0] },
+  WG: { name:"WITTnessing Greatness",         color:"#2a9d8f", wins:3, losses:3, apW:38, scores:[656.5,354.5,394.0,508.0,469.5,381.0] },
+  MM: { name:"Mike and Mike In The Mornin'",  color:"#457b9d", wins:5, losses:1, apW:36, scores:[567.5,467.5,475.0,461.5,449.0,401.0] },
+  AA: { name:"All ARRAEZ for the JUDGE",      color:"#6a4c93", wins:3, losses:3, apW:36, scores:[646.5,537.0,296.0,391.5,494.5,413.5] },
+  SP: { name:"16 percent",                    color:"#90be6d", wins:1, losses:5, apW:34, scores:[595.5,484.5,468.0,458.0,434.0,392.0] },
+  JK: { name:"Jung H King",                   color:"#ff6b6b", wins:3, losses:3, apW:33, scores:[812.5,334.0,475.5,392.0,276.5,457.5] },
+  SK: { name:"Stop looking at me Kwan",       color:"#4cc9f0", wins:2, losses:4, apW:30, scores:[643.0,390.0,377.5,369.0,414.5,467.5] },
+  BB: { name:"Back 2 Back CY Young",          color:"#e9c46a", wins:3, losses:3, apW:29, scores:[522.5,325.5,478.0,469.0,476.5,326.0] },
+  TB: { name:"Thicc Bois",                    color:"#f4a261", wins:4, losses:2, apW:28, scores:[506.0,363.0,481.5,501.5,327.5,379.5] },
+  DH: { name:"Dom's House of Fun",            color:"#a8dadc", wins:3, losses:3, apW:24, scores:[603.5,300.5,510.5,310.0,438.5,375.0] },
+  RM: { name:"Raleighing My Way",             color:"#52b788", wins:2, losses:4, apW:16, scores:[505.0,484.0,321.5,429.5,407.0,351.0] },
 };
 
-// ── Matchup 7 schedule ────────────────────────────────────────────────────────
-const MATCHUPS = [
-  ["SP","JK"], ["RM","TB"], ["BB","MM"],
-  ["WG","DH"], ["MN","AA"], ["SK","IR"],
+// ── Category stats (for panel) ────────────────────────────────────────────────
+const RAW_STATS = {
+  IR: {r:321,s:338,d:109,t:15,hr:88,rbi:308,gw:38,bbB:265,kB:519,sb:59,ip:469.1,hP:391,er:184,bbP:171,kP:443,qs:36,w:36,sv:7,hd:22,l:29,bs:6},
+  MN: {r:307,s:336,d:100,t:11,hr:75,rbi:261,gw:32,bbB:267,kB:538,sb:68,ip:546.2,hP:470,er:244,bbP:216,kP:541,qs:34,w:34,sv:25,hd:8, l:30,bs:8},
+  WG: {r:269,s:349,d:107,t:7, hr:69,rbi:260,gw:42,bbB:198,kB:459,sb:30,ip:545.1,hP:506,er:249,bbP:183,kP:487,qs:28,w:33,sv:16,hd:16,l:33,bs:7},
+  MM: {r:249,s:269,d:87, t:4, hr:64,rbi:268,gw:29,bbB:197,kB:556,sb:53,ip:550.0,hP:457,er:208,bbP:175,kP:585,qs:38,w:31,sv:16,hd:5, l:28,bs:2},
+  AA: {r:293,s:323,d:105,t:8, hr:71,rbi:275,gw:29,bbB:255,kB:457,sb:37,ip:537.0,hP:514,er:265,bbP:188,kP:462,qs:30,w:32,sv:18,hd:19,l:40,bs:6},
+  SP: {r:296,s:303,d:81, t:9, hr:85,rbi:261,gw:28,bbB:257,kB:551,sb:56,ip:553.1,hP:522,er:263,bbP:228,kP:554,qs:23,w:39,sv:21,hd:9, l:34,bs:6},
+  JK: {r:277,s:323,d:80, t:13,hr:67,rbi:248,gw:27,bbB:243,kB:452,sb:38,ip:483.2,hP:399,er:212,bbP:202,kP:507,qs:25,w:33,sv:22,hd:4, l:30,bs:4},
+  SK: {r:269,s:337,d:91, t:2, hr:68,rbi:250,gw:34,bbB:210,kB:450,sb:35,ip:512.1,hP:493,er:242,bbP:205,kP:556,qs:30,w:29,sv:10,hd:20,l:32,bs:6},
+  BB: {r:298,s:320,d:91, t:5, hr:78,rbi:280,gw:34,bbB:241,kB:554,sb:35,ip:569.0,hP:559,er:291,bbP:232,kP:534,qs:29,w:24,sv:9, hd:25,l:43,bs:9},
+  TB: {r:212,s:317,d:90, t:8, hr:57,rbi:230,gw:27,bbB:174,kB:432,sb:44,ip:490.1,hP:419,er:199,bbP:185,kP:435,qs:30,w:31,sv:25,hd:5, l:35,bs:6},
+  DH: {r:270,s:309,d:92, t:5, hr:57,rbi:218,gw:30,bbB:209,kB:425,sb:38,ip:538.0,hP:495,er:250,bbP:217,kP:458,qs:28,w:32,sv:10,hd:26,l:38,bs:5},
+  RM: {r:260,s:300,d:99, t:9, hr:70,rbi:230,gw:29,bbB:234,kB:558,sb:31,ip:475.0,hP:444,er:215,bbP:175,kP:475,qs:25,w:31,sv:25,hd:7, l:31,bs:5},
+};
+
+const CATS = [
+  {id:'r',   label:'R',    mult:1,   group:'bat', desc:'Runs'},
+  {id:'hr',  label:'HR',   mult:4,   group:'bat', desc:'Home Runs'},
+  {id:'rbi', label:'RBI',  mult:2,   group:'bat', desc:'RBI'},
+  {id:'sb',  label:'SB',   mult:2,   group:'bat', desc:'Stolen Bases'},
+  {id:'kB',  label:'K',    mult:-1,  group:'bat', desc:'Strikeouts (bat)'},
+  {id:'ip',  label:'IP',   mult:3,   group:'pit', desc:'Innings Pitched'},
+  {id:'w',   label:'W',    mult:8,   group:'pit', desc:'Pitcher Wins'},
+  {id:'kP',  label:'K',    mult:1,   group:'pit', desc:'Strikeouts (pit)'},
+  {id:'qs',  label:'QS',   mult:2,   group:'pit', desc:'Quality Starts'},
+  {id:'sv',  label:'SV',   mult:4.5, group:'pit', desc:'Saves'},
+  {id:'er',  label:'ER',   mult:-2,  group:'pit', desc:'Earned Runs'},
+  {id:'hP',  label:'H',    mult:-1,  group:'pit', desc:'Hits Allowed'},
 ];
 
-const AP_TOTAL = 66;
-const JUICE    = 1.0476; // 4.76% overround — standard -110 line on pick-em
+// ── All prior matchup results (M1-M6) ────────────────────────────────────────
+// [teamA, teamB, winner, matchup#, scoreA, scoreB]
+const HISTORY = [
+  ["SP","RM","SP",1,595.5,505.0], ["JK","SK","JK",1,812.5,643.0], ["IR","MN","IR",1,755.0,723.0],
+  ["AA","WG","WG",1,646.5,656.5], ["DH","BB","DH",1,603.5,522.5], ["MM","TB","MM",1,567.5,506.0],
+  ["SP","IR","IR",2,484.5,538.5], ["JK","RM","RM",2,334.0,484.0], ["SK","AA","AA",2,390.0,537.0],
+  ["MN","DH","MN",2,546.5,300.5], ["WG","MM","MM",2,354.5,467.5], ["BB","TB","TB",2,325.5,363.0],
+  ["DH","SP","DH",3,510.5,468.0], ["RM","IR","IR",3,321.5,554.0], ["AA","JK","JK",3,296.0,475.5],
+  ["MM","SK","MM",3,475.0,377.5], ["TB","MN","TB",3,481.5,401.0], ["BB","WG","BB",3,478.0,394.0],
+  ["SP","TB","TB",4,458.0,501.5], ["AA","RM","RM",4,391.5,429.5], ["IR","DH","IR",4,411.0,310.0],
+  ["JK","MM","MM",4,392.0,461.5], ["SK","BB","BB",4,369.0,469.0], ["MN","WG","WG",4,501.0,508.0],
+  ["WG","SP","WG",5,469.5,434.0], ["RM","DH","DH",5,407.0,438.5], ["MM","AA","AA",5,449.0,494.5],
+  ["TB","IR","IR",5,327.5,409.5], ["BB","JK","BB",5,476.5,276.5], ["MN","SK","SK",5,409.0,414.5],
+  ["SP","SK","SK",6,392.0,467.5], ["MM","RM","MM",6,401.0,351.0], ["DH","TB","TB",6,375.0,379.5],
+  ["AA","BB","AA",6,413.5,326.0], ["IR","WG","IR",6,443.5,381.0], ["JK","MN","JK",6,457.5,429.0],
+];
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── League average scores by week ─────────────────────────────────────────────
+const LEAGUE_AVGS = [628.0, 427.1, 436.0, 433.4, 418.0, 401.4];
+const WEEK_LABELS = ['Wk1','Wk2','Wk3','Wk4','Wk5','Wk6'];
+
+const AP_TOTAL = 66;
+const JUICE    = 1.0476;
+const matchupData = [];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function avg(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
 
 function projScore(key) {
   const t = TEAMS[key];
-  const seasonAvg = avg(t.scores);
-  const last2Avg  = avg(t.scores.slice(-2));
-  return 0.4 * seasonAvg + 0.6 * last2Avg;
+  return 0.4 * avg(t.scores) + 0.6 * avg(t.scores.slice(-2));
 }
 
-function toAmericanML(winProb) {
-  const p = winProb * JUICE;
-  if (p >= 0.5) {
-    return Math.round(-(p / (1 - p)) * 100 / 5) * 5;  // negative, round to 5
-  } else {
-    return Math.round(((1 - p) / p) * 100 / 5) * 5;   // positive, round to 5
-  }
+function toAmericanML(p) {
+  const jp = p * JUICE;
+  if (jp >= 0.5) return Math.round(-(jp/(1-jp))*100/5)*5;
+  else           return Math.round(((1-jp)/jp)*100/5)*5;
 }
 
-function fmtML(ml) {
-  return ml > 0 ? `+${ml}` : `${ml}`;
-}
-
-function fmtSpread(val) {
-  const rounded = Math.round(val * 2) / 2;  // nearest 0.5
-  if (Math.abs(rounded) < 0.5) return 'PK';
-  return rounded > 0 ? `+${rounded.toFixed(1)}` : `${rounded.toFixed(1)}`;
-}
+function fmtML(ml) { return ml > 0 ? `+${ml}` : `${ml}`; }
 
 function computeLines(keyA, keyB) {
   const tA = TEAMS[keyA], tB = TEAMS[keyB];
   const projA = projScore(keyA), projB = projScore(keyB);
-
-  // ML win probability: 70% all-play %, 30% projected scores (blended)
-  const apRatioA  = (tA.apW / AP_TOTAL) / (tA.apW / AP_TOTAL + tB.apW / AP_TOTAL);
+  const apRatioA  = (tA.apW/AP_TOTAL) / (tA.apW/AP_TOTAL + tB.apW/AP_TOTAL);
   const projRatioA = projA / (projA + projB);
-  const pA = 0.70 * apRatioA + 0.30 * projRatioA;
+  const pA = 0.70*apRatioA + 0.30*projRatioA;
   const pB = 1 - pA;
-
-  const mlA = toAmericanML(pA);
-  const mlB = toAmericanML(pB);
-
-  // Spread: magnitude from projected score difference, direction forced to match ML
-  const aIsMLFav  = pA >= pB;
-  const spreadMag = Math.floor(Math.abs(projA - projB)) + 0.5; // always a half-point
+  const mlA = toAmericanML(pA), mlB = toAmericanML(pB);
+  const aIsMLFav = pA >= pB;
+  const spreadMag = Math.floor(Math.abs(projA - projB)) + 0.5;
   const spreadLineA = aIsMLFav ? -spreadMag : +spreadMag;
   const spreadLineB = aIsMLFav ? +spreadMag : -spreadMag;
-
-  // Total from projected scores
-  const total     = projA + projB;
-  const totalLine = Math.round(total * 2) / 2;
-
+  const total = projA + projB;
+  const totalLine = Math.round(total*2)/2;
   return { projA, projB, total, totalLine, spreadLineA, spreadLineB, mlA, mlB, pA, pB };
 }
+
+// ── Sparkline SVG ─────────────────────────────────────────────────────────────
+function buildSpark(scores, color) {
+  const W = 362, H = 56;
+  const all = [...scores, ...LEAGUE_AVGS];
+  const lo = Math.min(...all) * 0.93, hi = Math.max(...all) * 1.04;
+  const n  = scores.length;
+  const bW = W / n;
+  const toY = v => H - ((v - lo) / (hi - lo)) * H;
+
+  const bars = scores.map((s,i) => {
+    const bh = ((s - lo)/(hi - lo)) * H;
+    const x  = i * bW + 2;
+    return `<rect x="${x.toFixed(1)}" y="${(H-bh).toFixed(1)}" width="${(bW-4).toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${color}" opacity="0.8"/>
+            <text x="${(i*bW+bW/2).toFixed(1)}" y="${H+13}" font-size="9" fill="#4d6275" text-anchor="middle">${s.toFixed(0)}</text>`;
+  }).join('');
+
+  const avgPts = LEAGUE_AVGS.map((v,i) => `${(i*bW+bW/2).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
+  const avgLine = `<polyline points="${avgPts}" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+
+  return `<svg width="${W}" height="${H+18}" overflow="visible" style="display:block">${bars}${avgLine}</svg>`;
+}
+
+// ── H2H lookup ────────────────────────────────────────────────────────────────
+function getH2H(keyA, keyB) {
+  return HISTORY.filter(([a,b]) => (a===keyA&&b===keyB)||(a===keyB&&b===keyA));
+}
+
+// ── Category comparison ───────────────────────────────────────────────────────
+function getCatEdge(keyA, keyB) {
+  const rA = RAW_STATS[keyA], rB = RAW_STATS[keyB];
+  return CATS.map(c => ({
+    ...c,
+    ptsA: +(rA[c.id] * c.mult).toFixed(1),
+    ptsB: +(rB[c.id] * c.mult).toFixed(1),
+  })).map(c => ({ ...c, diff: c.ptsA - c.ptsB }))
+     .sort((a,b) => Math.abs(b.diff) - Math.abs(a.diff));
+}
+
+// ── Open preview panel ────────────────────────────────────────────────────────
+function openPreview(idx) {
+  const { keyA, keyB, L } = matchupData[idx];
+  const tA = TEAMS[keyA], tB = TEAMS[keyB];
+
+  // Form stats
+  const seasonA = avg(tA.scores), last2A = avg(tA.scores.slice(-2));
+  const seasonB = avg(tB.scores), last2B = avg(tB.scores.slice(-2));
+  const trendA = last2A - seasonA, trendB = last2B - seasonB;
+  const trendCls = d => d > 10 ? 'trend-up' : d < -10 ? 'trend-down' : 'trend-flat';
+  const trendIcon = d => d > 10 ? '▲' : d < -10 ? '▼' : '→';
+
+  // H2H
+  const h2h = getH2H(keyA, keyB);
+  let winsA = 0, winsB = 0;
+  const h2hRows = h2h.map(([a,b,winner,mu,sA,sB]) => {
+    const aIsA = a === keyA;
+    const scoreA = aIsA ? sA : sB, scoreB = aIsA ? sB : sA;
+    const aWon = winner === keyA;
+    if (aWon) winsA++; else winsB++;
+    const wName = aWon ? tA.name.split(' ')[0] : tB.name.split(' ')[0];
+    return `<div class="h2h-row">
+      <span class="h2h-mu">M${mu}</span>
+      <span class="h2h-winner" style="color:${aWon?tA.color:tB.color}">${wName} won</span>
+      <span class="h2h-score">${scoreA.toFixed(1)} – ${scoreB.toFixed(1)}</span>
+    </div>`;
+  }).join('');
+
+  const h2hSeries = h2h.length > 0
+    ? `<div class="h2h-series">Season series: <strong style="color:${winsA>winsB?tA.color:winsB>winsA?tB.color:'var(--dim)'}">${winsA > winsB ? tA.name.split(' ')[0]+' leads' : winsB > winsA ? tB.name.split(' ')[0]+' leads' : 'Tied'} ${winsA}–${winsB}</strong></div>`
+    : '';
+
+  // Category edge
+  const edges = getCatEdge(keyA, keyB).slice(0, 8);
+  const catRows = edges.map(c => {
+    const aWins = c.diff > 0;
+    const tie   = Math.abs(c.diff) < 1;
+    const badge = tie   ? `<span class="cat-edge-badge edge-tie">—</span>`
+                : aWins ? `<span class="cat-edge-badge edge-a">${tA.name.split(' ')[0]}</span>`
+                        : `<span class="cat-edge-badge edge-b">${tB.name.split(' ')[0]}</span>`;
+    return `<tr>
+      <td>${c.desc}</td>
+      <td class="${aWins&&!tie?'cat-win-a':''}">${c.ptsA.toFixed(0)}</td>
+      <td class="${!aWins&&!tie?'cat-win-b':''}">${c.ptsB.toFixed(0)}</td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
+
+  // Spread display
+  const spA = (L.spreadLineA > 0 ? '+' : '') + L.spreadLineA.toFixed(1);
+  const spB = (L.spreadLineB > 0 ? '+' : '') + L.spreadLineB.toFixed(1);
+  const aIsMLFav = L.pA >= L.pB;
+
+  document.getElementById('preview-content').innerHTML = `
+    <!-- Teams header -->
+    <div class="pv-teams">
+      <div class="pv-team">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${tA.color}"></span>
+          <span class="pv-team-name">${tA.name}</span>
+        </div>
+        <div class="pv-team-rec">${tA.wins}–${tA.losses} &nbsp;·&nbsp; ${tA.apW}/${AP_TOTAL} AP</div>
+        <div class="pv-team-ml ${aIsMLFav?'fav':'dog'}">${fmtML(L.mlA)}</div>
+      </div>
+      <div class="pv-team">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${tB.color}"></span>
+          <span class="pv-team-name">${tB.name}</span>
+        </div>
+        <div class="pv-team-rec">${tB.wins}–${tB.losses} &nbsp;·&nbsp; ${tB.apW}/${AP_TOTAL} AP</div>
+        <div class="pv-team-ml ${!aIsMLFav?'fav':'dog'}">${fmtML(L.mlB)}</div>
+      </div>
+    </div>
+
+    <!-- Score trend -->
+    <div class="pv-section">
+      <div class="pv-section-title">Score trend — last 6 weeks <span style="color:var(--muted);font-style:italic;font-weight:normal;text-transform:none">dashed = league avg</span></div>
+      <div class="spark-wrap">
+        <div class="spark-label"><span class="spark-dot" style="background:${tA.color}"></span>${tA.name.split(' ')[0]}</div>
+        ${buildSpark(tA.scores, tA.color)}
+      </div>
+      <div class="spark-wrap" style="margin-top:12px">
+        <div class="spark-label"><span class="spark-dot" style="background:${tB.color}"></span>${tB.name.split(' ')[0]}</div>
+        ${buildSpark(tB.scores, tB.color)}
+      </div>
+    </div>
+
+    <!-- Recent form -->
+    <div class="pv-section">
+      <div class="pv-section-title">Recent form</div>
+      <div class="form-grid">
+        <div class="form-card">
+          <div class="form-team" style="color:${tA.color}">${tA.name.split(' ')[0]}</div>
+          <div class="form-row"><span class="form-label">Season avg</span><span class="form-val">${seasonA.toFixed(1)}</span></div>
+          <div class="form-row"><span class="form-label">Last 2 wks</span><span class="form-val">${last2A.toFixed(1)}</span></div>
+          <div class="form-row"><span class="form-label">Trend</span><span class="form-val ${trendCls(trendA)}">${trendIcon(trendA)} ${trendA>0?'+':''}${trendA.toFixed(1)}</span></div>
+          <div class="form-row"><span class="form-label">Projected</span><span class="form-val">${L.projA.toFixed(1)}</span></div>
+        </div>
+        <div class="form-card">
+          <div class="form-team" style="color:${tB.color}">${tB.name.split(' ')[0]}</div>
+          <div class="form-row"><span class="form-label">Season avg</span><span class="form-val">${seasonB.toFixed(1)}</span></div>
+          <div class="form-row"><span class="form-label">Last 2 wks</span><span class="form-val">${last2B.toFixed(1)}</span></div>
+          <div class="form-row"><span class="form-label">Trend</span><span class="form-val ${trendCls(trendB)}">${trendIcon(trendB)} ${trendB>0?'+':''}${trendB.toFixed(1)}</span></div>
+          <div class="form-row"><span class="form-label">Projected</span><span class="form-val">${L.projB.toFixed(1)}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category edge -->
+    <div class="pv-section">
+      <div class="pv-section-title">Category edge (top 8 by margin, season totals)</div>
+      <table class="cat-table">
+        <thead><tr><th>Category</th><th>${tA.name.split(' ')[0]}</th><th>${tB.name.split(' ')[0]}</th><th>Edge</th></tr></thead>
+        <tbody>${catRows}</tbody>
+      </table>
+    </div>
+
+    <!-- H2H -->
+    <div class="pv-section">
+      <div class="pv-section-title">Head-to-head history (M1–M6)</div>
+      ${h2h.length > 0 ? h2hRows + h2hSeries : '<div class="h2h-none">These teams have not faced each other yet this season.</div>'}
+    </div>
+
+    <!-- Projected -->
+    <div class="pv-section">
+      <div class="pv-section-title">This week's projection</div>
+      <div class="proj-big">
+        <div class="proj-team-score">
+          <div class="proj-team-name" style="color:${tA.color}">${tA.name.split(' ')[0]}</div>
+          <div class="proj-score-big">${L.projA.toFixed(1)}</div>
+        </div>
+        <div class="proj-vs">vs</div>
+        <div class="proj-team-score">
+          <div class="proj-team-name" style="color:${tB.color}">${tB.name.split(' ')[0]}</div>
+          <div class="proj-score-big">${L.projB.toFixed(1)}</div>
+        </div>
+      </div>
+      <div class="proj-lines">
+        <div class="proj-line-item">
+          <div class="proj-line-label">Spread</div>
+          <div class="proj-line-val">${spA} / ${spB}</div>
+        </div>
+        <div class="proj-line-item">
+          <div class="proj-line-label">Total</div>
+          <div class="proj-line-val">O/U ${L.totalLine.toFixed(1)}</div>
+        </div>
+        <div class="proj-line-item">
+          <div class="proj-line-label">Total proj</div>
+          <div class="proj-line-val">${L.total.toFixed(1)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('preview-overlay').classList.add('open');
+  document.getElementById('preview-panel').classList.add('open');
+}
+
+function closePreview() {
+  document.getElementById('preview-overlay').classList.remove('open');
+  document.getElementById('preview-panel').classList.remove('open');
+}
+
+// ── Matchup 7 schedule ────────────────────────────────────────────────────────
+const MATCHUPS = [["SP","JK"],["RM","TB"],["BB","MM"],["WG","DH"],["MN","AA"],["SK","IR"]];
 
 // ── Render ────────────────────────────────────────────────────────────────────
 const container = document.getElementById('matchups-container');
@@ -432,127 +565,70 @@ const bestBetsData = [];
 MATCHUPS.forEach(([keyA, keyB]) => {
   const tA = TEAMS[keyA], tB = TEAMS[keyB];
   const L  = computeLines(keyA, keyB);
+  const idx = matchupData.length;
+  matchupData.push({ keyA, keyB, L });
 
   const aIsMLFav = L.pA >= L.pB;
   const aIsProjFav = L.spreadLineA < 0;
-
   const dotA = `<span class="team-dot" style="background:${tA.color}"></span>`;
   const dotB = `<span class="team-dot" style="background:${tB.color}"></span>`;
-
   const mlClassA = L.mlA < 0 ? 'neg' : 'pos';
   const mlClassB = L.mlB < 0 ? 'neg' : 'pos';
-
   const spA = (L.spreadLineA > 0 ? '+' : '') + L.spreadLineA.toFixed(1);
   const spB = (L.spreadLineB > 0 ? '+' : '') + L.spreadLineB.toFixed(1);
-
-  const note = '';
 
   const card = document.createElement('div');
   card.className = 'matchup-card';
   card.innerHTML = `
     <div class="card-header">
       <span class="mu-label">M7</span>
-      <span class="mu-date">May 11–17, 2026</span>
+      <span style="color:var(--muted)">May 11–17, 2026</span>
       <span class="spacer"></span>
-      ${note}
+      <button class="preview-btn" onclick="openPreview(${idx})">▶ Preview</button>
     </div>
-
-    <!-- Team A row -->
     <div class="team-row">
-      <div class="team-info">
-        ${dotA}
-        <div class="team-name-wrap" style="min-width:0">
-          <div class="team-name">${tA.name}</div>
-          <div class="team-meta">${tA.wins}–${tA.losses} &nbsp;·&nbsp; AP ${tA.apW}/${AP_TOTAL}</div>
-        </div>
-      </div>
-      <div class="bet-btn${aIsProjFav ? ' fav' : ''}">
-        <span class="btn-line">${spA}</span>
-        <span class="btn-odds">−110</span>
-      </div>
-      <div class="bet-btn">
-        <span class="btn-line">O ${L.totalLine.toFixed(1)}</span>
-        <span class="btn-odds">−110</span>
-      </div>
-      <div class="bet-btn${aIsMLFav ? ' fav' : ''}">
-        <span class="btn-line ${mlClassA}">${fmtML(L.mlA)}</span>
-        <span class="btn-odds">${(L.pA*100).toFixed(0)}% win</span>
-      </div>
+      <div class="team-info">${dotA}<div style="min-width:0"><div class="team-name">${tA.name}</div><div class="team-meta">${tA.wins}–${tA.losses} &nbsp;·&nbsp; AP ${tA.apW}/${AP_TOTAL}</div></div></div>
+      <div class="bet-btn${aIsProjFav?' fav':''}"><span class="btn-line">${spA}</span><span class="btn-odds">−110</span></div>
+      <div class="bet-btn"><span class="btn-line">O ${L.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span></div>
+      <div class="bet-btn${aIsMLFav?' fav':''}"><span class="btn-line ${mlClassA}">${fmtML(L.mlA)}</span><span class="btn-odds">${(L.pA*100).toFixed(0)}% win</span></div>
     </div>
-
-    <!-- Team B row -->
     <div class="team-row">
-      <div class="team-info">
-        ${dotB}
-        <div class="team-name-wrap" style="min-width:0">
-          <div class="team-name">${tB.name}</div>
-          <div class="team-meta">${tB.wins}–${tB.losses} &nbsp;·&nbsp; AP ${tB.apW}/${AP_TOTAL}</div>
-        </div>
-      </div>
-      <div class="bet-btn${!aIsProjFav ? ' fav' : ''}">
-        <span class="btn-line">${spB}</span>
-        <span class="btn-odds">−110</span>
-      </div>
-      <div class="bet-btn">
-        <span class="btn-line">U ${L.totalLine.toFixed(1)}</span>
-        <span class="btn-odds">−110</span>
-      </div>
-      <div class="bet-btn${!aIsMLFav ? ' fav' : ''}">
-        <span class="btn-line ${mlClassB}">${fmtML(L.mlB)}</span>
-        <span class="btn-odds">${(L.pB*100).toFixed(0)}% win</span>
-      </div>
+      <div class="team-info">${dotB}<div style="min-width:0"><div class="team-name">${tB.name}</div><div class="team-meta">${tB.wins}–${tB.losses} &nbsp;·&nbsp; AP ${tB.apW}/${AP_TOTAL}</div></div></div>
+      <div class="bet-btn${!aIsProjFav?' fav':''}"><span class="btn-line">${spB}</span><span class="btn-odds">−110</span></div>
+      <div class="bet-btn"><span class="btn-line">U ${L.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span></div>
+      <div class="bet-btn${!aIsMLFav?' fav':''}"><span class="btn-line ${mlClassB}">${fmtML(L.mlB)}</span><span class="btn-odds">${(L.pB*100).toFixed(0)}% win</span></div>
     </div>
-
-    <!-- Proj footer -->
     <div class="proj-footer">
       <span style="font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Proj</span>
       <span class="proj-sep">|</span>
-      <span class="proj-item">
-        <span class="proj-dot" style="background:${tA.color}"></span>
-        ${tA.name.split(' ')[0]} <span class="proj-val">${L.projA.toFixed(1)}</span>
-      </span>
+      <span class="proj-item"><span class="proj-dot" style="background:${tA.color}"></span>${tA.name.split(' ')[0]} <span class="proj-val">${L.projA.toFixed(1)}</span></span>
       <span class="proj-sep">·</span>
-      <span class="proj-item">
-        <span class="proj-dot" style="background:${tB.color}"></span>
-        ${tB.name.split(' ')[0]} <span class="proj-val">${L.projB.toFixed(1)}</span>
-      </span>
+      <span class="proj-item"><span class="proj-dot" style="background:${tB.color}"></span>${tB.name.split(' ')[0]} <span class="proj-val">${L.projB.toFixed(1)}</span></span>
       <span class="proj-sep">·</span>
       <span>Total <span class="proj-val">${L.total.toFixed(1)}</span></span>
-    </div>
-  `;
-
+    </div>`;
   container.appendChild(card);
 
-  // Collect for best bets (biggest ML edge = highest win prob)
-  const favKey  = L.pA >= L.pB ? keyA : keyB;
-  const favTeam = TEAMS[favKey];
-  const favProb = Math.max(L.pA, L.pB);
-  const favML   = L.pA >= L.pB ? L.mlA : L.mlB;
-  bestBetsData.push({ favKey, favTeam, favProb, favML, L, keyA, keyB, tA, tB });
+  const favKey = L.pA >= L.pB ? keyA : keyB;
+  bestBetsData.push({ favKey, favTeam: TEAMS[favKey], favProb: Math.max(L.pA,L.pB), favML: L.pA>=L.pB?L.mlA:L.mlB, oppTeam: L.pA>=L.pB?tB:tA });
 });
 
-// ── Best bets: top 3 by win probability ──────────────────────────────────────
+// ── Best bets ─────────────────────────────────────────────────────────────────
 bestBetsData.sort((a,b) => b.favProb - a.favProb);
 const bbContainer = document.getElementById('best-bets');
-
-bestBetsData.slice(0, 3).forEach((b, i) => {
-  const labels = ['⭐ Best Bet', '🔒 Strong', '📌 Lean'];
-  const opp = b.favKey === b.keyA ? b.tB : b.tA;
-  const card = document.createElement('div');
-  card.className = 'best-bet-card';
-  card.innerHTML = `
-    <div class="bb-label">${labels[i]}</div>
+['⭐ Best Bet','🔒 Strong','📌 Lean'].forEach((lbl, i) => {
+  const b = bestBetsData[i];
+  const el = document.createElement('div');
+  el.className = 'best-bet-card';
+  el.innerHTML = `
+    <div class="bb-label">${lbl}</div>
     <div class="bb-pick">
       <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${b.favTeam.color}"></span>
-      ${b.favTeam.name.length > 22 ? b.favTeam.name.slice(0,20)+'…' : b.favTeam.name}
+      ${b.favTeam.name.length>22?b.favTeam.name.slice(0,20)+'…':b.favTeam.name}
       <span class="bb-odds-badge">${fmtML(b.favML)}</span>
     </div>
-    <div class="bb-desc">
-      ML favorite at ${(b.favProb*100).toFixed(0)}% win probability vs ${opp.name.split(' ')[0]}.
-      AP quality edge: ${b.favTeam.apW}/${AP_TOTAL} vs ${opp.apW}/${AP_TOTAL}.
-    </div>
-  `;
-  bbContainer.appendChild(card);
+    <div class="bb-desc">${(b.favProb*100).toFixed(0)}% win prob vs ${b.oppTeam.name.split(' ')[0]}. AP edge: ${b.favTeam.apW}/${AP_TOTAL} vs ${b.oppTeam.apW}/${AP_TOTAL}.</div>`;
+  bbContainer.appendChild(el);
 });
 </script>
 </body>

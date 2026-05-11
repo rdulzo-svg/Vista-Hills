@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vista Hills — Matchup Simulator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+  }
+  h2 { font-size: 22px; font-weight: bold; margin-bottom: 4px; text-align: center; }
+  .subtitle { color: #aaa; font-size: 13px; margin-bottom: 30px; text-align: center; }
+
+  .picker {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .picker label { font-size: 12px; color: #aaa; display: block; margin-bottom: 4px; }
+  select {
+    background: #16213e;
+    color: #eee;
+    border: 1px solid #3a3a5a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    min-width: 240px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23aaa' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  select:focus { outline: none; border-color: #457b9d; }
+
+  .vs-label {
+    font-size: 18px;
+    font-weight: bold;
+    color: #555;
+    margin-top: 18px;
+  }
+
+  button#calcBtn {
+    background: #457b9d;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 32px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-top: 18px;
+  }
+  button#calcBtn:hover { background: #2a9d8f; }
+
+  #result { width: 100%; max-width: 620px; }
+
+  .record-banner {
+    background: #16213e;
+    border-radius: 12px;
+    padding: 24px 32px;
+    text-align: center;
+    margin-bottom: 20px;
+    border: 1px solid #2a2a4a;
+  }
+  .record-teams {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 10px;
+  }
+  .record-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  .record-team-name {
+    font-size: 15px;
+    font-weight: bold;
+  }
+  .record-score {
+    font-size: 42px;
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+  .record-dash { font-size: 32px; color: #555; }
+  .wins-side  { color: #4ade80; }
+  .losses-side { color: #f87171; }
+  .even-side  { color: #facc15; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th {
+    background: #16213e;
+    color: #aaa;
+    font-weight: normal;
+    padding: 9px 14px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+  }
+  th:first-child { text-align: left; }
+  td {
+    padding: 9px 14px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  td:first-child { text-align: left; color: #aaa; }
+  tr.winner-a td { background: rgba(74,222,128,0.07); }
+  tr.winner-b td { background: rgba(248,113,113,0.07); }
+  .score-a { font-weight: bold; }
+  .score-b { font-weight: bold; }
+  .result-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+  .badge-w { background: rgba(74,222,128,0.2); color: #4ade80; }
+  .badge-l { background: rgba(248,113,113,0.2); color: #f87171; }
+  .margin-pos { color: #4ade80; font-size: 11px; }
+  .margin-neg { color: #f87171; font-size: 11px; }
+
+  .error-msg { color: #f87171; font-size: 13px; text-align: center; margin-top: 10px; }
+
+  a.back-link {
+    color: #557b9d;
+    font-size: 12px;
+    text-decoration: none;
+    margin-bottom: 20px;
+    display: block;
+    text-align: center;
+  }
+  a.back-link:hover { color: #60a5fa; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="index.html">← Back to Vista Hills</a>
+<h2>Vista Hills — Matchup Simulator</h2>
+<p class="subtitle">What if these two teams played each other every single week? Select any two teams to find out.</p>
+
+<div class="picker">
+  <div>
+    <label for="teamA">Team A</label>
+    <select id="teamA"></select>
+  </div>
+  <div class="vs-label">vs</div>
+  <div>
+    <label for="teamB">Team B</label>
+    <select id="teamB"></select>
+  </div>
+</div>
+<button id="calcBtn" onclick="calculate()">Calculate</button>
+
+<div style="margin-top: 28px; width: 100%; max-width: 620px;">
+  <div id="result"></div>
+</div>
+
+<script>
+const WEEKS = ['Wk 1*','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'];
+
+const TEAMS = [
+  { name: "Ima Ride For My MF McGGonicle", color: "#e63946", scores: [755.0, 538.5, 554.0, 411.0, 409.5, 443.5] },
+  { name: "MANNY MEN",                     color: "#f77f00", scores: [723.0, 546.5, 401.0, 501.0, 409.0, 429.0] },
+  { name: "WITTnessing Greatness",          color: "#2a9d8f", scores: [656.5, 354.5, 394.0, 508.0, 469.5, 381.0] },
+  { name: "Mike and Mike In The Mornin'",  color: "#457b9d", scores: [567.5, 467.5, 475.0, 461.5, 449.0, 401.0] },
+  { name: "All ARRAEZ for the JUDGE",      color: "#6a4c93", scores: [646.5, 537.0, 296.0, 391.5, 494.5, 413.5] },
+  { name: "16 percent",                    color: "#90be6d", scores: [595.5, 484.5, 468.0, 458.0, 434.0, 392.0] },
+  { name: "Jung H King",                   color: "#ff6b6b", scores: [812.5, 334.0, 475.5, 392.0, 276.5, 457.5] },
+  { name: "Stop looking at me Kwan",       color: "#4cc9f0", scores: [643.0, 390.0, 377.5, 369.0, 414.5, 467.5] },
+  { name: "Back 2 Back CY Young",          color: "#e9c46a", scores: [522.5, 325.5, 478.0, 469.0, 476.5, 326.0] },
+  { name: "Thicc Bois",                    color: "#f4a261", scores: [506.0, 363.0, 481.5, 501.5, 327.5, 379.5] },
+  { name: "Dom's House of Fun",            color: "#a8dadc", scores: [603.5, 300.5, 510.5, 310.0, 438.5, 375.0] },
+  { name: "Raleighing My Way",             color: "#52b788", scores: [505.0, 484.0, 321.5, 429.5, 407.0, 351.0] },
+];
+
+// Populate dropdowns
+const selA = document.getElementById('teamA');
+const selB = document.getElementById('teamB');
+TEAMS.forEach((t, i) => {
+  selA.innerHTML += `<option value="${i}">${t.name}</option>`;
+  selB.innerHTML += `<option value="${i}">${t.name}</option>`;
+});
+// Default to 16 percent vs MANNY MEN
+selA.value = TEAMS.findIndex(t => t.name === '16 percent');
+selB.value = TEAMS.findIndex(t => t.name === 'MANNY MEN');
+
+function calculate() {
+  const idxA = parseInt(selA.value);
+  const idxB = parseInt(selB.value);
+
+  if (idxA === idxB) {
+    document.getElementById('result').innerHTML = '<p class="error-msg">Please select two different teams.</p>';
+    return;
+  }
+
+  const a = TEAMS[idxA];
+  const b = TEAMS[idxB];
+
+  let winsA = 0, winsB = 0;
+  let rows = '';
+
+  for (let w = 0; w < WEEKS.length; w++) {
+    const sA = a.scores[w];
+    const sB = b.scores[w];
+    const aWon = sA > sB;
+    if (aWon) winsA++; else winsB++;
+    const trCls = aWon ? 'winner-a' : 'winner-b';
+    const margin = Math.abs(sA - sB).toFixed(1);
+    const marginCls = aWon ? 'margin-pos' : 'margin-neg';
+    const badge = aWon
+      ? `<span class="result-badge badge-w">W</span>`
+      : `<span class="result-badge badge-l">L</span>`;
+    const wkNote = w === 0 ? '<span style="color:#555;font-size:10px;"> (12d)</span>' : '';
+
+    rows += `<tr class="${trCls}">
+      <td>${WEEKS[w]}${wkNote}</td>
+      <td class="score-a" style="color:${a.color}">${sA.toFixed(1)}</td>
+      <td class="score-b" style="color:${b.color}">${sB.toFixed(1)}</td>
+      <td><span class="${marginCls}">±${margin}</span></td>
+      <td>${badge}</td>
+    </tr>`;
+  }
+
+  const aColor = winsA > winsB ? 'wins-side' : winsA < winsB ? 'losses-side' : 'even-side';
+  const bColor = winsB > winsA ? 'wins-side' : winsB < winsA ? 'losses-side' : 'even-side';
+
+  const dotA = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${a.color};margin-right:6px;vertical-align:middle;"></span>`;
+  const dotB = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${b.color};margin-right:6px;vertical-align:middle;"></span>`;
+
+  document.getElementById('result').innerHTML = `
+    <div class="record-banner">
+      <div class="record-teams">Hypothetical 6-week record if these two played every week</div>
+      <div class="record-vs">
+        <div>
+          <div class="record-team-name">${dotA}${a.name}</div>
+          <div class="record-score ${aColor}">${winsA}</div>
+        </div>
+        <div class="record-dash">–</div>
+        <div>
+          <div class="record-team-name">${dotB}${b.name}</div>
+          <div class="record-score ${bColor}">${winsB}</div>
+        </div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Week</th>
+          <th>${a.name.length > 20 ? a.name.slice(0,18)+'…' : a.name}</th>
+          <th>${b.name.length > 20 ? b.name.slice(0,18)+'…' : b.name}</th>
+          <th>Margin</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+// Auto-run on load
+calculate();
+</script>
+</body>
+</html>

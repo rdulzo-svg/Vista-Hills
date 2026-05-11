@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vista Hills 2026 — Power Rankings</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      color: #eee;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 24px 20px 40px;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .page-header h1 {
+      font-size: clamp(1.25rem, 3vw, 1.9rem);
+      font-weight: 700;
+      letter-spacing: .5px;
+      color: #fff;
+    }
+    .page-header .subtitle {
+      font-size: .82rem;
+      color: #aaa;
+      margin-top: 6px;
+    }
+    .page-header .note {
+      font-size: .76rem;
+      color: #888;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin: 14px auto 0;
+      padding: 9px 20px;
+      background: #e63946;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: .3px;
+      transition: background .2s, transform .1s;
+    }
+    .btn-download:hover { background: #c1121f; transform: translateY(-1px); }
+    .btn-download:active { transform: translateY(0); }
+
+    /* ── Two-column layout ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr minmax(280px, 420px);
+      gap: 22px;
+      margin-top: 22px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 20px 18px;
+      border: 1px solid #1f3066;
+    }
+    .card-title {
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 14px;
+    }
+
+    /* ── Table ── */
+    .pr-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .83rem;
+    }
+    .pr-table thead th {
+      text-align: left;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: #888;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1f3066;
+      white-space: nowrap;
+    }
+    .pr-table thead th.center { text-align: center; }
+    .pr-table thead th.right  { text-align: right; }
+
+    .pr-table tbody tr {
+      border-bottom: 1px solid #1a2a4a;
+      transition: background .15s;
+    }
+    .pr-table tbody tr:last-child { border-bottom: none; }
+    .pr-table tbody tr:hover { background: rgba(255,255,255,.04); }
+
+    .pr-table td {
+      padding: 9px 6px;
+      vertical-align: middle;
+    }
+    .pr-table td.center { text-align: center; }
+    .pr-table td.right  { text-align: right; }
+
+    /* Rank badge */
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: .82rem;
+      color: #fff;
+    }
+    .rank-1  { background: #ffd700; color: #1a1a2e; }
+    .rank-2  { background: #c0c0c0; color: #1a1a2e; }
+    .rank-3  { background: #cd7f32; color: #fff; }
+    .rank-top { background: #2a9d8f; }
+    .rank-mid { background: #e9c46a; color: #1a1a2e; }
+    .rank-bot { background: #e63946; }
+
+    /* Movement indicator */
+    .move {
+      font-size: .8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .move-up   { color: #4caf50; }
+    .move-down { color: #e63946; }
+    .move-same { color: #666; }
+
+    /* Team name */
+    .team-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-right: 7px;
+      flex-shrink: 0;
+    }
+    .team-cell {
+      display: flex;
+      align-items: center;
+      min-width: 130px;
+    }
+    .team-short {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Power score bar */
+    .bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 120px;
+    }
+    .bar-track {
+      flex: 1;
+      height: 10px;
+      background: rgba(255,255,255,.08);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width .4s ease;
+    }
+    .bar-label {
+      font-size: .78rem;
+      font-weight: 700;
+      color: #eee;
+      min-width: 34px;
+      text-align: right;
+    }
+
+    /* Stat cells */
+    .stat-pct  { font-variant-numeric: tabular-nums; color: #ccc; }
+    .stat-rec  { font-weight: 600; white-space: nowrap; }
+
+    /* ── Chart card ── */
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    /* ── Footer note ── */
+    .footer-note {
+      margin-top: 20px;
+      font-size: .74rem;
+      color: #666;
+      text-align: center;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<div id="capture-root">
+
+  <div class="page-header">
+    <h1>Vista Hills &mdash; Power Rankings</h1>
+    <div style="color:#aaa;font-size:.9rem;margin-top:4px;">Through Matchup 6, 2026</div>
+    <div class="subtitle">Power Score = 30% season all-play quality + 50% last-2-week form + 20% actual record</div>
+    <div class="note">Rank ▲▼ = movement vs. all-play standings. A team ranked higher in Power Rankings than AP standings is trending up.</div>
+  </div>
+
+  <div style="text-align:center;">
+    <button class="btn-download" onclick="downloadPNG()">
+      &#8681; Download PNG
+    </button>
+  </div>
+
+  <div class="main-grid">
+    <!-- Left: table -->
+    <div class="card">
+      <div class="card-title">Power Rankings</div>
+      <table class="pr-table" id="pr-table">
+        <thead>
+          <tr>
+            <th class="center">Rank</th>
+            <th class="center" title="vs All-Play standings">▲▼</th>
+            <th>Team</th>
+            <th>Power Score</th>
+            <th class="center">Season AP%</th>
+            <th class="center">Recent AP%</th>
+            <th class="right">Record</th>
+          </tr>
+        </thead>
+        <tbody id="pr-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Right: chart -->
+    <div class="card">
+      <div class="card-title">Power Score Chart</div>
+      <div class="chart-wrap">
+        <canvas id="pr-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note" id="footer-note">Vista Hills Fantasy Baseball League &middot; 2026 Season</div>
+
+</div><!-- end capture-root -->
+
+<script>
+/* ── Data ─────────────────────────────────────────────────────────────── */
+const TEAMS = [
+  { name: "Ima Ride For My MF McGGonicle", short: "McGGonicle",  color: "#e63946", apW: 48, wins: 6, scores: [755.0,538.5,554.0,411.0,409.5,443.5] },
+  { name: "MANNY MEN",                     short: "MANNY MEN",   color: "#f77f00", apW: 44, wins: 1, scores: [723.0,546.5,401.0,501.0,409.0,429.0] },
+  { name: "WITTnessing Greatness",          short: "WITTnessing", color: "#2a9d8f", apW: 38, wins: 3, scores: [656.5,354.5,394.0,508.0,469.5,381.0] },
+  { name: "Mike and Mike In The Mornin'",  short: "Mike & Mike", color: "#457b9d", apW: 36, wins: 5, scores: [567.5,467.5,475.0,461.5,449.0,401.0] },
+  { name: "All ARRAEZ for the JUDGE",      short: "All ARRAEZ",  color: "#6a4c93", apW: 36, wins: 3, scores: [646.5,537.0,296.0,391.5,494.5,413.5] },
+  { name: "16 percent",                    short: "16 percent",  color: "#90be6d", apW: 34, wins: 1, scores: [595.5,484.5,468.0,458.0,434.0,392.0] },
+  { name: "Jung H King",                   short: "Jung H King", color: "#ff6b6b", apW: 33, wins: 3, scores: [812.5,334.0,475.5,392.0,276.5,457.5] },
+  { name: "Stop looking at me Kwan",       short: "Kwan",        color: "#4cc9f0", apW: 30, wins: 2, scores: [643.0,390.0,377.5,369.0,414.5,467.5] },
+  { name: "Back 2 Back CY Young",          short: "CY Young",    color: "#e9c46a", apW: 29, wins: 3, scores: [522.5,325.5,478.0,469.0,476.5,326.0] },
+  { name: "Thicc Bois",                    short: "Thicc Bois",  color: "#f4a261", apW: 28, wins: 4, scores: [506.0,363.0,481.5,501.5,327.5,379.5] },
+  { name: "Dom's House of Fun",            short: "Dom's House", color: "#a8dadc", apW: 24, wins: 3, scores: [603.5,300.5,510.5,310.0,438.5,375.0] },
+  { name: "Raleighing My Way",             short: "Raleighing",  color: "#52b788", apW: 16, wins: 2, scores: [505.0,484.0,321.5,429.5,407.0,351.0] },
+];
+const AP_TOTAL     = 66;   // 6 weeks × 11 opponents
+const WEEKS        = 6;
+const RECENT_WEEKS = 2;    // last 2 weeks = indices 4 and 5
+const N            = TEAMS.length; // 12
+
+/* ── Compute recent all-play wins (weeks 5 & 6, 0-indexed 4 & 5) ─────── */
+const RECENT_WEEK_INDICES = [WEEKS - 2, WEEKS - 1]; // [4, 5]
+
+function computeRecentAPWins() {
+  RECENT_WEEK_INDICES.forEach(wi => {
+    // Sort teams by score descending for this week
+    const sorted = TEAMS.map((t, i) => ({ idx: i, score: t.scores[wi] }))
+                        .sort((a, b) => b.score - a.score);
+    sorted.forEach((entry, rank) => {
+      if (!TEAMS[entry.idx]._recentAPW) TEAMS[entry.idx]._recentAPW = 0;
+      TEAMS[entry.idx]._recentAPW += rank; // rank 0 = best → beats all 11 others = 11 wins
+    });
+  });
+}
+computeRecentAPWins();
+
+const RECENT_MAX = RECENT_WEEKS * (N - 1); // 2 × 11 = 22
+
+/* ── Compute actual W% ─────────────────────────────────────────────────── */
+// Max wins possible = WEEKS = 6
+function actualWPct(t) { return t.wins / WEEKS; }
+
+/* ── Power Score ───────────────────────────────────────────────────────── */
+// 0.30 × Season AP W% + 0.50 × Recent AP W% + 0.20 × Actual W%
+function powerScore(t) {
+  const seasonAPpct  = t.apW / AP_TOTAL;
+  const recentAPpct  = t._recentAPW / RECENT_MAX;
+  const actualPct    = actualWPct(t);
+  return 0.30 * seasonAPpct + 0.50 * recentAPpct + 0.20 * actualPct;
+}
+
+// Attach scores
+TEAMS.forEach(t => { t._ps = powerScore(t); });
+
+/* ── AP Rank (by apW desc, stable) ─────────────────────────────────────── */
+const apSorted = [...TEAMS].sort((a, b) => b.apW - a.apW || b.wins - a.wins);
+apSorted.forEach((t, i) => { t._apRank = i + 1; }); // 1-based
+
+/* ── Power Rank ─────────────────────────────────────────────────────────── */
+const psSorted = [...TEAMS].sort((a, b) => b._ps - a._ps);
+psSorted.forEach((t, i) => { t._psRank = i + 1; });
+
+/* ── Max power score (for bar scaling) ─────────────────────────────────── */
+const maxPS = Math.max(...TEAMS.map(t => t._ps));
+
+/* ── Rank badge class ─────────────────────────────────────────────────── */
+function rankClass(r) {
+  if (r === 1) return 'rank-badge rank-1';
+  if (r === 2) return 'rank-badge rank-2';
+  if (r === 3) return 'rank-badge rank-3';
+  if (r <= 4)  return 'rank-badge rank-top';
+  if (r <= 8)  return 'rank-badge rank-mid';
+  return 'rank-badge rank-bot';
+}
+
+/* ── Movement cell ──────────────────────────────────────────────────────── */
+function moveHTML(t) {
+  // positive delta = power rank is BETTER (lower number) than AP rank → trending up
+  const delta = t._apRank - t._psRank;
+  if (delta === 0) return `<span class="move move-same">—</span>`;
+  if (delta > 0)   return `<span class="move move-up">▲${delta}</span>`;
+  return `<span class="move move-down">▼${Math.abs(delta)}</span>`;
+}
+
+/* ── Render table ─────────────────────────────────────────────────────── */
+function fmt3(v) { return v.toFixed(3).replace(/^0/, ''); } // ".727"
+
+const tbody = document.getElementById('pr-tbody');
+psSorted.forEach(t => {
+  const ps        = t._ps;
+  const barPct    = (ps / maxPS * 100).toFixed(1);
+  const seasonPct = fmt3(t.apW / AP_TOTAL);
+  const recentPct = fmt3(t._recentAPW / RECENT_MAX);
+  const rec       = `${t.wins}&ndash;${WEEKS - t.wins}`;
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="center"><span class="${rankClass(t._psRank)}">${t._psRank}</span></td>
+    <td class="center">${moveHTML(t)}</td>
+    <td>
+      <div class="team-cell">
+        <span class="team-dot" style="background:${t.color}"></span>
+        <span class="team-short">${t.short}</span>
+      </div>
+    </td>
+    <td>
+      <div class="bar-wrap">
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${barPct}%;background:${t.color}"></div>
+        </div>
+        <span class="bar-label">${(ps * 100).toFixed(1)}</span>
+      </div>
+    </td>
+    <td class="center stat-pct">${seasonPct}</td>
+    <td class="center stat-pct">${recentPct}</td>
+    <td class="right stat-rec">${rec}</td>
+  `;
+  tbody.appendChild(tr);
+});
+
+/* ── Render chart ─────────────────────────────────────────────────────── */
+const chartLabels  = psSorted.map(t => t.short);
+const chartScores  = psSorted.map(t => parseFloat((t._ps * 100).toFixed(2)));
+const chartColors  = psSorted.map(t => t.color);
+const chartBorders = psSorted.map(t => t.color);
+
+const ctx = document.getElementById('pr-chart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: chartLabels,
+    datasets: [{
+      label: 'Power Score',
+      data: chartScores,
+      backgroundColor: chartColors.map(c => c + 'cc'),
+      borderColor: chartBorders,
+      borderWidth: 1.5,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.parsed.x.toFixed(1)}`
+        }
+      }
+    },
+    scales: {
+      x: {
+        min: 0,
+        max: 100,
+        grid: { color: 'rgba(255,255,255,.07)' },
+        ticks: { color: '#888', font: { size: 11 } },
+        title: {
+          display: true,
+          text: 'Power Score (×100)',
+          color: '#888',
+          font: { size: 11 }
+        }
+      },
+      y: {
+        grid: { color: 'rgba(255,255,255,.05)' },
+        ticks: {
+          color: '#ccc',
+          font: { size: 11 },
+          // color each label by team color
+          callback: function(value, index) {
+            return chartLabels[index];
+          }
+        }
+      }
+    }
+  }
+});
+
+// Color y-axis tick labels to match team colors
+// We do it post-render via a plugin
+Chart.register({
+  id: 'coloredTicks',
+  afterDraw(chart) {
+    const yAxis = chart.scales.y;
+    if (!yAxis) return;
+    const ctx2 = chart.ctx;
+    ctx2.save();
+    yAxis.ticks.forEach((tick, i) => {
+      const color = chartColors[i] || '#ccc';
+      const y = yAxis.getPixelForTick(i);
+      const x = yAxis.right - 6;
+      ctx2.fillStyle = color;
+      ctx2.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx2.textAlign = 'right';
+      ctx2.textBaseline = 'middle';
+      ctx2.fillText(tick.label, x, y);
+    });
+    ctx2.restore();
+  }
+});
+
+// Re-render chart to apply color plugin (plugin registered after creation — rebuild)
+(function recolorChart() {
+  const existingChart = Chart.getChart('pr-chart');
+  if (existingChart) existingChart.update();
+})();
+
+/* ── Download PNG ─────────────────────────────────────────────────────── */
+function downloadPNG() {
+  const root = document.getElementById('capture-root');
+  html2canvas(root, {
+    backgroundColor: '#1a1a2e',
+    scale: 2,
+    useCORS: true,
+    logging: false
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'vista_hills_power_rankings_2026.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+</script>
+</body>
+</html>

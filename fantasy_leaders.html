@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vista Hills — Category Kings &amp; Doormats (2026)</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      color: #eee;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 28px 20px 56px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .page-header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #fff;
+    }
+    .page-header p {
+      margin-top: 6px;
+      color: #aaa;
+      font-size: 0.92rem;
+    }
+
+    /* Two-column layout */
+    .tables-row {
+      display: flex;
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: flex-start;
+    }
+    @media (max-width: 750px) {
+      .tables-row { flex-direction: column; }
+    }
+
+    .table-panel {
+      flex: 1;
+      background: #16213e;
+      border-radius: 14px;
+      padding: 20px 18px 24px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      overflow-x: auto;
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid;
+    }
+    .kings-panel  .panel-header { border-color: #16a34a; }
+    .doormats-panel .panel-header { border-color: #9f1239; }
+
+    .panel-header h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .kings-panel  .panel-header h2 { color: #4ade80; }
+    .doormats-panel .panel-header h2 { color: #fb7185; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    thead th {
+      background: #0f172a;
+      color: #64748b;
+      font-weight: 600;
+      padding: 8px 10px;
+      text-align: left;
+      white-space: nowrap;
+      border-bottom: 1px solid #1e293b;
+    }
+    thead th.th-pts { text-align: right; }
+
+    /* Group header rows */
+    tr.group-header td {
+      background: #0d1b33;
+      color: #475569;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      border-top: 2px solid #1e293b;
+      border-bottom: 1px solid #1e2d4a;
+    }
+
+    tbody tr.data-row {
+      border-bottom: 1px solid #1e2d4a;
+      transition: background 0.12s;
+    }
+    tbody tr.data-row:hover { background: rgba(255,255,255,0.045); }
+    tbody tr.data-row:nth-child(even) { background: rgba(255,255,255,0.02); }
+    tbody tr.data-row:nth-child(even):hover { background: rgba(255,255,255,0.05); }
+
+    td { padding: 8px 10px; vertical-align: middle; }
+
+    .cat-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .cat-label {
+      font-weight: 700;
+      color: #e2e8f0;
+      font-size: 0.83rem;
+    }
+    .cat-desc {
+      font-size: 0.72rem;
+      color: #64748b;
+    }
+
+    .team-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 120px;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .team-name { font-size: 0.81rem; color: #e2e8f0; line-height: 1.3; }
+
+    .pts-cell {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      white-space: nowrap;
+      font-size: 0.85rem;
+    }
+    .pts-pos { color: #4ade80; }
+    .pts-neg { color: #fb7185; }
+
+    /* Fun doormats badge */
+    .doormat-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      background: rgba(159,18,57,0.25);
+      color: #fda4af;
+      border-radius: 4px;
+      padding: 1px 5px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Vista Hills — Category Kings &amp; Doormats (2026)</h1>
+  <p>Best and worst team in each scoring category through Matchup 6</p>
+</div>
+
+<div class="tables-row">
+  <div class="table-panel kings-panel" id="kingsPanel">
+    <div class="panel-header">
+      <h2>👑 Category Kings</h2>
+    </div>
+    <table id="kingsTable">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Team</th>
+          <th class="th-pts">Points</th>
+        </tr>
+      </thead>
+      <tbody id="kingsTbody"></tbody>
+    </table>
+  </div>
+
+  <div class="table-panel doormats-panel" id="doormatsPanel">
+    <div class="panel-header">
+      <h2>🪣 Category Doormats</h2>
+    </div>
+    <table id="doormatsTable">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Team</th>
+          <th class="th-pts">Points</th>
+        </tr>
+      </thead>
+      <tbody id="doormatsTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const COLS = [
+  { id:'r',   label:'R',     mult:1,    group:'bat+', desc:'Runs' },
+  { id:'s',   label:'1B',    mult:1,    group:'bat+', desc:'Singles' },
+  { id:'d',   label:'2B',    mult:2,    group:'bat+', desc:'Doubles' },
+  { id:'t',   label:'3B',    mult:3,    group:'bat+', desc:'Triples' },
+  { id:'hr',  label:'HR',    mult:4,    group:'bat+', desc:'Home Runs' },
+  { id:'rbi', label:'RBI',   mult:2,    group:'bat+', desc:'RBI' },
+  { id:'gw',  label:'GWRBI', mult:1,    group:'bat+', desc:'GWRBI' },
+  { id:'bbB', label:'BB',    mult:1,    group:'bat+', desc:'Walks (Bat)' },
+  { id:'hbp', label:'HBP',   mult:1,    group:'bat+', desc:'Hit by Pitch' },
+  { id:'sac', label:'SAC',   mult:1,    group:'bat+', desc:'Sacrifices' },
+  { id:'sb',  label:'SB',    mult:2,    group:'bat+', desc:'Stolen Bases' },
+  { id:'kB',  label:'K',     mult:-1,   group:'bat-', desc:'Batter Strikeouts' },
+  { id:'cs',  label:'CS',    mult:-0.5, group:'bat-', desc:'Caught Stealing' },
+  { id:'ip',  label:'IP',    mult:3,    group:'pit+', desc:'Innings Pitched' },
+  { id:'kP',  label:'K',     mult:1,    group:'pit+', desc:'Pitcher Strikeouts' },
+  { id:'qs',  label:'QS',    mult:2,    group:'pit+', desc:'Quality Starts' },
+  { id:'so',  label:'SHO',   mult:3,    group:'pit+', desc:'Shutouts' },
+  { id:'w',   label:'W',     mult:8,    group:'pit+', desc:'Wins' },
+  { id:'sv',  label:'SV',    mult:4.5,  group:'pit+', desc:'Saves' },
+  { id:'hd',  label:'HD',    mult:2,    group:'pit+', desc:'Holds' },
+  { id:'hP',  label:'H',     mult:-1,   group:'pit-', desc:'Hits Allowed' },
+  { id:'er',  label:'ER',    mult:-2,   group:'pit-', desc:'Earned Runs' },
+  { id:'bbP', label:'BB',    mult:-1,   group:'pit-', desc:'Walks Issued' },
+  { id:'hb',  label:'HB',    mult:-1,   group:'pit-', desc:'Hit Batters' },
+  { id:'l',   label:'L',     mult:-2,   group:'pit-', desc:'Losses' },
+  { id:'bs',  label:'BS',    mult:-2,   group:'pit-', desc:'Blown Saves' },
+];
+
+const RAW = [
+  { name:"Ima Ride For My MF McGGonicle", color:"#e63946", r:321,s:338,d:109,t:15,hr:88,rbi:308,gw:38,bbB:265,kB:519,hbp:35,sac:20,sb:59,cs:14, ip:469.1,hP:391,er:184,bbP:171,hb:15,kP:443,qs:36,so:0,w:36,l:29,sv:7,bs:6,hd:22 },
+  { name:"Mike and Mike In The Mornin'",  color:"#457b9d", r:249,s:269,d:87,t:4,hr:64,rbi:268,gw:29,bbB:197,kB:556,hbp:30,sac:17,sb:53,cs:13, ip:550.0,hP:457,er:208,bbP:175,hb:24,kP:585,qs:38,so:0,w:31,l:28,sv:16,bs:2,hd:5 },
+  { name:"Thicc Bois",                    color:"#f4a261", r:212,s:317,d:90,t:8,hr:57,rbi:230,gw:27,bbB:174,kB:432,hbp:21,sac:29,sb:44,cs:13, ip:490.1,hP:419,er:199,bbP:185,hb:15,kP:435,qs:30,so:0,w:31,l:35,sv:25,bs:6,hd:5 },
+  { name:"All ARRAEZ for the JUDGE",      color:"#6a4c93", r:293,s:323,d:105,t:8,hr:71,rbi:275,gw:29,bbB:255,kB:457,hbp:14,sac:26,sb:37,cs:10, ip:537.0,hP:514,er:265,bbP:188,hb:25,kP:462,qs:30,so:0,w:32,l:40,sv:18,bs:6,hd:19 },
+  { name:"WITTnessing Greatness",         color:"#2a9d8f", r:269,s:349,d:107,t:7,hr:69,rbi:260,gw:42,bbB:198,kB:459,hbp:14,sac:16,sb:30,cs:13, ip:545.1,hP:506,er:249,bbP:183,hb:30,kP:487,qs:28,so:0,w:33,l:33,sv:16,bs:7,hd:16 },
+  { name:"Jung H King",                   color:"#ff6b6b", r:277,s:323,d:80,t:13,hr:67,rbi:248,gw:27,bbB:243,kB:452,hbp:21,sac:15,sb:38,cs:14, ip:483.2,hP:399,er:212,bbP:202,hb:24,kP:507,qs:25,so:0,w:33,l:30,sv:22,bs:4,hd:4 },
+  { name:"Back 2 Back CY Young",          color:"#e9c46a", r:298,s:320,d:91,t:5,hr:78,rbi:280,gw:34,bbB:241,kB:554,hbp:20,sac:24,sb:35,cs:8, ip:569.0,hP:559,er:291,bbP:232,hb:25,kP:534,qs:29,so:0,w:24,l:43,sv:9,bs:9,hd:25 },
+  { name:"Dom's House of Fun",            color:"#a8dadc", r:270,s:309,d:92,t:5,hr:57,rbi:218,gw:30,bbB:209,kB:425,hbp:29,sac:15,sb:38,cs:4, ip:538.0,hP:495,er:250,bbP:217,hb:19,kP:458,qs:28,so:0,w:32,l:38,sv:10,bs:5,hd:26 },
+  { name:"Stop looking at me Kwan",       color:"#4cc9f0", r:269,s:337,d:91,t:2,hr:68,rbi:250,gw:34,bbB:210,kB:450,hbp:20,sac:21,sb:35,cs:13, ip:512.1,hP:493,er:242,bbP:205,hb:15,kP:556,qs:30,so:0,w:29,l:32,sv:10,bs:6,hd:20 },
+  { name:"Raleighing My Way",             color:"#52b788", r:260,s:300,d:99,t:9,hr:70,rbi:230,gw:29,bbB:234,kB:558,hbp:24,sac:17,sb:31,cs:15, ip:475.0,hP:444,er:215,bbP:175,hb:31,kP:475,qs:25,so:0,w:31,l:31,sv:25,bs:5,hd:7 },
+  { name:"MANNY MEN",                     color:"#f77f00", r:307,s:336,d:100,t:11,hr:75,rbi:261,gw:32,bbB:267,kB:538,hbp:29,sac:18,sb:68,cs:20, ip:546.2,hP:470,er:244,bbP:216,hb:25,kP:541,qs:34,so:1,w:34,l:30,sv:25,bs:8,hd:8 },
+  { name:"16 percent",                    color:"#90be6d", r:296,s:303,d:81,t:9,hr:85,rbi:261,gw:28,bbB:257,kB:551,hbp:19,sac:10,sb:56,cs:11, ip:553.1,hP:522,er:263,bbP:228,hb:16,kP:554,qs:23,so:0,w:39,l:34,sv:21,bs:6,hd:9 },
+];
+
+// Doormat flavor text per category
+const DOORMAT_QUIPS = {
+  r:   '🐢 Hasn\'t scored since last week',
+  s:   '🪵 Singles? More like "outtles"',
+  d:   '📏 Can\'t even go the extra base',
+  t:   '🌵 Triples are a myth here',
+  hr:  '⚾ Baseballs leaving at a leisurely pace',
+  rbi: '🙈 RBI-less in Seattle',
+  gw:  '🤷 "What\'s a GWRBI?"',
+  bbB: '👀 Swinging at everything',
+  hbp: '🎯 Hasn\'t been hit lately',
+  sac: '🐑 No sacrifice, no glory',
+  sb:  '🪑 Sitting on the basepaths',
+  kB:  '💨 Fanning the most',
+  cs:  '🚨 Worst baserunner',
+  ip:  '⏱️ Check-in early, leave early',
+  kP:  '🫧 Strikeouts? We\'ve heard of them',
+  qs:  '📉 Quality is debatable',
+  so:  '🙃 A shutout? LOL',
+  w:   '🧸 Participation award only',
+  sv:  '🔥 Saves? More like "watch it burn"',
+  hd:  '🕳️ Holds? Holding nothing',
+  hP:  '🗑️ Giving out hits like candy',
+  er:  '🏌️ ERA approaching Jupiter',
+  bbP: '🚶 Free passes for everyone',
+  hb:  '🩹 Beaning the whole lineup',
+  l:   '📝 L after L after L',
+  bs:  '💣 Blown saves connoisseur',
+};
+
+// Compute points per team per category
+// categoryPoints[col.id][teamIdx] = points value
+const categoryPoints = {};
+COLS.forEach(col => {
+  categoryPoints[col.id] = RAW.map(team => {
+    const raw = team[col.id];
+    return raw * col.mult;
+  });
+});
+
+// Group order and labels
+const GROUP_META = {
+  'bat+': { label: 'Batting — Positive', emoji: '🏏' },
+  'bat-': { label: 'Batting — Negative', emoji: '😬' },
+  'pit+': { label: 'Pitching — Positive', emoji: '⚾' },
+  'pit-': { label: 'Pitching — Negative', emoji: '🔥' },
+};
+const GROUP_ORDER = ['bat+', 'bat-', 'pit+', 'pit-'];
+
+function fmtPts(val) {
+  const rounded = Math.round(val * 10) / 10;
+  const sign = rounded >= 0 ? '+' : '';
+  return sign + rounded.toFixed(1);
+}
+
+function buildTable(tbodyId, mode) {
+  // mode: 'king' = argmax, 'doormat' = argmin
+  const tbody = document.getElementById(tbodyId);
+  let html = '';
+  let lastGroup = null;
+
+  COLS.forEach(col => {
+    if (col.group !== lastGroup) {
+      const meta = GROUP_META[col.group];
+      html += `<tr class="group-header"><td colspan="3">${meta.emoji} ${meta.label}</td></tr>`;
+      lastGroup = col.group;
+    }
+
+    const pts = categoryPoints[col.id];
+    let idx;
+    if (mode === 'king') {
+      idx = pts.indexOf(Math.max(...pts));
+    } else {
+      idx = pts.indexOf(Math.min(...pts));
+    }
+
+    const team = RAW[idx];
+    const val  = pts[idx];
+    const isPos = val >= 0;
+    const ptsClass = isPos ? 'pts-pos' : 'pts-neg';
+
+    let teamNameHtml = `<span class="team-name">${team.name}</span>`;
+    if (mode === 'doormat') {
+      const quip = DOORMAT_QUIPS[col.id] || '';
+      teamNameHtml += quip ? `<span class="doormat-badge">${quip}</span>` : '';
+    }
+
+    html += `
+      <tr class="data-row">
+        <td>
+          <div class="cat-cell">
+            <span class="cat-label">${col.label}</span>
+            <span class="cat-desc">${col.desc}</span>
+          </div>
+        </td>
+        <td>
+          <div class="team-cell">
+            <span class="dot" style="background:${team.color}"></span>
+            ${teamNameHtml}
+          </div>
+        </td>
+        <td class="pts-cell ${ptsClass}">${fmtPts(val)}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+}
+
+buildTable('kingsTbody', 'king');
+buildTable('doormatsTbody', 'doormat');
+</script>
+</body>
+</html>

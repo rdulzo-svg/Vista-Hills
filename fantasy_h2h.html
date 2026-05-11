@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vista Hills — Head-to-Head Matrix</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  h2 { margin-bottom: 4px; }
+  .subtitle { color: #aaa; margin: 0 0 18px; font-size: 13px; text-align: center; }
+  #wrap { width: 100%; overflow-x: auto; }
+  #capture { background: #1a1a2e; padding: 24px 30px; display: inline-block; min-width: max-content; }
+  table { border-collapse: collapse; font-size: 12px; }
+  th { background: #16213e; color: #aaa; font-weight: normal; padding: 8px 6px; text-align: center; border-bottom: 1px solid #333; white-space: nowrap; }
+  th.row-header { text-align: left; min-width: 210px; padding-left: 10px; }
+  th.sep { border-left: 1px solid #333; min-width: 70px; }
+  td { padding: 5px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+  td.team-name { text-align: left; padding-left: 8px; white-space: nowrap; min-width: 210px; }
+  td.self { background: #0a0a18; }
+  td.win  { background: rgba(74,222,128,0.15); cursor: default; }
+  td.loss { background: rgba(248,113,113,0.15); cursor: default; }
+  td.none { background: transparent; color: #333; cursor: default; }
+  td.record { background: #16213e; font-weight: bold; border-left: 1px solid #333; padding: 5px 10px; white-space: nowrap; }
+  .cell-result { font-weight: bold; font-size: 13px; display: block; }
+  .win  .cell-result { color: #4ade80; }
+  .loss .cell-result { color: #f87171; }
+  .cell-week  { font-size: 9px; color: #666; display: block; margin-top: 1px; }
+  .cell-score { font-size: 9px; color: #888; display: block; }
+  .rec-pos { color: #4ade80; }
+  .rec-neg { color: #f87171; }
+  .rec-even { color: #eee; }
+  .note { font-size: 11px; color: #555; margin-top: 14px; text-align: center; max-width: 900px; }
+  #downloadBtn { margin: 14px 0 0; padding: 8px 22px; background: #457b9d; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  #downloadBtn:hover { background: #2a9d8f; }
+  .col-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; vertical-align: middle; margin-bottom: 3px; }
+  .col-abbr { font-size: 10px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+<div id="wrap">
+<div id="capture">
+<h2>Vista Hills — Head-to-Head Matrix (2026)</h2>
+<p class="subtitle">W/L from row team's perspective &nbsp;|&nbsp; Matchup week shown &nbsp;|&nbsp; — = not yet faced &nbsp;|&nbsp; Sorted by all-play quality</p>
+<table id="matrix-table">
+  <thead id="matrix-head"></thead>
+  <tbody id="matrix-body"></tbody>
+</table>
+<p class="note">Matchups 1–6 only. — = teams have not yet faced each other this season. Rows ordered by 6-week all-play win % (truest measure of team quality).</p>
+</div>
+</div>
+<button id="downloadBtn" onclick="downloadChart()">⬇ Download PNG</button>
+
+<script>
+const TEAMS_ORDER = ["IR","MN","WG","MM","AA","SP","JK","SK","BB","TB","DH","RM"];
+
+const TEAMS = {
+  IR: { name: "Ima Ride For My MF McGGonicle",  color: "#e63946", wins: 6, losses: 0, apW: 48 },
+  MN: { name: "MANNY MEN",                       color: "#f77f00", wins: 1, losses: 5, apW: 44 },
+  WG: { name: "WITTnessing Greatness",           color: "#2a9d8f", wins: 3, losses: 3, apW: 38 },
+  MM: { name: "Mike and Mike In The Mornin'",    color: "#457b9d", wins: 5, losses: 1, apW: 36 },
+  AA: { name: "All ARRAEZ for the JUDGE",        color: "#6a4c93", wins: 3, losses: 3, apW: 36 },
+  SP: { name: "16 percent",                      color: "#90be6d", wins: 1, losses: 5, apW: 34 },
+  JK: { name: "Jung H King",                     color: "#ff6b6b", wins: 3, losses: 3, apW: 33 },
+  SK: { name: "Stop looking at me Kwan",         color: "#4cc9f0", wins: 2, losses: 4, apW: 30 },
+  BB: { name: "Back 2 Back CY Young",            color: "#e9c46a", wins: 3, losses: 3, apW: 29 },
+  TB: { name: "Thicc Bois",                      color: "#f4a261", wins: 4, losses: 2, apW: 28 },
+  DH: { name: "Dom's House of Fun",              color: "#a8dadc", wins: 3, losses: 3, apW: 24 },
+  RM: { name: "Raleighing My Way",               color: "#52b788", wins: 2, losses: 4, apW: 16 },
+};
+
+// [teamA, teamB, winner, matchup#, scoreA, scoreB]
+const MATCHUPS = [
+  // M1
+  ["SP","RM","SP", 1, 595.5, 505.0],
+  ["JK","SK","JK", 1, 812.5, 643.0],
+  ["IR","MN","IR", 1, 755.0, 723.0],
+  ["AA","WG","WG", 1, 646.5, 656.5],
+  ["DH","BB","DH", 1, 603.5, 522.5],
+  ["MM","TB","MM", 1, 567.5, 506.0],
+  // M2
+  ["SP","IR","IR", 2, 484.5, 538.5],
+  ["JK","RM","RM", 2, 334.0, 484.0],
+  ["SK","AA","AA", 2, 390.0, 537.0],
+  ["MN","DH","MN", 2, 546.5, 300.5],
+  ["WG","MM","MM", 2, 354.5, 467.5],
+  ["BB","TB","TB", 2, 325.5, 363.0],
+  // M3
+  ["DH","SP","DH", 3, 510.5, 468.0],
+  ["RM","IR","IR", 3, 321.5, 554.0],
+  ["AA","JK","JK", 3, 296.0, 475.5],
+  ["MM","SK","MM", 3, 475.0, 377.5],
+  ["TB","MN","TB", 3, 481.5, 401.0],
+  ["BB","WG","BB", 3, 478.0, 394.0],
+  // M4
+  ["SP","TB","TB", 4, 458.0, 501.5],
+  ["AA","RM","RM", 4, 391.5, 429.5],
+  ["IR","DH","IR", 4, 411.0, 310.0],
+  ["JK","MM","MM", 4, 392.0, 461.5],
+  ["SK","BB","BB", 4, 369.0, 469.0],
+  ["MN","WG","WG", 4, 501.0, 508.0],
+  // M5
+  ["WG","SP","WG", 5, 469.5, 434.0],
+  ["RM","DH","DH", 5, 407.0, 438.5],
+  ["MM","AA","AA", 5, 449.0, 494.5],
+  ["TB","IR","IR", 5, 327.5, 409.5],
+  ["BB","JK","BB", 5, 476.5, 276.5],
+  ["MN","SK","SK", 5, 409.0, 414.5],
+  // M6
+  ["SP","SK","SK", 6, 392.0, 467.5],
+  ["MM","RM","MM", 6, 401.0, 351.0],
+  ["DH","TB","TB", 6, 375.0, 379.5],
+  ["AA","BB","AA", 6, 413.5, 326.0],
+  ["IR","WG","IR", 6, 443.5, 381.0],
+  ["JK","MN","JK", 6, 457.5, 429.0],
+];
+
+// Build lookup: h2h[row][col] = { winner, matchup, myScore, oppScore }
+const h2h = {};
+TEAMS_ORDER.forEach(k => { h2h[k] = {}; });
+MATCHUPS.forEach(([a, b, winner, mu, sA, sB]) => {
+  h2h[a][b] = { winner, mu, myScore: sA, oppScore: sB };
+  h2h[b][a] = { winner, mu, myScore: sB, oppScore: sA };
+});
+
+// ── Column headers ────────────────────────────────────────────────────────────
+const thead = document.getElementById('matrix-head');
+let headerRow = '<tr><th class="row-header">Team</th>';
+TEAMS_ORDER.forEach(k => {
+  const t = TEAMS[k];
+  headerRow += `<th class="col-abbr" title="${t.name}">
+    <span class="col-dot" style="background:${t.color}"></span><br>${k}
+  </th>`;
+});
+headerRow += '<th class="sep">H2H Rec</th></tr>';
+thead.innerHTML = headerRow;
+
+// ── Matrix rows ───────────────────────────────────────────────────────────────
+const tbody = document.getElementById('matrix-body');
+TEAMS_ORDER.forEach(rowKey => {
+  const row = TEAMS[rowKey];
+  const dot = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${row.color};margin-right:6px;vertical-align:middle;"></span>`;
+
+  let h2hW = 0, h2hL = 0;
+  let cells = '';
+  TEAMS_ORDER.forEach(colKey => {
+    if (colKey === rowKey) {
+      cells += '<td class="self">·</td>';
+      return;
+    }
+    const match = h2h[rowKey][colKey];
+    if (!match) {
+      cells += '<td class="none">—</td>';
+      return;
+    }
+    const won = match.winner === rowKey;
+    if (won) h2hW++; else h2hL++;
+    const cls = won ? 'win' : 'loss';
+    const result = won ? 'W' : 'L';
+    const score = won
+      ? `${match.myScore}–${match.oppScore}`
+      : `${match.myScore}–${match.oppScore}`;
+    const tip = `M${match.mu}: ${row.name} ${match.myScore} vs ${TEAMS[colKey].name} ${match.oppScore}`;
+    cells += `<td class="${cls}" title="${tip}">
+      <span class="cell-result">${result}</span>
+      <span class="cell-week">M${match.mu}</span>
+      <span class="cell-score">${score}</span>
+    </td>`;
+  });
+
+  const recCls = h2hW > h2hL ? 'rec-pos' : h2hW < h2hL ? 'rec-neg' : 'rec-even';
+  const recLabel = `${h2hW}–${h2hL}`;
+
+  tbody.innerHTML += `<tr>
+    <td class="team-name">${dot}${row.name}<br><span style="font-size:10px;color:#555;padding-left:15px;">M1–M6 record: ${row.wins}–${row.losses}</span></td>
+    ${cells}
+    <td class="record ${recCls}">${recLabel}</td>
+  </tr>`;
+});
+
+// ── Download ──────────────────────────────────────────────────────────────────
+function downloadChart() {
+  const target = document.getElementById('capture');
+  html2canvas(target, {
+    backgroundColor: '#1a1a2e', scale: 2,
+    width: target.scrollWidth, height: target.scrollHeight,
+    windowWidth: target.scrollWidth,
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'vista_hills_h2h.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+</script>
+</body>
+</html>

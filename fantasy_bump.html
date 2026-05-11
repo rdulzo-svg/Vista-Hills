@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vista Hills — Weekly Rank Movement (2026)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      color: #eee;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .card {
+      background: #16213e;
+      border-radius: 14px;
+      padding: 32px 36px 24px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.55);
+      max-width: 940px;
+      width: 100%;
+    }
+
+    .chart-header {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .chart-header h1 {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: #eee;
+      letter-spacing: 0.02em;
+    }
+
+    .chart-header .subtitle {
+      font-size: 0.82rem;
+      color: #aaa;
+      margin-top: 5px;
+    }
+
+    .chart-wrap {
+      position: relative;
+      width: 820px;
+      height: 620px;
+      margin: 18px auto 0;
+    }
+
+    .note {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    button#downloadBtn {
+      background: #2a9d8f;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 26px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: background 0.18s;
+    }
+
+    button#downloadBtn:hover { background: #21867a; }
+  </style>
+</head>
+<body>
+
+<div class="card" id="captureTarget">
+  <div class="chart-header">
+    <h1>Vista Hills &mdash; Weekly Rank Movement (2026)</h1>
+    <div class="subtitle">Weekly score rank among all 12 teams | Rank #1 = highest score that week</div>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas id="bumpChart"></canvas>
+  </div>
+
+  <p class="note">* Week 1 ran 12 days — scores not normalized</p>
+</div>
+
+<div class="btn-row">
+  <button id="downloadBtn">Download PNG</button>
+</div>
+
+<script>
+  const TEAMS = [
+    { name: "Ima Ride For My MF McGGonicle", color: "#e63946", scores: [755.0, 538.5, 554.0, 411.0, 409.5, 443.5] },
+    { name: "MANNY MEN",                     color: "#f77f00", scores: [723.0, 546.5, 401.0, 501.0, 409.0, 429.0] },
+    { name: "WITTnessing Greatness",          color: "#2a9d8f", scores: [656.5, 354.5, 394.0, 508.0, 469.5, 381.0] },
+    { name: "Mike and Mike In The Mornin'",  color: "#457b9d", scores: [567.5, 467.5, 475.0, 461.5, 449.0, 401.0] },
+    { name: "All ARRAEZ for the JUDGE",      color: "#6a4c93", scores: [646.5, 537.0, 296.0, 391.5, 494.5, 413.5] },
+    { name: "16 percent",                    color: "#90be6d", scores: [595.5, 484.5, 468.0, 458.0, 434.0, 392.0] },
+    { name: "Jung H King",                   color: "#ff6b6b", scores: [812.5, 334.0, 475.5, 392.0, 276.5, 457.5] },
+    { name: "Stop looking at me Kwan",       color: "#4cc9f0", scores: [643.0, 390.0, 377.5, 369.0, 414.5, 467.5] },
+    { name: "Back 2 Back CY Young",          color: "#e9c46a", scores: [522.5, 325.5, 478.0, 469.0, 476.5, 326.0] },
+    { name: "Thicc Bois",                    color: "#f4a261", scores: [506.0, 363.0, 481.5, 501.5, 327.5, 379.5] },
+    { name: "Dom's House of Fun",            color: "#a8dadc", scores: [603.5, 300.5, 510.5, 310.0, 438.5, 375.0] },
+    { name: "Raleighing My Way",             color: "#52b788", scores: [505.0, 484.0, 321.5, 429.5, 407.0, 351.0] },
+  ];
+
+  const NUM_WEEKS = 6;
+  const NUM_TEAMS = TEAMS.length;
+
+  // Compute weekly ranks (1 = highest score)
+  // ranks[teamIndex][weekIndex] = rank number
+  const ranks = TEAMS.map(() => new Array(NUM_WEEKS).fill(0));
+
+  for (let w = 0; w < NUM_WEEKS; w++) {
+    // Build [score, teamIndex] pairs and sort descending
+    const pairs = TEAMS.map((t, i) => ({ score: t.scores[w], idx: i }));
+    pairs.sort((a, b) => b.score - a.score);
+    pairs.forEach((p, rank0) => {
+      ranks[p.idx][w] = rank0 + 1; // 1-based
+    });
+  }
+
+  const WEEKS = ['Wk 1*', 'Wk 2', 'Wk 3', 'Wk 4', 'Wk 5', 'Wk 6'];
+
+  // Truncate name to max 18 chars
+  function truncate(name, max = 18) {
+    return name.length <= max ? name : name.slice(0, max - 1) + '…';
+  }
+
+  // --- Plugin: draw rank numbers inside points ---
+  const rankInsidePointsPlugin = {
+    id: 'rankInsidePoints',
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.font = 'bold 9px "Segoe UI", sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      chart.data.datasets.forEach((ds, di) => {
+        const meta = chart.getDatasetMeta(di);
+        meta.data.forEach((pt, wi) => {
+          const rank = ds.data[wi];
+          ctx.fillText(String(rank), pt.x, pt.y);
+        });
+      });
+      ctx.restore();
+    }
+  };
+
+  // --- Plugin: draw team name labels at right end of each line ---
+  const rightLabelsPlugin = {
+    id: 'rightLabels',
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      const chartArea = chart.chartArea;
+
+      // Collect final-week pixel positions for each dataset
+      const entries = chart.data.datasets.map((ds, di) => {
+        const meta = chart.getDatasetMeta(di);
+        const lastPt = meta.data[NUM_WEEKS - 1];
+        return {
+          label: truncate(ds.label),
+          color: ds.borderColor,
+          x: lastPt.x,
+          y: lastPt.y,
+          rank: ds.data[NUM_WEEKS - 1]
+        };
+      });
+
+      // Sort by y position (top to bottom)
+      entries.sort((a, b) => a.y - b.y);
+
+      // Nudge overlapping labels (min gap = 13px)
+      const MIN_GAP = 13;
+      for (let pass = 0; pass < 20; pass++) {
+        let changed = false;
+        for (let i = 1; i < entries.length; i++) {
+          const gap = entries[i].y - entries[i - 1].y;
+          if (gap < MIN_GAP) {
+            const diff = (MIN_GAP - gap) / 2;
+            entries[i - 1].y -= diff;
+            entries[i].y += diff;
+            changed = true;
+          }
+        }
+        if (!changed) break;
+      }
+
+      // Clamp to chart area
+      for (const e of entries) {
+        e.y = Math.max(chartArea.top + 6, Math.min(chartArea.bottom - 6, e.y));
+      }
+
+      ctx.save();
+      ctx.font = '600 10.5px "Segoe UI", sans-serif';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left';
+
+      const labelX = chartArea.right + 10;
+
+      for (const e of entries) {
+        ctx.fillStyle = e.color;
+        ctx.fillText(e.label, labelX, e.y);
+      }
+
+      ctx.restore();
+    }
+  };
+
+  // Build datasets
+  const datasets = TEAMS.map((team, i) => ({
+    label: team.name,
+    data: ranks[i],
+    borderColor: team.color,
+    backgroundColor: team.color,
+    tension: 0.25,
+    borderWidth: 2.5,
+    pointRadius: 7,
+    pointHoverRadius: 10,
+    pointBackgroundColor: team.color,
+    pointBorderColor: team.color,
+  }));
+
+  const ctx = document.getElementById('bumpChart').getContext('2d');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: WEEKS,
+      datasets: datasets
+    },
+    options: {
+      responsive: false,
+      animation: false,
+      layout: {
+        padding: {
+          right: 155,  // space for right-side labels
+          top: 10,
+          bottom: 10,
+          left: 10
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title(items) {
+              const item = items[0];
+              return item.dataset.label;
+            },
+            label(item) {
+              const wi = item.dataIndex;
+              const rank = item.raw;
+              const score = TEAMS[item.datasetIndex].scores[wi];
+              return [
+                `Week: ${WEEKS[wi]}`,
+                `Rank: #${rank}`,
+                `Score: ${score.toFixed(1)}`
+              ];
+            }
+          },
+          backgroundColor: 'rgba(22,33,62,0.95)',
+          titleColor: '#eee',
+          bodyColor: '#ccc',
+          borderColor: '#444',
+          borderWidth: 1,
+          padding: 10
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            color: 'rgba(255,255,255,0.07)',
+            drawTicks: false
+          },
+          ticks: {
+            color: '#aaa',
+            font: { size: 12, weight: '600' },
+            padding: 8
+          },
+          border: { color: 'rgba(255,255,255,0.12)' }
+        },
+        y: {
+          reverse: true,
+          min: 0.5,
+          max: 12.5,
+          grid: {
+            color: 'rgba(255,255,255,0.07)',
+            drawTicks: false
+          },
+          ticks: {
+            color: '#aaa',
+            font: { size: 11 },
+            stepSize: 1,
+            padding: 6,
+            callback(val) {
+              if (Number.isInteger(val) && val >= 1 && val <= 12) {
+                return `#${val}`;
+              }
+              return '';
+            }
+          },
+          border: { color: 'rgba(255,255,255,0.12)' }
+        }
+      }
+    },
+    plugins: [rankInsidePointsPlugin, rightLabelsPlugin]
+  });
+
+  // Download
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    html2canvas(document.getElementById('captureTarget'), {
+      backgroundColor: '#16213e',
+      scale: 2,
+      useCORS: true
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'vista_hills_bump.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  });
+</script>
+</body>
+</html>

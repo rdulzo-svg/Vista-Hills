@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vista Hills Sportsbook</title>
+<style>
+  :root {
+    --bg:        #0f1923;
+    --card:      #1a2535;
+    --card-hdr:  #111e2c;
+    --btn:       #1e2f42;
+    --btn-hover: #253b52;
+    --border:    #263545;
+    --border-lt: rgba(255,255,255,0.06);
+    --text:      #ffffff;
+    --dim:       #8fa6b8;
+    --muted:     #4d6275;
+    --green:     #1ec75f;
+    --green-dim: rgba(30,199,95,0.15);
+    --gold:      #f0b417;
+    --red:       #f05454;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* ── Site Header ── */
+  .site-header {
+    background: #0a1118;
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: stretch;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-right: 24px;
+    border-right: 1px solid var(--border);
+    margin-right: 20px;
+  }
+  .brand-logo {
+    background: var(--green);
+    color: #000;
+    font-weight: 900;
+    font-size: 11px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    line-height: 1;
+  }
+  .brand-text { line-height: 1.2; }
+  .brand-name { font-size: 14px; font-weight: 700; }
+  .brand-sub  { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .nav-tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+  .nav-tab {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dim);
+    border-bottom: 2px solid transparent;
+    cursor: default;
+    letter-spacing: 0.3px;
+  }
+  .nav-tab.active {
+    color: var(--text);
+    border-bottom-color: var(--green);
+  }
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .open-pill {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid rgba(30,199,95,0.3);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Page Body ── */
+  .page-body { max-width: 820px; margin: 0 auto; padding: 18px 16px; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Method box ── */
+  .method-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 6px;
+    padding: 11px 14px;
+    font-size: 11px;
+    color: var(--dim);
+    margin-bottom: 18px;
+    line-height: 1.7;
+  }
+  .method-box strong { color: var(--text); }
+
+  /* ── Column header row ── */
+  .col-headers {
+    display: grid;
+    grid-template-columns: 1fr 146px 146px 120px;
+    gap: 6px;
+    padding: 0 14px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    text-align: center;
+  }
+  .col-headers span:first-child { text-align: left; }
+
+  /* ── Matchup card ── */
+  .matchup-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .card-header {
+    background: var(--card-hdr);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .card-header .mu-label { color: var(--dim); font-weight: 700; font-size: 11px; letter-spacing: 0.5px; }
+  .card-header .mu-date { color: var(--muted); }
+  .card-header .spacer { flex: 1; }
+  .card-header .line-note {
+    font-size: 10px;
+    color: var(--gold);
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* ── Team row ── */
+  .team-row {
+    display: grid;
+    grid-template-columns: 1fr 146px 146px 120px;
+    gap: 6px;
+    padding: 9px 14px;
+    align-items: center;
+    border-bottom: 1px solid var(--border-lt);
+  }
+  .team-row:last-of-type { border-bottom: none; }
+
+  .team-info { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .team-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .team-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .team-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Bet button ── */
+  .bet-btn {
+    background: var(--btn);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+    cursor: default;
+    transition: background 0.12s, border-color 0.12s;
+    user-select: none;
+    min-width: 0;
+  }
+  .bet-btn:hover { background: var(--btn-hover); }
+  .bet-btn.fav { border-color: rgba(30,199,95,0.35); }
+  .btn-line { font-size: 13px; font-weight: 700; display: block; line-height: 1.3; white-space: nowrap; }
+  .btn-odds { font-size: 11px; color: var(--dim); display: block; margin-top: 2px; line-height: 1; }
+  .btn-odds.pos { color: var(--green); }
+  .btn-odds.neg { color: #f87171; }
+
+  /* ── Proj footer ── */
+  .proj-footer {
+    background: #111d2b;
+    border-top: 1px solid var(--border-lt);
+    padding: 6px 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .proj-item { display: flex; align-items: center; gap: 5px; }
+  .proj-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .proj-val { color: var(--dim); font-weight: 600; }
+  .proj-sep { color: var(--border); margin: 0 4px; }
+
+  /* ── Best bets ── */
+  .best-bets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .best-bet-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .bb-label { font-size: 9px; color: var(--green); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px; }
+  .bb-pick { font-size: 14px; font-weight: 700; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+  .bb-odds-badge {
+    background: var(--green-dim);
+    color: var(--green);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .bb-desc { font-size: 11px; color: var(--dim); line-height: 1.5; }
+
+  /* ── Disclaimer ── */
+  .disclaimer {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 28px;
+    line-height: 1.7;
+    max-width: 580px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  a.back-link { color: var(--muted); font-size: 11px; text-decoration: none; display: inline-block; margin-bottom: 14px; }
+  a.back-link:hover { color: var(--dim); }
+</style>
+</head>
+<body>
+
+<!-- Site Header -->
+<header class="site-header">
+  <div class="brand">
+    <div class="brand-logo">VH</div>
+    <div class="brand-text">
+      <div class="brand-name">Vista Hills</div>
+      <div class="brand-sub">Fantasy Sportsbook</div>
+    </div>
+  </div>
+  <nav class="nav-tabs">
+    <div class="nav-tab active">Matchup Lines</div>
+    <div class="nav-tab">Futures</div>
+    <div class="nav-tab">Props</div>
+  </nav>
+  <div class="header-right">
+    <span class="open-pill">OPEN</span>
+    <span>Lines posted through <strong>Matchup 7</strong></span>
+  </div>
+</header>
+
+<!-- Page Body -->
+<div class="page-body">
+  <a class="back-link" href="index.html">← Back to Vista Hills</a>
+
+  <div class="method-box">
+    <strong>Line methodology:</strong>
+    Spread &amp; total derived from blended score projection (40% season avg + 60% last-2-week avg).
+    Moneyline win probability derived from 6-week all-play win % — a stronger season-long quality signal.
+    Standard −110 juice applied to spread &amp; total. ~4.8% overround on moneyline.
+    <strong>For entertainment only.</strong>
+  </div>
+
+  <div class="section-label">Matchup 7 &nbsp;·&nbsp; May 11–17, 2026</div>
+
+  <div class="col-headers">
+    <span>Team</span>
+    <span>Spread</span>
+    <span>Total</span>
+    <span>Moneyline</span>
+  </div>
+
+  <div id="matchups-container"></div>
+
+  <div class="section-label" style="margin-top:26px">Model's Best Bets</div>
+  <div class="best-bets-grid" id="best-bets"></div>
+
+  <p class="disclaimer">
+    Vista Hills Fantasy Sportsbook is for entertainment purposes only. No real money wagering occurs.<br>
+    Lines generated from season scoring data through Matchup 6. Small sample size (n=6) means high variance.<br>
+    All-play win % used as talent proxy. Injury and roster changes not reflected.
+  </p>
+</div>
+
+<script>
+// ── Team data ─────────────────────────────────────────────────────────────────
+const TEAMS = {
+  IR: { name: "Ima Ride For My MF McGGonicle", color: "#e63946", wins: 6, losses: 0, apW: 48,
+        scores: [755.0, 538.5, 554.0, 411.0, 409.5, 443.5] },
+  MN: { name: "MANNY MEN",                     color: "#f77f00", wins: 1, losses: 5, apW: 44,
+        scores: [723.0, 546.5, 401.0, 501.0, 409.0, 429.0] },
+  WG: { name: "WITTnessing Greatness",          color: "#2a9d8f", wins: 3, losses: 3, apW: 38,
+        scores: [656.5, 354.5, 394.0, 508.0, 469.5, 381.0] },
+  MM: { name: "Mike and Mike In The Mornin'",   color: "#457b9d", wins: 5, losses: 1, apW: 36,
+        scores: [567.5, 467.5, 475.0, 461.5, 449.0, 401.0] },
+  AA: { name: "All ARRAEZ for the JUDGE",       color: "#6a4c93", wins: 3, losses: 3, apW: 36,
+        scores: [646.5, 537.0, 296.0, 391.5, 494.5, 413.5] },
+  SP: { name: "16 percent",                     color: "#90be6d", wins: 1, losses: 5, apW: 34,
+        scores: [595.5, 484.5, 468.0, 458.0, 434.0, 392.0] },
+  JK: { name: "Jung H King",                    color: "#ff6b6b", wins: 3, losses: 3, apW: 33,
+        scores: [812.5, 334.0, 475.5, 392.0, 276.5, 457.5] },
+  SK: { name: "Stop looking at me Kwan",        color: "#4cc9f0", wins: 2, losses: 4, apW: 30,
+        scores: [643.0, 390.0, 377.5, 369.0, 414.5, 467.5] },
+  BB: { name: "Back 2 Back CY Young",           color: "#e9c46a", wins: 3, losses: 3, apW: 29,
+        scores: [522.5, 325.5, 478.0, 469.0, 476.5, 326.0] },
+  TB: { name: "Thicc Bois",                     color: "#f4a261", wins: 4, losses: 2, apW: 28,
+        scores: [506.0, 363.0, 481.5, 501.5, 327.5, 379.5] },
+  DH: { name: "Dom's House of Fun",             color: "#a8dadc", wins: 3, losses: 3, apW: 24,
+        scores: [603.5, 300.5, 510.5, 310.0, 438.5, 375.0] },
+  RM: { name: "Raleighing My Way",              color: "#52b788", wins: 2, losses: 4, apW: 16,
+        scores: [505.0, 484.0, 321.5, 429.5, 407.0, 351.0] },
+};
+
+// ── Matchup 7 schedule ────────────────────────────────────────────────────────
+const MATCHUPS = [
+  ["SP","JK"], ["RM","TB"], ["BB","MM"],
+  ["WG","DH"], ["MN","AA"], ["SK","IR"],
+];
+
+const AP_TOTAL = 66;
+const JUICE    = 1.0476; // 4.76% overround — standard -110 line on pick-em
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function avg(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
+
+function projScore(key) {
+  const t = TEAMS[key];
+  const seasonAvg = avg(t.scores);
+  const last2Avg  = avg(t.scores.slice(-2));
+  return 0.4 * seasonAvg + 0.6 * last2Avg;
+}
+
+function toAmericanML(winProb) {
+  const p = winProb * JUICE;
+  if (p >= 0.5) {
+    return Math.round(-(p / (1 - p)) * 100 / 5) * 5;  // negative, round to 5
+  } else {
+    return Math.round(((1 - p) / p) * 100 / 5) * 5;   // positive, round to 5
+  }
+}
+
+function fmtML(ml) {
+  return ml > 0 ? `+${ml}` : `${ml}`;
+}
+
+function fmtSpread(val) {
+  const rounded = Math.round(val * 2) / 2;  // nearest 0.5
+  if (Math.abs(rounded) < 0.5) return 'PK';
+  return rounded > 0 ? `+${rounded.toFixed(1)}` : `${rounded.toFixed(1)}`;
+}
+
+function computeLines(keyA, keyB) {
+  const tA = TEAMS[keyA], tB = TEAMS[keyB];
+  const projA = projScore(keyA), projB = projScore(keyB);
+  const total  = projA + projB;
+
+  // Spread (from projections)
+  const rawSpread = projA - projB;  // positive = A favored
+  const spreadA = -Math.round(rawSpread * 2) / 2;  // A's spread (neg = favorite)
+  // Flip: if A is projected higher, A's spread is negative (gives points)
+  const spA = rawSpread >= 0 ? -Math.abs(Math.round(rawSpread * 2 + 1) / 2) : Math.abs(Math.round(-rawSpread * 2 + 1) / 2);
+  // Simpler:
+  const halfPt = Math.abs(rawSpread) < 0.5 ? 0.5 : 0.5;
+  const spreadFav = -(Math.floor(Math.abs(rawSpread)) + halfPt);
+  const spreadDog =  (Math.floor(Math.abs(rawSpread)) + halfPt);
+
+  const aIsFavByProj = rawSpread >= 0;
+  const spreadLineA  = aIsFavByProj ? spreadFav : spreadDog;
+  const spreadLineB  = aIsFavByProj ? spreadDog : spreadFav;
+
+  // Total (from projections, nearest 0.5)
+  const totalLine = Math.round(total * 2) / 2;
+
+  // Win probability (from projected scores — same signal as spread/total)
+  const pA = projA / (projA + projB);
+  const pB = 1 - pA;
+
+  const mlA = toAmericanML(pA);
+  const mlB = toAmericanML(pB);
+
+  return { projA, projB, total, totalLine, spreadLineA, spreadLineB, mlA, mlB, pA, pB };
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+const container = document.getElementById('matchups-container');
+const bestBetsData = [];
+
+MATCHUPS.forEach(([keyA, keyB]) => {
+  const tA = TEAMS[keyA], tB = TEAMS[keyB];
+  const L  = computeLines(keyA, keyB);
+
+  const aIsMLFav = L.pA >= L.pB;
+  const aIsProjFav = L.spreadLineA < 0;
+
+  const dotA = `<span class="team-dot" style="background:${tA.color}"></span>`;
+  const dotB = `<span class="team-dot" style="background:${tB.color}"></span>`;
+
+  const mlClassA = L.mlA < 0 ? 'neg' : 'pos';
+  const mlClassB = L.mlB < 0 ? 'neg' : 'pos';
+
+  const spA = (L.spreadLineA > 0 ? '+' : '') + L.spreadLineA.toFixed(1);
+  const spB = (L.spreadLineB > 0 ? '+' : '') + L.spreadLineB.toFixed(1);
+
+  const note = '';
+
+  const card = document.createElement('div');
+  card.className = 'matchup-card';
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="mu-label">M7</span>
+      <span class="mu-date">May 11–17, 2026</span>
+      <span class="spacer"></span>
+      ${note}
+    </div>
+
+    <!-- Team A row -->
+    <div class="team-row">
+      <div class="team-info">
+        ${dotA}
+        <div class="team-name-wrap" style="min-width:0">
+          <div class="team-name">${tA.name}</div>
+          <div class="team-meta">${tA.wins}–${tA.losses} &nbsp;·&nbsp; AP ${tA.apW}/${AP_TOTAL}</div>
+        </div>
+      </div>
+      <div class="bet-btn${aIsProjFav ? ' fav' : ''}">
+        <span class="btn-line">${spA}</span>
+        <span class="btn-odds">−110</span>
+      </div>
+      <div class="bet-btn">
+        <span class="btn-line">O ${L.totalLine.toFixed(1)}</span>
+        <span class="btn-odds">−110</span>
+      </div>
+      <div class="bet-btn${aIsMLFav ? ' fav' : ''}">
+        <span class="btn-line ${mlClassA}">${fmtML(L.mlA)}</span>
+        <span class="btn-odds">${(L.pA*100).toFixed(0)}% win</span>
+      </div>
+    </div>
+
+    <!-- Team B row -->
+    <div class="team-row">
+      <div class="team-info">
+        ${dotB}
+        <div class="team-name-wrap" style="min-width:0">
+          <div class="team-name">${tB.name}</div>
+          <div class="team-meta">${tB.wins}–${tB.losses} &nbsp;·&nbsp; AP ${tB.apW}/${AP_TOTAL}</div>
+        </div>
+      </div>
+      <div class="bet-btn${!aIsProjFav ? ' fav' : ''}">
+        <span class="btn-line">${spB}</span>
+        <span class="btn-odds">−110</span>
+      </div>
+      <div class="bet-btn">
+        <span class="btn-line">U ${L.totalLine.toFixed(1)}</span>
+        <span class="btn-odds">−110</span>
+      </div>
+      <div class="bet-btn${!aIsMLFav ? ' fav' : ''}">
+        <span class="btn-line ${mlClassB}">${fmtML(L.mlB)}</span>
+        <span class="btn-odds">${(L.pB*100).toFixed(0)}% win</span>
+      </div>
+    </div>
+
+    <!-- Proj footer -->
+    <div class="proj-footer">
+      <span style="font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Proj</span>
+      <span class="proj-sep">|</span>
+      <span class="proj-item">
+        <span class="proj-dot" style="background:${tA.color}"></span>
+        ${tA.name.split(' ')[0]} <span class="proj-val">${L.projA.toFixed(1)}</span>
+      </span>
+      <span class="proj-sep">·</span>
+      <span class="proj-item">
+        <span class="proj-dot" style="background:${tB.color}"></span>
+        ${tB.name.split(' ')[0]} <span class="proj-val">${L.projB.toFixed(1)}</span>
+      </span>
+      <span class="proj-sep">·</span>
+      <span>Total <span class="proj-val">${L.total.toFixed(1)}</span></span>
+    </div>
+  `;
+
+  container.appendChild(card);
+
+  // Collect for best bets (biggest ML edge = highest win prob)
+  const favKey  = L.pA >= L.pB ? keyA : keyB;
+  const favTeam = TEAMS[favKey];
+  const favProb = Math.max(L.pA, L.pB);
+  const favML   = L.pA >= L.pB ? L.mlA : L.mlB;
+  bestBetsData.push({ favKey, favTeam, favProb, favML, L, keyA, keyB, tA, tB });
+});
+
+// ── Best bets: top 3 by win probability ──────────────────────────────────────
+bestBetsData.sort((a,b) => b.favProb - a.favProb);
+const bbContainer = document.getElementById('best-bets');
+
+bestBetsData.slice(0, 3).forEach((b, i) => {
+  const labels = ['⭐ Best Bet', '🔒 Strong', '📌 Lean'];
+  const opp = b.favKey === b.keyA ? b.tB : b.tA;
+  const card = document.createElement('div');
+  card.className = 'best-bet-card';
+  card.innerHTML = `
+    <div class="bb-label">${labels[i]}</div>
+    <div class="bb-pick">
+      <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${b.favTeam.color}"></span>
+      ${b.favTeam.name.length > 22 ? b.favTeam.name.slice(0,20)+'…' : b.favTeam.name}
+      <span class="bb-odds-badge">${fmtML(b.favML)}</span>
+    </div>
+    <div class="bb-desc">
+      ML favorite at ${(b.favProb*100).toFixed(0)}% win probability vs ${opp.name.split(' ')[0]}.
+      AP quality edge: ${b.favTeam.apW}/${AP_TOTAL} vs ${opp.apW}/${AP_TOTAL}.
+    </div>
+  `;
+  bbContainer.appendChild(card);
+});
+</script>
+</body>
+</html>

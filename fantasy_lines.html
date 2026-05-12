@@ -257,7 +257,7 @@
     ML win probability: 70% all-play win % + 30% projected scores. Spread direction constrained to match ML favorite.
     Standard −110 juice on spread &amp; total. ~4.8% overround on ML. <strong>For entertainment only.</strong>
   </div>
-  <div class="section-label">Matchup 7 &nbsp;·&nbsp; May 11–17, 2026</div>
+  <div class="section-label" id="week-section-label">Matchup 7 &nbsp;·&nbsp; May 11–17, 2026</div>
   <div class="col-headers">
     <span>Team</span><span>Spread</span><span>Total</span><span>Moneyline</span>
   </div>
@@ -330,7 +330,7 @@ const CATS = [
 
 // ── All prior matchup results (M1-M6) ────────────────────────────────────────
 // [teamA, teamB, winner, matchup#, scoreA, scoreB]
-const HISTORY = [
+let HISTORY = [
   ["SP","RM","SP",1,595.5,505.0], ["JK","SK","JK",1,812.5,643.0], ["IR","MN","IR",1,755.0,723.0],
   ["AA","WG","WG",1,646.5,656.5], ["DH","BB","DH",1,603.5,522.5], ["MM","TB","MM",1,567.5,506.0],
   ["SP","IR","IR",2,484.5,538.5], ["JK","RM","RM",2,334.0,484.0], ["SK","AA","AA",2,390.0,537.0],
@@ -349,8 +349,11 @@ const HISTORY = [
 const LEAGUE_AVGS = [628.0, 427.1, 436.0, 433.4, 418.0, 401.4];
 const WEEK_LABELS = ['Wk1','Wk2','Wk3','Wk4','Wk5','Wk6'];
 
-const AP_TOTAL = 66;
-const JUICE    = 1.0476;
+let WEEK_LABEL = '7';
+let DATE_RANGE = 'May 11–17, 2026';
+
+let AP_TOTAL = 66;
+const JUICE  = 1.0476;
 const SP_PTS   = 10; // pts adjustment per start above/below expected pace
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -394,9 +397,9 @@ function computeLiveLines(keyA, keyB) {
   const expectedStartsRem = LIVE.spCap * daysRemaining / LIVE.totalPeriods;
   const startsRemA = LIVE.spCap - ldA.starts;
   const startsRemB = LIVE.spCap - ldB.starts;
-  const projRemainingA = avg(tA.scores) * (daysRemaining / LIVE.totalPeriods)
+  const projRemainingA = projScore(keyA) * (daysRemaining / LIVE.totalPeriods)
                         + (startsRemA - expectedStartsRem) * SP_PTS;
-  const projRemainingB = avg(tB.scores) * (daysRemaining / LIVE.totalPeriods)
+  const projRemainingB = projScore(keyB) * (daysRemaining / LIVE.totalPeriods)
                         + (startsRemB - expectedStartsRem) * SP_PTS;
   const projA = ldA.score + projRemainingA;
   const projB = ldB.score + projRemainingB;
@@ -618,7 +621,7 @@ function closePreview() {
 }
 
 // ── Matchup 7 schedule ────────────────────────────────────────────────────────
-const MATCHUPS = [["SP","JK"],["RM","TB"],["BB","MM"],["WG","DH"],["MN","AA"],["SK","IR"]];
+let MATCHUPS = [["SP","JK"],["RM","TB"],["BB","MM"],["WG","DH"],["MN","AA"],["SK","IR"]];
 let matchupData = [];
 
 // ── Render all matchups ───────────────────────────────────────────────────────
@@ -685,8 +688,8 @@ function renderAll() {
     card.className = 'matchup-card';
     card.innerHTML = `
       <div class="card-header">
-        <span class="mu-label">M7</span>
-        <span style="color:var(--muted)">May 11–17, 2026</span>
+        <span class="mu-label">M${WEEK_LABEL}</span>
+        <span style="color:var(--muted)">${DATE_RANGE}</span>
         <span class="spacer"></span>
         <button class="preview-btn" onclick="openPreview(${idx})">▶ Preview</button>
       </div>
@@ -742,13 +745,45 @@ function loadLive() {
   fetch('live_data.json?t=' + Date.now())
     .then(r => { if (!r.ok) throw new Error('no live data'); return r.json(); })
     .then(data => {
-      if (data.matchupPeriod !== 7) return;
       LIVE = data;
+
+      // Update team records, scores, and apW
+      if (data.apTotal) AP_TOTAL = data.apTotal;
+      if (data.teams) {
+        for (const [key, t] of Object.entries(data.teams)) {
+          if (!TEAMS[key]) continue;
+          if (t.wins   !== undefined) TEAMS[key].wins   = t.wins;
+          if (t.losses !== undefined) TEAMS[key].losses = t.losses;
+          if (t.apW    !== undefined) TEAMS[key].apW    = t.apW;
+          if (t.scores && t.scores.length) TEAMS[key].scores = t.scores;
+        }
+      }
+
+      // Update matchup pairings
+      if (data.matchups && data.matchups.length) {
+        MATCHUPS = data.matchups.map(m => [m.away, m.home]);
+      }
+
+      // Update H2H history
+      if (data.history && data.history.length) {
+        HISTORY = data.history;
+      }
+
+      // Update week label vars
+      if (data.weekLabel) WEEK_LABEL = data.weekLabel;
+      if (data.dateRange) DATE_RANGE = data.dateRange;
+
+      // Update header
       const pill = document.getElementById('status-pill');
       const lbl  = document.getElementById('status-label');
       const day  = LIVE.currentPeriod - LIVE.weekStartPeriod + 1;
       if (pill) { pill.textContent = 'LIVE'; pill.classList.add('live'); }
-      if (lbl)  lbl.innerHTML = `M7 in progress &nbsp;·&nbsp; Day ${day} of ${LIVE.totalPeriods} &nbsp;·&nbsp; Updated ${LIVE.updated}`;
+      if (lbl)  lbl.innerHTML = `M${data.matchupPeriod} in progress &nbsp;·&nbsp; Day ${day} of ${LIVE.totalPeriods} &nbsp;·&nbsp; Updated ${LIVE.updated}`;
+
+      // Update section label
+      const sl = document.getElementById('week-section-label');
+      if (sl) sl.textContent = `Matchup ${WEEK_LABEL}  ·  ${DATE_RANGE}`;
+
       renderAll();
     })
     .catch(() => {});

@@ -196,6 +196,36 @@
   .disclaimer { font-size: 10px; color: var(--muted); text-align: center; margin-top: 28px; line-height: 1.7; max-width: 580px; margin-left: auto; margin-right: auto; }
   a.back-link { color: var(--muted); font-size: 11px; text-decoration: none; display: inline-block; margin-bottom: 14px; }
   a.back-link:hover { color: var(--dim); }
+
+  /* ── Live score bar ── */
+  .live-bar {
+    background: rgba(30,199,95,0.05);
+    border-bottom: 1px solid rgba(30,199,95,0.15);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .live-score-side { display: flex; align-items: center; gap: 7px; font-size: 11px; }
+  .live-score-side.right { flex-direction: row-reverse; }
+  .live-score-num { font-size: 16px; font-weight: 800; }
+  .starts-pip { font-size: 9px; color: var(--muted); }
+  .live-badge-sm {
+    background: var(--green);
+    color: #000;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    display: block;
+    text-align: center;
+    margin-bottom: 3px;
+  }
+  .live-center { text-align: center; }
+  .live-day { font-size: 9px; color: var(--muted); }
+  .open-pill.live { background: rgba(30,199,95,0.18); border-color: rgba(30,199,95,0.4); }
+  .btn-open { font-size: 9px; color: var(--muted); display: block; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -214,8 +244,8 @@
     <div class="nav-tab">Props</div>
   </nav>
   <div class="header-right">
-    <span class="open-pill">OPEN</span>
-    <span>Lines posted through <strong>Matchup 7</strong></span>
+    <span class="open-pill" id="status-pill">OPEN</span>
+    <span id="status-label">Lines posted through <strong>Matchup 7</strong></span>
   </div>
 </header>
 
@@ -249,6 +279,8 @@
 </div>
 
 <script>
+let LIVE = null;
+
 // ── Team data ─────────────────────────────────────────────────────────────────
 const TEAMS = {
   IR: { name:"Ima Ride For My MF McGGonicle", color:"#e63946", wins:6, losses:0, apW:48, scores:[755.0,538.5,554.0,411.0,409.5,443.5] },
@@ -319,7 +351,7 @@ const WEEK_LABELS = ['Wk1','Wk2','Wk3','Wk4','Wk5','Wk6'];
 
 const AP_TOTAL = 66;
 const JUICE    = 1.0476;
-const matchupData = [];
+const SP_PTS   = 10; // pts adjustment per start above/below expected pace
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function avg(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
@@ -352,6 +384,36 @@ function computeLines(keyA, keyB) {
   const total = projA + projB;
   const totalLine = Math.round(total*2)/2;
   return { projA, projB, total, totalLine, spreadLineA, spreadLineB, mlA, mlB, pA, pB };
+}
+
+function computeLiveLines(keyA, keyB) {
+  const tA = TEAMS[keyA], tB = TEAMS[keyB];
+  const ldA = LIVE.teams[keyA], ldB = LIVE.teams[keyB];
+  const daysElapsed  = LIVE.currentPeriod - LIVE.weekStartPeriod;
+  const daysRemaining = LIVE.totalPeriods - daysElapsed;
+  const expectedStartsRem = LIVE.spCap * daysRemaining / LIVE.totalPeriods;
+  const startsRemA = LIVE.spCap - ldA.starts;
+  const startsRemB = LIVE.spCap - ldB.starts;
+  const projRemainingA = avg(tA.scores) * (daysRemaining / LIVE.totalPeriods)
+                        + (startsRemA - expectedStartsRem) * SP_PTS;
+  const projRemainingB = avg(tB.scores) * (daysRemaining / LIVE.totalPeriods)
+                        + (startsRemB - expectedStartsRem) * SP_PTS;
+  const projA = ldA.score + projRemainingA;
+  const projB = ldB.score + projRemainingB;
+  const apRatioA  = (tA.apW/AP_TOTAL) / (tA.apW/AP_TOTAL + tB.apW/AP_TOTAL);
+  const projRatioA = projA / (projA + projB);
+  const pA = 0.70*apRatioA + 0.30*projRatioA;
+  const pB = 1 - pA;
+  const mlA = toAmericanML(pA), mlB = toAmericanML(pB);
+  const aIsMLFav = pA >= pB;
+  const spreadMag = Math.floor(Math.abs(projA - projB)) + 0.5;
+  const spreadLineA = aIsMLFav ? -spreadMag : +spreadMag;
+  const spreadLineB = aIsMLFav ? +spreadMag : -spreadMag;
+  const total = projA + projB;
+  const totalLine = Math.round(total*2)/2;
+  return { projA, projB, total, totalLine, spreadLineA, spreadLineB, mlA, mlB, pA, pB,
+           currentA: ldA.score, currentB: ldB.score, startsA: ldA.starts, startsB: ldB.starts,
+           startsRemA, startsRemB, daysElapsed, daysRemaining };
 }
 
 // ── Sparkline SVG ─────────────────────────────────────────────────────────────
@@ -557,79 +619,143 @@ function closePreview() {
 
 // ── Matchup 7 schedule ────────────────────────────────────────────────────────
 const MATCHUPS = [["SP","JK"],["RM","TB"],["BB","MM"],["WG","DH"],["MN","AA"],["SK","IR"]];
+let matchupData = [];
 
-// ── Render ────────────────────────────────────────────────────────────────────
-const container = document.getElementById('matchups-container');
-const bestBetsData = [];
+// ── Render all matchups ───────────────────────────────────────────────────────
+function renderAll() {
+  matchupData = [];
+  const container  = document.getElementById('matchups-container');
+  const bbContainer = document.getElementById('best-bets');
+  container.innerHTML = '';
+  bbContainer.innerHTML = '';
+  const bestBetsData = [];
 
-MATCHUPS.forEach(([keyA, keyB]) => {
-  const tA = TEAMS[keyA], tB = TEAMS[keyB];
-  const L  = computeLines(keyA, keyB);
-  const idx = matchupData.length;
-  matchupData.push({ keyA, keyB, L });
+  MATCHUPS.forEach(([keyA, keyB]) => {
+    const tA = TEAMS[keyA], tB = TEAMS[keyB];
+    const L  = computeLines(keyA, keyB);
+    const LL = LIVE ? computeLiveLines(keyA, keyB) : null;
+    const D  = LL || L; // display lines
+    const idx = matchupData.length;
+    matchupData.push({ keyA, keyB, L, liveL: LL || L });
 
-  const aIsMLFav = L.pA >= L.pB;
-  const aIsProjFav = L.spreadLineA < 0;
-  const dotA = `<span class="team-dot" style="background:${tA.color}"></span>`;
-  const dotB = `<span class="team-dot" style="background:${tB.color}"></span>`;
-  const mlClassA = L.mlA < 0 ? 'neg' : 'pos';
-  const mlClassB = L.mlB < 0 ? 'neg' : 'pos';
-  const spA = (L.spreadLineA > 0 ? '+' : '') + L.spreadLineA.toFixed(1);
-  const spB = (L.spreadLineB > 0 ? '+' : '') + L.spreadLineB.toFixed(1);
+    // Live score bar
+    let liveBanner = '';
+    if (LL) {
+      const dayNum = LL.daysElapsed + 1;
+      const leading = LL.currentA > LL.currentB ? keyA : LL.currentB > LL.currentA ? keyB : null;
+      const leaderStyle = k => k === leading ? `font-weight:800` : '';
+      liveBanner = `
+        <div class="live-bar">
+          <div class="live-score-side">
+            <span class="team-dot" style="background:${tA.color}"></span>
+            <span style="color:${tA.color};font-weight:700">${tA.name.split(' ')[0]}</span>
+            <span class="live-score-num" style="color:${tA.color};${leaderStyle(keyA)}">${LL.currentA.toFixed(1)}</span>
+            <span class="starts-pip">${LL.startsA}/13 GS</span>
+          </div>
+          <div class="live-center">
+            <span class="live-badge-sm">LIVE</span>
+            <div class="live-day">Day ${dayNum} of ${LIVE.totalPeriods} &nbsp;·&nbsp; ${LL.daysRemaining} days left</div>
+          </div>
+          <div class="live-score-side right">
+            <span class="starts-pip">${LL.startsB}/13 GS</span>
+            <span class="live-score-num" style="color:${tB.color};${leaderStyle(keyB)}">${LL.currentB.toFixed(1)}</span>
+            <span style="color:${tB.color};font-weight:700">${tB.name.split(' ')[0]}</span>
+            <span class="team-dot" style="background:${tB.color}"></span>
+          </div>
+        </div>`;
+    }
 
-  const card = document.createElement('div');
-  card.className = 'matchup-card';
-  card.innerHTML = `
-    <div class="card-header">
-      <span class="mu-label">M7</span>
-      <span style="color:var(--muted)">May 11–17, 2026</span>
-      <span class="spacer"></span>
-      <button class="preview-btn" onclick="openPreview(${idx})">▶ Preview</button>
-    </div>
-    <div class="team-row">
-      <div class="team-info">${dotA}<div style="min-width:0"><div class="team-name">${tA.name}</div><div class="team-meta">${tA.wins}–${tA.losses} &nbsp;·&nbsp; AP ${tA.apW}/${AP_TOTAL}</div></div></div>
-      <div class="bet-btn${aIsProjFav?' fav':''}"><span class="btn-line">${spA}</span><span class="btn-odds">−110</span></div>
-      <div class="bet-btn"><span class="btn-line">O ${L.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span></div>
-      <div class="bet-btn${aIsMLFav?' fav':''}"><span class="btn-line ${mlClassA}">${fmtML(L.mlA)}</span><span class="btn-odds">${(L.pA*100).toFixed(0)}% win</span></div>
-    </div>
-    <div class="team-row">
-      <div class="team-info">${dotB}<div style="min-width:0"><div class="team-name">${tB.name}</div><div class="team-meta">${tB.wins}–${tB.losses} &nbsp;·&nbsp; AP ${tB.apW}/${AP_TOTAL}</div></div></div>
-      <div class="bet-btn${!aIsProjFav?' fav':''}"><span class="btn-line">${spB}</span><span class="btn-odds">−110</span></div>
-      <div class="bet-btn"><span class="btn-line">U ${L.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span></div>
-      <div class="bet-btn${!aIsMLFav?' fav':''}"><span class="btn-line ${mlClassB}">${fmtML(L.mlB)}</span><span class="btn-odds">${(L.pB*100).toFixed(0)}% win</span></div>
-    </div>
-    <div class="proj-footer">
-      <span style="font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Proj</span>
-      <span class="proj-sep">|</span>
-      <span class="proj-item"><span class="proj-dot" style="background:${tA.color}"></span>${tA.name.split(' ')[0]} <span class="proj-val">${L.projA.toFixed(1)}</span></span>
-      <span class="proj-sep">·</span>
-      <span class="proj-item"><span class="proj-dot" style="background:${tB.color}"></span>${tB.name.split(' ')[0]} <span class="proj-val">${L.projB.toFixed(1)}</span></span>
-      <span class="proj-sep">·</span>
-      <span>Total <span class="proj-val">${L.total.toFixed(1)}</span></span>
-    </div>`;
-  container.appendChild(card);
+    const aIsMLFav  = D.pA >= D.pB;
+    const aIsProjFav = D.spreadLineA < 0;
+    const dotA = `<span class="team-dot" style="background:${tA.color}"></span>`;
+    const dotB = `<span class="team-dot" style="background:${tB.color}"></span>`;
+    const mlClassA = D.mlA < 0 ? 'neg' : 'pos';
+    const mlClassB = D.mlB < 0 ? 'neg' : 'pos';
+    const spA = (D.spreadLineA > 0 ? '+' : '') + D.spreadLineA.toFixed(1);
+    const spB = (D.spreadLineB > 0 ? '+' : '') + D.spreadLineB.toFixed(1);
 
-  const favKey = L.pA >= L.pB ? keyA : keyB;
-  bestBetsData.push({ favKey, favTeam: TEAMS[favKey], favProb: Math.max(L.pA,L.pB), favML: L.pA>=L.pB?L.mlA:L.mlB, oppTeam: L.pA>=L.pB?tB:tA });
-});
+    // Opening line reference (shown when live)
+    const openSpA = LL ? `<span class="btn-open">Open: ${(L.spreadLineA>0?'+':'')+L.spreadLineA.toFixed(1)}</span>` : '';
+    const openSpB = LL ? `<span class="btn-open">Open: ${(L.spreadLineB>0?'+':'')+L.spreadLineB.toFixed(1)}</span>` : '';
+    const openTot = LL ? `<span class="btn-open">Open: ${L.totalLine.toFixed(1)}</span>` : '';
+    const openMLA = LL ? `<span class="btn-open">Open: ${fmtML(L.mlA)}</span>` : '';
+    const openMLB = LL ? `<span class="btn-open">Open: ${fmtML(L.mlB)}</span>` : '';
 
-// ── Best bets ─────────────────────────────────────────────────────────────────
-bestBetsData.sort((a,b) => b.favProb - a.favProb);
-const bbContainer = document.getElementById('best-bets');
-['⭐ Best Bet','🔒 Strong','📌 Lean'].forEach((lbl, i) => {
-  const b = bestBetsData[i];
-  const el = document.createElement('div');
-  el.className = 'best-bet-card';
-  el.innerHTML = `
-    <div class="bb-label">${lbl}</div>
-    <div class="bb-pick">
-      <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${b.favTeam.color}"></span>
-      ${b.favTeam.name.length>22?b.favTeam.name.slice(0,20)+'…':b.favTeam.name}
-      <span class="bb-odds-badge">${fmtML(b.favML)}</span>
-    </div>
-    <div class="bb-desc">${(b.favProb*100).toFixed(0)}% win prob vs ${b.oppTeam.name.split(' ')[0]}. AP edge: ${b.favTeam.apW}/${AP_TOTAL} vs ${b.oppTeam.apW}/${AP_TOTAL}.</div>`;
-  bbContainer.appendChild(el);
-});
+    const card = document.createElement('div');
+    card.className = 'matchup-card';
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="mu-label">M7</span>
+        <span style="color:var(--muted)">May 11–17, 2026</span>
+        <span class="spacer"></span>
+        <button class="preview-btn" onclick="openPreview(${idx})">▶ Preview</button>
+      </div>
+      ${liveBanner}
+      <div class="team-row">
+        <div class="team-info">${dotA}<div style="min-width:0"><div class="team-name">${tA.name}</div><div class="team-meta">${tA.wins}–${tA.losses} &nbsp;·&nbsp; AP ${tA.apW}/${AP_TOTAL}</div></div></div>
+        <div class="bet-btn${aIsProjFav?' fav':''}"><span class="btn-line">${spA}</span><span class="btn-odds">−110</span>${openSpA}</div>
+        <div class="bet-btn"><span class="btn-line">O ${D.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span>${openTot}</div>
+        <div class="bet-btn${aIsMLFav?' fav':''}"><span class="btn-line ${mlClassA}">${fmtML(D.mlA)}</span><span class="btn-odds">${(D.pA*100).toFixed(0)}% win</span>${openMLA}</div>
+      </div>
+      <div class="team-row">
+        <div class="team-info">${dotB}<div style="min-width:0"><div class="team-name">${tB.name}</div><div class="team-meta">${tB.wins}–${tB.losses} &nbsp;·&nbsp; AP ${tB.apW}/${AP_TOTAL}</div></div></div>
+        <div class="bet-btn${!aIsProjFav?' fav':''}"><span class="btn-line">${spB}</span><span class="btn-odds">−110</span>${openSpB}</div>
+        <div class="bet-btn"><span class="btn-line">U ${D.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span>${openTot}</div>
+        <div class="bet-btn${!aIsMLFav?' fav':''}"><span class="btn-line ${mlClassB}">${fmtML(D.mlB)}</span><span class="btn-odds">${(D.pB*100).toFixed(0)}% win</span>${openMLB}</div>
+      </div>
+      <div class="proj-footer">
+        <span style="font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">${LL?'Live Proj':'Proj'}</span>
+        <span class="proj-sep">|</span>
+        <span class="proj-item"><span class="proj-dot" style="background:${tA.color}"></span>${tA.name.split(' ')[0]} <span class="proj-val">${D.projA.toFixed(1)}</span></span>
+        <span class="proj-sep">·</span>
+        <span class="proj-item"><span class="proj-dot" style="background:${tB.color}"></span>${tB.name.split(' ')[0]} <span class="proj-val">${D.projB.toFixed(1)}</span></span>
+        <span class="proj-sep">·</span>
+        <span>Total <span class="proj-val">${D.total.toFixed(1)}</span></span>
+      </div>`;
+    container.appendChild(card);
+
+    const favKey = D.pA >= D.pB ? keyA : keyB;
+    bestBetsData.push({ favKey, favTeam: TEAMS[favKey], favProb: Math.max(D.pA,D.pB),
+                        favML: D.pA>=D.pB?D.mlA:D.mlB, oppTeam: D.pA>=D.pB?tB:tA });
+  });
+
+  // Best bets
+  bestBetsData.sort((a,b) => b.favProb - a.favProb);
+  ['⭐ Best Bet','🔒 Strong','📌 Lean'].forEach((lbl, i) => {
+    const b = bestBetsData[i];
+    const el = document.createElement('div');
+    el.className = 'best-bet-card';
+    el.innerHTML = `
+      <div class="bb-label">${lbl}</div>
+      <div class="bb-pick">
+        <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${b.favTeam.color}"></span>
+        ${b.favTeam.name.length>22?b.favTeam.name.slice(0,20)+'…':b.favTeam.name}
+        <span class="bb-odds-badge">${fmtML(b.favML)}</span>
+      </div>
+      <div class="bb-desc">${(b.favProb*100).toFixed(0)}% win prob vs ${b.oppTeam.name.split(' ')[0]}. AP edge: ${b.favTeam.apW}/${AP_TOTAL} vs ${b.oppTeam.apW}/${AP_TOTAL}.</div>`;
+    bbContainer.appendChild(el);
+  });
+}
+
+// ── Load live data from ESPN snapshot ────────────────────────────────────────
+function loadLive() {
+  fetch('live_data.json?t=' + Date.now())
+    .then(r => { if (!r.ok) throw new Error('no live data'); return r.json(); })
+    .then(data => {
+      if (data.matchupPeriod !== 7) return;
+      LIVE = data;
+      const pill = document.getElementById('status-pill');
+      const lbl  = document.getElementById('status-label');
+      const day  = LIVE.currentPeriod - LIVE.weekStartPeriod + 1;
+      if (pill) { pill.textContent = 'LIVE'; pill.classList.add('live'); }
+      if (lbl)  lbl.innerHTML = `M7 in progress &nbsp;·&nbsp; Day ${day} of ${LIVE.totalPeriods} &nbsp;·&nbsp; Updated ${LIVE.updated}`;
+      renderAll();
+    })
+    .catch(() => {});
+}
+
+renderAll();
+loadLive();
 </script>
 </body>
 </html>

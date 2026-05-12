@@ -1,0 +1,22 @@
+{
+  "updated": "May 12, 9:00 AM",
+  "matchupPeriod": 7,
+  "currentPeriod": 49,
+  "weekStartPeriod": 48,
+  "totalPeriods": 7,
+  "spCap": 13,
+  "teams": {
+    "SP": {"score": 45.0,  "starts": 1},
+    "JK": {"score": 21.0,  "starts": 1},
+    "RM": {"score": 26.0,  "starts": 2},
+    "TB": {"score": 30.5,  "starts": 0},
+    "BB": {"score": 14.0,  "starts": 0},
+    "MM": {"score": 25.0,  "starts": 1},
+    "WG": {"score": 15.0,  "starts": 1},
+    "DH": {"score": 14.0,  "starts": 0},
+    "MN": {"score": 34.5,  "starts": 0},
+    "AA": {"score": 58.0,  "starts": 2},
+    "SK": {"score": 17.5,  "starts": 0},
+    "IR": {"score": 23.5,  "starts": 1}
+  }
+}

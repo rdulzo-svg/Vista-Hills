@@ -1011,7 +1011,7 @@ function loadLive() {
       if (data.dateRange) DATE_RANGE = data.dateRange;
 
       // Update Supabase config
-      if (data.supabaseUrl)     SUPABASE_URL      = data.supabaseUrl;
+      if (data.supabaseUrl)     SUPABASE_URL      = data.supabaseUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
       if (data.supabaseAnonKey) SUPABASE_ANON_KEY = data.supabaseAnonKey;
 
       // Update header

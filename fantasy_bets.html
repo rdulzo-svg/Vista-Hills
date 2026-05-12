@@ -159,7 +159,7 @@ let activeWeek   = 'all';
 fetch('live_data.json?t=' + Date.now())
   .then(r => r.ok ? r.json() : {})
   .then(data => {
-    if (data.supabaseUrl)     SUPABASE_URL      = data.supabaseUrl;
+    if (data.supabaseUrl)     SUPABASE_URL      = data.supabaseUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
     if (data.supabaseAnonKey) SUPABASE_ANON_KEY = data.supabaseAnonKey;
     init();
   })

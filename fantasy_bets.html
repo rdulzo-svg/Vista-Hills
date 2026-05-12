@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vista Hills — Bet Tracker</title>
+<style>
+  :root {
+    --bg:        #0f1923;
+    --card:      #1a2535;
+    --card-hdr:  #111e2c;
+    --btn:       #1e2f42;
+    --border:    #263545;
+    --border-lt: rgba(255,255,255,0.06);
+    --text:      #ffffff;
+    --dim:       #8fa6b8;
+    --muted:     #4d6275;
+    --green:     #1ec75f;
+    --green-dim: rgba(30,199,95,0.15);
+    --gold:      #f0b417;
+    --red:       #f05454;
+    --red-dim:   rgba(240,84,84,0.15);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system,"Segoe UI",Arial,sans-serif; min-height: 100vh; padding-bottom: 60px; }
+
+  /* ── Site header ── */
+  .site-header { background: #0a1118; border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: stretch; height: 52px; position: sticky; top: 0; z-index: 100; }
+  .brand { display: flex; align-items: center; gap: 10px; padding-right: 24px; border-right: 1px solid var(--border); margin-right: 20px; }
+  .brand-logo { background: var(--green); color: #000; font-weight: 900; font-size: 11px; padding: 5px 8px; border-radius: 4px; letter-spacing: 0.5px; }
+  .brand-text { line-height: 1.2; }
+  .brand-name { font-size: 14px; font-weight: 700; }
+  .brand-sub  { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .nav-tabs { display: flex; align-items: stretch; }
+  .nav-tab { display: flex; align-items: center; padding: 0 16px; font-size: 12px; font-weight: 600; color: var(--dim); border-bottom: 2px solid transparent; text-decoration: none; letter-spacing: 0.3px; }
+  .nav-tab.active { color: var(--text); border-bottom-color: var(--green); }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--dim); }
+  .open-pill { background: var(--green-dim); color: var(--green); border: 1px solid rgba(30,199,95,0.3); border-radius: 4px; padding: 3px 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
+
+  /* ── Page body ── */
+  .page-body { max-width: 820px; margin: 0 auto; padding: 18px 16px; }
+  a.back-link { color: var(--muted); font-size: 11px; text-decoration: none; display: inline-block; margin-bottom: 14px; }
+  a.back-link:hover { color: var(--dim); }
+  .section-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .section-label .sl-right { flex: initial; }
+  .section-label::after { display: none; }
+  .section-hr { flex: 1; height: 1px; background: var(--border); display: inline-block; }
+
+  /* ── Leaderboard table ── */
+  .lb-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .lb-table th { color: var(--muted); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: right; }
+  .lb-table th:first-child, .lb-table th:nth-child(2) { text-align: left; }
+  .lb-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-lt); text-align: right; }
+  .lb-table td:first-child { text-align: left; font-weight: 700; color: var(--muted); font-size: 11px; }
+  .lb-table td:nth-child(2) { text-align: left; }
+  .lb-table tr:last-child td { border-bottom: none; }
+  .lb-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .bettor-name { font-weight: 700; font-size: 13px; }
+  .bettor-record { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .net-pos { color: var(--green); font-weight: 700; }
+  .net-neg { color: var(--red); font-weight: 700; }
+  .net-zer { color: var(--dim); font-weight: 700; }
+  .roi-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+  .roi-pos { background: var(--green-dim); color: var(--green); }
+  .roi-neg { background: var(--red-dim); color: var(--red); }
+  .roi-zer { background: rgba(255,255,255,0.06); color: var(--muted); }
+  .rank-1 td:first-child { color: var(--gold); }
+
+  /* ── Bet feed ── */
+  .feed-filters { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-btn { background: var(--btn); border: 1px solid var(--border); border-radius: 20px; color: var(--dim); font-size: 11px; padding: 4px 12px; cursor: pointer; transition: background 0.12s; }
+  .filter-btn:hover { background: #253b52; }
+  .filter-btn.active { background: var(--green-dim); border-color: rgba(30,199,95,0.4); color: var(--green); font-weight: 700; }
+  .week-select { background: var(--btn); border: 1px solid var(--border); border-radius: 6px; color: var(--dim); font-size: 11px; padding: 5px 10px; cursor: pointer; outline: none; }
+  .week-select:focus { border-color: var(--green); }
+
+  .bet-row { background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; padding: 12px 14px; display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px 14px; align-items: center; }
+  .bet-mu { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .bet-desc { font-size: 13px; font-weight: 600; }
+  .bet-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .bet-amt  { font-size: 12px; color: var(--dim); text-align: right; white-space: nowrap; }
+  .bet-amt strong { font-size: 13px; color: var(--text); }
+  .status-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
+  .s-open  { background: rgba(240,180,23,0.15); color: var(--gold); border: 1px solid rgba(240,180,23,0.3); }
+  .s-won   { background: var(--green-dim); color: var(--green); border: 1px solid rgba(30,199,95,0.3); }
+  .s-lost  { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(240,84,84,0.3); }
+  .s-push  { background: rgba(255,255,255,0.06); color: var(--dim); border: 1px solid var(--border); }
+  .payout-line { font-size: 11px; margin-top: 4px; }
+  .payout-won  { color: var(--green); font-weight: 700; }
+  .payout-lost { color: var(--red); }
+
+  /* ── Empty / loading states ── */
+  .state-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 40px 20px; text-align: center; }
+  .state-box h3 { font-size: 15px; margin-bottom: 8px; }
+  .state-box p  { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .state-box code { font-size: 11px; color: var(--gold); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 3px; }
+  .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="brand">
+    <div class="brand-logo">VH</div>
+    <div class="brand-text">
+      <div class="brand-name">Vista Hills</div>
+      <div class="brand-sub">Fantasy Sportsbook</div>
+    </div>
+  </div>
+  <nav class="nav-tabs">
+    <a class="nav-tab" href="fantasy_lines.html">Matchup Lines</a>
+    <a class="nav-tab active" href="fantasy_bets.html">Bet Tracker</a>
+  </nav>
+  <div class="header-right">
+    <span class="open-pill" id="status-pill">TRACKER</span>
+    <span id="status-label">Vista Hills Sportsbook</span>
+  </div>
+</header>
+
+<div class="page-body">
+  <a class="back-link" href="fantasy_lines.html">← Back to Lines</a>
+
+  <div class="section-label">
+    Leaderboard
+    <span class="section-hr"></span>
+  </div>
+  <div id="leaderboard-wrap">
+    <div class="state-box"><div class="spinner"></div><p>Loading…</p></div>
+  </div>
+
+  <div class="section-label" style="margin-top:26px">
+    All Bets
+    <span class="section-hr"></span>
+  </div>
+  <div class="feed-filters">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" data-filter="open"  onclick="setFilter('open',this)">Open</button>
+    <button class="filter-btn" data-filter="won"   onclick="setFilter('won',this)">Won</button>
+    <button class="filter-btn" data-filter="lost"  onclick="setFilter('lost',this)">Lost</button>
+    <select class="week-select" id="week-select" onchange="setWeek(this.value)">
+      <option value="all">All Weeks</option>
+    </select>
+  </div>
+  <div id="feed-wrap">
+    <div class="state-box"><div class="spinner"></div><p>Loading…</p></div>
+  </div>
+</div>
+
+<script>
+let SUPABASE_URL = '';
+let SUPABASE_ANON_KEY = '';
+let ALL_BETS = [];
+let activeFilter = 'all';
+let activeWeek   = 'all';
+
+// Load Supabase config from live_data.json, then fetch bets
+fetch('live_data.json?t=' + Date.now())
+  .then(r => r.ok ? r.json() : {})
+  .then(data => {
+    if (data.supabaseUrl)     SUPABASE_URL      = data.supabaseUrl;
+    if (data.supabaseAnonKey) SUPABASE_ANON_KEY = data.supabaseAnonKey;
+    init();
+  })
+  .catch(() => init());
+
+async function init() {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    const notConfigured = `
+      <div class="state-box">
+        <h3>Sportsbook not configured yet</h3>
+        <p>Add your Supabase credentials as GitHub secrets and run the workflow.<br>
+        See <code>supabase_setup.sql</code> for setup instructions.</p>
+      </div>`;
+    document.getElementById('leaderboard-wrap').innerHTML = notConfigured;
+    document.getElementById('feed-wrap').innerHTML = notConfigured;
+    return;
+  }
+
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/bets?select=*&order=created_at.desc`,
+      { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    ALL_BETS = await r.json();
+    populateWeekFilter();
+    renderLeaderboard();
+    renderFeed();
+  } catch (e) {
+    const errBox = `<div class="state-box"><h3>Error loading bets</h3><p>${e.message}</p></div>`;
+    document.getElementById('leaderboard-wrap').innerHTML = errBox;
+    document.getElementById('feed-wrap').innerHTML = errBox;
+  }
+}
+
+function populateWeekFilter() {
+  const weeks = [...new Set(ALL_BETS.map(b => b.matchup_period))].sort((a,b) => a-b);
+  const sel = document.getElementById('week-select');
+  weeks.forEach(w => {
+    const opt = document.createElement('option');
+    opt.value = w; opt.textContent = `Matchup ${w}`;
+    sel.appendChild(opt);
+  });
+}
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed();
+}
+
+function setWeek(w) {
+  activeWeek = w;
+  renderFeed();
+}
+
+// ── Leaderboard ────────────────────────────────────────────────────────────────
+function renderLeaderboard() {
+  const bettors = {};
+  for (const bet of ALL_BETS) {
+    if (!bettors[bet.bettor]) bettors[bet.bettor] = { w:0, l:0, p:0, open:0, wagered:0, gradedWagered:0, net:0 };
+    const b = bettors[bet.bettor];
+    b.wagered += bet.amount;
+    if (bet.status === 'won') {
+      b.w++;
+      b.gradedWagered += bet.amount;
+      b.net += (bet.payout - bet.amount);
+    } else if (bet.status === 'lost') {
+      b.l++;
+      b.gradedWagered += bet.amount;
+      b.net -= bet.amount;
+    } else if (bet.status === 'push') {
+      b.p++;
+      b.gradedWagered += bet.amount;
+    } else {
+      b.open++;
+    }
+  }
+
+  if (!Object.keys(bettors).length) {
+    document.getElementById('leaderboard-wrap').innerHTML =
+      `<div class="state-box"><h3>No bets yet</h3><p>Be the first to place a bet on the <a href="fantasy_lines.html" style="color:var(--green)">Lines page</a>.</p></div>`;
+    return;
+  }
+
+  const rows = Object.entries(bettors)
+    .sort((a, b) => b[1].net - a[1].net || b[1].w - a[1].w);
+
+  const tableRows = rows.map(([name, s], i) => {
+    const netCls = s.net > 0 ? 'net-pos' : s.net < 0 ? 'net-neg' : 'net-zer';
+    const netStr = (s.net > 0 ? '+' : '') + s.net.toFixed(1) + 'u';
+    const roi    = s.gradedWagered > 0 ? s.net / s.gradedWagered * 100 : null;
+    const roiBadge = roi === null
+      ? `<span class="roi-badge roi-zer">—</span>`
+      : roi >= 0
+        ? `<span class="roi-badge roi-pos">+${roi.toFixed(0)}%</span>`
+        : `<span class="roi-badge roi-neg">${roi.toFixed(0)}%</span>`;
+    const total = s.w + s.l + s.p;
+    return `<tr class="${i===0?'rank-1':''}">
+      <td>${i+1}</td>
+      <td>
+        <div class="bettor-name">${esc(name)}</div>
+        <div class="bettor-record">${total} graded · ${s.open} open</div>
+      </td>
+      <td>${s.w}</td>
+      <td>${s.l}</td>
+      <td>${s.p}</td>
+      <td>${s.wagered.toFixed(1)}u</td>
+      <td class="${netCls}">${netStr}</td>
+      <td>${roiBadge}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('leaderboard-wrap').innerHTML = `
+    <table class="lb-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Bettor</th><th>W</th><th>L</th><th>P</th>
+          <th>Wagered</th><th>Net</th><th>ROI</th>
+        </tr>
+      </thead>
+      <tbody>${tableRows}</tbody>
+    </table>`;
+}
+
+// ── Bet feed ──────────────────────────────────────────────────────────────────
+function renderFeed() {
+  let bets = ALL_BETS;
+  if (activeFilter !== 'all') bets = bets.filter(b => b.status === activeFilter);
+  if (activeWeek   !== 'all') bets = bets.filter(b => b.matchup_period == activeWeek);
+
+  if (!bets.length) {
+    document.getElementById('feed-wrap').innerHTML =
+      `<div class="state-box"><h3>No bets match this filter</h3></div>`;
+    return;
+  }
+
+  const html = bets.map(bet => {
+    const statusCls = { open:'s-open', won:'s-won', lost:'s-lost', push:'s-push' }[bet.status] || 's-open';
+    const oddsStr = bet.odds > 0 ? `+${bet.odds}` : `${bet.odds}`;
+    let payoutLine = '';
+    if (bet.status === 'won') {
+      const profit = bet.payout - bet.amount;
+      payoutLine = `<div class="payout-line payout-won">+${profit.toFixed(2)}u payout</div>`;
+    } else if (bet.status === 'lost') {
+      payoutLine = `<div class="payout-line payout-lost">−${bet.amount.toFixed(2)}u lost</div>`;
+    } else if (bet.status === 'push') {
+      payoutLine = `<div class="payout-line" style="color:var(--muted)">Push — returned</div>`;
+    }
+
+    const typeLabel = { spread:'Spread', total:'Total', ml:'Moneyline' }[bet.pick_type] || bet.pick_type;
+    const ts = new Date(bet.created_at);
+    const timeStr = ts.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' +
+                    ts.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+
+    return `<div class="bet-row">
+      <div>
+        <div class="bet-mu">M${bet.matchup_period}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:3px">${typeLabel}</div>
+      </div>
+      <div>
+        <div class="bet-desc">${esc(bet.pick_desc)}</div>
+        <div class="bet-sub">${esc(bet.bettor)} · ${timeStr}</div>
+        ${payoutLine}
+      </div>
+      <div class="bet-amt">${oddsStr}<br><strong>${bet.amount.toFixed(1)}u</strong></div>
+      <div><span class="status-badge ${statusCls}">${bet.status}</span></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('feed-wrap').innerHTML = html;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

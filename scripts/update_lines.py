@@ -62,6 +62,113 @@ def fmt_date_range(start: datetime, end: datetime) -> str:
     return f"{start.strftime('%b')} {start.day}–{end.strftime('%b')} {end.day}, {end.year}"
 
 
+def grade_single(bet, away_final, home_final):
+    """Returns (status, payout) for a single bet given final scores."""
+    pick_type = bet["pick_type"]
+    pick_key  = bet["pick_key"]
+    line      = float(bet["line"])
+    odds      = int(bet["odds"])
+    amount    = float(bet["amount"])
+    away_key  = bet["away_key"]
+
+    if pick_type == "spread":
+        if pick_key == away_key:
+            margin = (away_final + line) - home_final
+        else:
+            margin = (home_final + line) - away_final
+        if abs(margin) < 0.01:
+            status = "push"
+        elif margin > 0:
+            status = "won"
+        else:
+            status = "lost"
+
+    elif pick_type == "total":
+        total = away_final + home_final
+        diff  = total - line
+        if abs(diff) < 0.01:
+            status = "push"
+        elif (pick_key == "over" and diff > 0) or (pick_key == "under" and diff < 0):
+            status = "won"
+        else:
+            status = "lost"
+
+    elif pick_type == "ml":
+        diff = away_final - home_final
+        away_won = diff > 0.01
+        home_won = diff < -0.01
+        if abs(diff) < 0.01:
+            status = "push"
+        elif (pick_key == away_key and away_won) or (pick_key != away_key and home_won):
+            status = "won"
+        else:
+            status = "lost"
+
+    else:
+        return "open", None
+
+    if status == "won":
+        profit = amount * 100 / abs(odds) if odds < 0 else amount * odds / 100
+        payout = round(amount + profit, 2)
+    elif status == "push":
+        payout = float(amount)
+    else:
+        payout = 0.0
+
+    return status, payout
+
+
+def grade_bets(supabase_url, service_key, history, current_matchup):
+    """Grade open bets for any matchup periods that have now completed."""
+    headers = {
+        "apikey":        service_key,
+        "Authorization": f"Bearer {service_key}",
+        "Content-Type":  "application/json",
+    }
+
+    r = requests.get(
+        f"{supabase_url}/rest/v1/bets",
+        params={"status": "eq.open", "matchup_period": f"lt.{current_matchup}", "select": "*"},
+        headers=headers,
+        timeout=15,
+    )
+    if not r.ok:
+        print(f"  Supabase fetch failed: {r.status_code} {r.text}", file=sys.stderr)
+        return
+    open_bets = r.json()
+    if not open_bets:
+        print("  No open bets to grade.")
+        return
+
+    # Build lookup: (away_key, home_key, matchup_period) -> (away_final, home_final)
+    result_map = {}
+    for row in history:
+        away_key, home_key, _winner, mp, away_score, home_score = row
+        result_map[(away_key, home_key, mp)] = (float(away_score), float(home_score))
+
+    graded = 0
+    for bet in open_bets:
+        key = (bet["away_key"], bet["home_key"], bet["matchup_period"])
+        if key not in result_map:
+            continue
+        away_final, home_final = result_map[key]
+        status, payout = grade_single(bet, away_final, home_final)
+        patch = {"status": status, "payout": payout, "away_final": away_final, "home_final": home_final}
+        r2 = requests.patch(
+            f"{supabase_url}/rest/v1/bets?id=eq.{bet['id']}",
+            headers={**headers, "Prefer": "return=minimal"},
+            json=patch,
+            timeout=15,
+        )
+        if r2.ok:
+            graded += 1
+            print(f"  Graded {bet['bettor']} ({bet['pick_desc']}): {status}")
+        else:
+            print(f"  Failed to grade {bet['id']}: {r2.status_code}", file=sys.stderr)
+
+    print(f"  Graded {graded}/{len(open_bets)} open bets.")
+
+
 def main():
     espn_s2 = os.environ.get("ESPN_S2", "")
     swid    = os.environ.get("ESPN_SWID", "")
@@ -233,11 +340,25 @@ def main():
             "starts": live["starts"],
         }
 
+    # ── Supabase config ───────────────────────────────────────────────────────
+    supabase_url  = os.environ.get("SUPABASE_URL", "")
+    supabase_anon = os.environ.get("SUPABASE_ANON_KEY", "")
+    service_key   = os.environ.get("SUPABASE_SERVICE_KEY", "")
+    output["supabaseUrl"]     = supabase_url
+    output["supabaseAnonKey"] = supabase_anon
+
     with open("live_data.json", "w") as f:
         json.dump(output, f, indent=2)
 
     print(f"Wrote live_data.json — Matchup {current_matchup}, {updated_str}")
     print(f"  Matchups: {[(m['away'], m['home']) for m in matchup_pairs]}")
+
+    # ── Grade completed bets ──────────────────────────────────────────────────
+    if supabase_url and service_key:
+        print("Grading open bets…")
+        grade_bets(supabase_url, service_key, history, current_matchup)
+    elif supabase_url:
+        print("  Skipping grading: SUPABASE_SERVICE_KEY not set", file=sys.stderr)
 
 
 if __name__ == "__main__":

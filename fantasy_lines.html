@@ -226,6 +226,61 @@
   .live-day { font-size: 9px; color: var(--muted); }
   .open-pill.live { background: rgba(30,199,95,0.18); border-color: rgba(30,199,95,0.4); }
   .btn-open { font-size: 9px; color: var(--muted); display: block; margin-top: 2px; }
+
+  /* ── Bet button selected state ── */
+  .bet-btn { cursor: pointer; }
+  .bet-btn.selected { background: rgba(30,199,95,0.15); border-color: var(--green); }
+  .bet-btn.selected .btn-line { color: var(--green); }
+
+  /* ── Slip bar (sticky bottom) ── */
+  .slip-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #0c1c2a; border-top: 1px solid var(--green);
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 150; box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  }
+  .slip-bar-left { font-size: 13px; color: var(--dim); }
+  .slip-count { font-weight: 700; color: var(--text); }
+  .slip-bar-btn { background: var(--green); color: #000; border: none; border-radius: 6px; padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.3px; }
+  .slip-bar-btn:hover { background: #18b052; }
+
+  /* ── Slip overlay + drawer ── */
+  #slip-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 190; opacity: 0; pointer-events: none; transition: opacity 0.22s; }
+  #slip-overlay.open { opacity: 1; pointer-events: all; }
+  #slip-drawer {
+    position: fixed; bottom: -100%; left: 0; right: 0; max-height: 88vh;
+    background: #111e2c; border-top: 1px solid var(--border); border-radius: 16px 16px 0 0;
+    z-index: 191; overflow-y: auto;
+    transition: bottom 0.28s cubic-bezier(0.4,0,0.2,1);
+    display: flex; flex-direction: column;
+  }
+  #slip-drawer.open { bottom: 0; }
+  .slip-dheader { background: #0a1118; border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .slip-dtitle { font-size: 14px; font-weight: 700; }
+  .slip-clear-btn { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; padding: 4px 8px; }
+  .slip-clear-btn:hover { color: var(--red); }
+  .slip-name-row { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+  .slip-name-row label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .slip-name-input { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 13px; padding: 8px 12px; outline: none; width: 100%; }
+  .slip-name-input:focus { border-color: var(--green); }
+  .slip-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border-lt); }
+  .slip-item-info { flex: 1; min-width: 0; }
+  .slip-item-desc { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slip-item-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .slip-item-amt { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 13px; padding: 6px 10px; width: 90px; text-align: right; outline: none; }
+  .slip-item-amt:focus { border-color: var(--green); }
+  .slip-remove { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px; line-height: 1; flex-shrink: 0; }
+  .slip-remove:hover { color: var(--red); }
+  .slip-dfooter { padding: 14px 16px; position: sticky; bottom: 0; background: #111e2c; border-top: 1px solid var(--border); }
+  .slip-summary { font-size: 11px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+  .slip-place-btn { width: 100%; background: var(--green); color: #000; border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .slip-place-btn:hover { background: #18b052; }
+  .slip-place-btn:disabled { opacity: 0.5; cursor: default; }
+  .slip-empty { padding: 40px 16px; text-align: center; color: var(--muted); font-size: 13px; }
+  .slip-msg { padding: 10px 16px; font-size: 12px; text-align: center; border-radius: 6px; margin-bottom: 10px; }
+  .slip-msg.success { background: rgba(30,199,95,0.12); color: var(--green); border: 1px solid rgba(30,199,95,0.3); }
+  .slip-msg.error   { background: rgba(240,84,84,0.12); color: var(--red);   border: 1px solid rgba(240,84,84,0.3); }
 </style>
 </head>
 <body>
@@ -240,8 +295,7 @@
   </div>
   <nav class="nav-tabs">
     <div class="nav-tab active">Matchup Lines</div>
-    <div class="nav-tab">Futures</div>
-    <div class="nav-tab">Props</div>
+    <a class="nav-tab" href="fantasy_bets.html">Bet Tracker</a>
   </nav>
   <div class="header-right">
     <span class="open-pill" id="status-pill">OPEN</span>
@@ -268,6 +322,33 @@
   Lines generated from season scoring data through Matchup 6. Injury and roster changes not reflected.</p>
 </div>
 
+<!-- Bet slip bar -->
+<div id="slip-bar" class="slip-bar" style="display:none">
+  <div class="slip-bar-left"><span class="slip-count" id="slip-count">0 bets selected</span></div>
+  <button class="slip-bar-btn" onclick="openSlip()">View Bet Slip →</button>
+</div>
+
+<!-- Bet slip overlay + drawer -->
+<div id="slip-overlay" onclick="closeSlip()"></div>
+<div id="slip-drawer">
+  <div class="slip-dheader">
+    <span class="slip-dtitle">Bet Slip</span>
+    <div style="display:flex;gap:12px;align-items:center">
+      <button class="slip-clear-btn" onclick="clearSlip()">Clear all</button>
+      <button class="pv-close" onclick="closeSlip()">✕</button>
+    </div>
+  </div>
+  <div class="slip-name-row">
+    <label for="slip-name">Your name / team nickname</label>
+    <input class="slip-name-input" type="text" id="slip-name" placeholder="e.g. Jung H King" autocomplete="off">
+  </div>
+  <div id="slip-items"></div>
+  <div class="slip-dfooter" id="slip-footer" style="display:none">
+    <div class="slip-summary" id="slip-summary"></div>
+    <button class="slip-place-btn" id="slip-submit" onclick="placeBets()">Place Bets</button>
+  </div>
+</div>
+
 <!-- Preview panel -->
 <div id="preview-overlay" onclick="closePreview()"></div>
 <div id="preview-panel">
@@ -280,6 +361,10 @@
 
 <script>
 let LIVE = null;
+let SUPABASE_URL = '';
+let SUPABASE_ANON_KEY = '';
+let slip = [];
+const BET_DEFS = {};
 
 // ── Team data ─────────────────────────────────────────────────────────────────
 const TEAMS = {
@@ -620,6 +705,140 @@ function closePreview() {
   document.getElementById('preview-panel').classList.remove('open');
 }
 
+// ── Bet slip ──────────────────────────────────────────────────────────────────
+function toggleBet(betId) {
+  const idx = slip.findIndex(s => s.id === betId);
+  if (idx >= 0) {
+    slip.splice(idx, 1);
+  } else {
+    slip.push({ id: betId, amount: 0 });
+  }
+  const btn = document.getElementById('btn-' + betId);
+  if (btn) btn.classList.toggle('selected', slip.some(s => s.id === betId));
+  updateSlipBar();
+}
+
+function updateSlipBar() {
+  const bar = document.getElementById('slip-bar');
+  const cnt = document.getElementById('slip-count');
+  if (!bar) return;
+  if (slip.length === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  cnt.textContent = `${slip.length} bet${slip.length === 1 ? '' : 's'} selected`;
+}
+
+function openSlip() {
+  document.getElementById('slip-overlay').classList.add('open');
+  document.getElementById('slip-drawer').classList.add('open');
+  renderSlipItems();
+}
+
+function closeSlip() {
+  document.getElementById('slip-overlay').classList.remove('open');
+  document.getElementById('slip-drawer').classList.remove('open');
+}
+
+function clearSlip() {
+  slip.forEach(s => {
+    const b = document.getElementById('btn-' + s.id);
+    if (b) b.classList.remove('selected');
+  });
+  slip = [];
+  updateSlipBar();
+  renderSlipItems();
+}
+
+function removeBet(betId) {
+  slip = slip.filter(s => s.id !== betId);
+  const btn = document.getElementById('btn-' + betId);
+  if (btn) btn.classList.remove('selected');
+  renderSlipItems();
+  updateSlipBar();
+}
+
+function renderSlipItems() {
+  const container = document.getElementById('slip-items');
+  const footer    = document.getElementById('slip-footer');
+  if (!slip.length) {
+    container.innerHTML = '<div class="slip-empty">No bets selected.<br>Tap any spread, total, or ML button to add.</div>';
+    footer.style.display = 'none';
+    return;
+  }
+  footer.style.display = 'block';
+  container.innerHTML = slip.map(s => {
+    const def = BET_DEFS[s.id];
+    if (!def) return '';
+    const oddsStr = def.odds > 0 ? `+${def.odds}` : `${def.odds}`;
+    const muStr   = `M${def.matchupPeriod} · ${(TEAMS[def.awayKey]?.name||def.awayKey).split(' ')[0]} vs ${(TEAMS[def.homeKey]?.name||def.homeKey).split(' ')[0]}`;
+    return `<div class="slip-item" id="slip-item-${s.id}">
+      <div class="slip-item-info">
+        <div class="slip-item-desc">${def.desc}</div>
+        <div class="slip-item-meta">${oddsStr} &nbsp;·&nbsp; ${muStr}</div>
+      </div>
+      <input class="slip-item-amt" type="number" min="0.5" step="0.5" placeholder="Units"
+             value="${s.amount || ''}"
+             oninput="slip.find(x=>x.id==='${s.id}').amount=parseFloat(this.value)||0;updateSlipSummary()">
+      <button class="slip-remove" onclick="removeBet('${s.id}')">✕</button>
+    </div>`;
+  }).join('');
+  updateSlipSummary();
+}
+
+function updateSlipSummary() {
+  const el = document.getElementById('slip-summary');
+  if (!el) return;
+  const total = slip.reduce((sum, s) => sum + (s.amount || 0), 0);
+  const count = slip.filter(s => s.amount > 0).length;
+  el.textContent = total > 0
+    ? `${count} bet${count === 1 ? '' : 's'} · ${total.toFixed(1)} units wagered`
+    : 'Enter unit amounts above to place bets';
+}
+
+async function placeBets() {
+  const name = (document.getElementById('slip-name')?.value || '').trim();
+  if (!name) { alert('Please enter your name or team nickname.'); document.getElementById('slip-name')?.focus(); return; }
+
+  const betsToPlace = slip.filter(s => s.amount > 0).map(s => {
+    const def = BET_DEFS[s.id];
+    return { bettor: name, matchup_period: def.matchupPeriod,
+             away_key: def.awayKey, home_key: def.homeKey,
+             pick_type: def.type, pick_key: def.pickKey,
+             pick_desc: def.desc, line: def.line, odds: def.odds, amount: s.amount };
+  });
+  if (!betsToPlace.length) { alert('Enter a unit amount for at least one bet.'); return; }
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) { alert('Sportsbook is not configured yet — check back soon!'); return; }
+
+  const btn = document.getElementById('slip-submit');
+  btn.disabled = true; btn.textContent = 'Placing…';
+
+  // Remove any prior message
+  document.querySelectorAll('.slip-msg').forEach(m => m.remove());
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/bets`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(betsToPlace),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
+    const msg = document.createElement('div');
+    msg.className = 'slip-msg success';
+    msg.textContent = `${betsToPlace.length} bet${betsToPlace.length === 1 ? '' : 's'} placed! Good luck.`;
+    document.getElementById('slip-footer').prepend(msg);
+    btn.textContent = '✓ Placed!';
+    clearSlip();
+    setTimeout(closeSlip, 1800);
+  } catch (e) {
+    const msg = document.createElement('div');
+    msg.className = 'slip-msg error';
+    msg.textContent = 'Something went wrong. Please try again.';
+    document.getElementById('slip-footer').prepend(msg);
+    btn.disabled = false; btn.textContent = 'Place Bets';
+  }
+}
+
 // ── Matchup 7 schedule ────────────────────────────────────────────────────────
 let MATCHUPS = [["SP","JK"],["RM","TB"],["BB","MM"],["WG","DH"],["MN","AA"],["SK","IR"]];
 let matchupData = [];
@@ -684,6 +903,24 @@ function renderAll() {
     const openMLA = LL ? `<span class="btn-open">Open: ${fmtML(L.mlA)}</span>` : '';
     const openMLB = LL ? `<span class="btn-open">Open: ${fmtML(L.mlB)}</span>` : '';
 
+    // Populate BET_DEFS for this matchup
+    const mp = parseInt(WEEK_LABEL);
+    const shortA = tA.name.split(' ').slice(0,3).join(' ');
+    const shortB = tB.name.split(' ').slice(0,3).join(' ');
+    BET_DEFS[`m${idx}-sp-${keyA}`] = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'spread', pickKey:keyA, desc:`${shortA} ${spA}`,            line:D.spreadLineA, odds:-110 };
+    BET_DEFS[`m${idx}-sp-${keyB}`] = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'spread', pickKey:keyB, desc:`${shortB} ${spB}`,            line:D.spreadLineB, odds:-110 };
+    BET_DEFS[`m${idx}-tot-o`]      = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'total',  pickKey:'over',  desc:`Over ${D.totalLine.toFixed(1)}`,  line:D.totalLine, odds:-110 };
+    BET_DEFS[`m${idx}-tot-u`]      = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'total',  pickKey:'under', desc:`Under ${D.totalLine.toFixed(1)}`, line:D.totalLine, odds:-110 };
+    BET_DEFS[`m${idx}-ml-${keyA}`] = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'ml',     pickKey:keyA, desc:`${shortA} ML`,                 line:D.mlA, odds:D.mlA };
+    BET_DEFS[`m${idx}-ml-${keyB}`] = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'ml',     pickKey:keyB, desc:`${shortB} ML`,                 line:D.mlB, odds:D.mlB };
+
+    const selSpA  = slip.some(s => s.id === `m${idx}-sp-${keyA}`) ? ' selected' : '';
+    const selSpB  = slip.some(s => s.id === `m${idx}-sp-${keyB}`) ? ' selected' : '';
+    const selTotO = slip.some(s => s.id === `m${idx}-tot-o`)      ? ' selected' : '';
+    const selTotU = slip.some(s => s.id === `m${idx}-tot-u`)      ? ' selected' : '';
+    const selMlA  = slip.some(s => s.id === `m${idx}-ml-${keyA}`) ? ' selected' : '';
+    const selMlB  = slip.some(s => s.id === `m${idx}-ml-${keyB}`) ? ' selected' : '';
+
     const card = document.createElement('div');
     card.className = 'matchup-card';
     card.innerHTML = `
@@ -696,15 +933,15 @@ function renderAll() {
       ${liveBanner}
       <div class="team-row">
         <div class="team-info">${dotA}<div style="min-width:0"><div class="team-name">${tA.name}</div><div class="team-meta">${tA.wins}–${tA.losses} &nbsp;·&nbsp; AP ${tA.apW}/${AP_TOTAL}</div></div></div>
-        <div class="bet-btn${aIsProjFav?' fav':''}"><span class="btn-line">${spA}</span><span class="btn-odds">−110</span>${openSpA}</div>
-        <div class="bet-btn"><span class="btn-line">O ${D.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span>${openTot}</div>
-        <div class="bet-btn${aIsMLFav?' fav':''}"><span class="btn-line ${mlClassA}">${fmtML(D.mlA)}</span><span class="btn-odds">${(D.pA*100).toFixed(0)}% win</span>${openMLA}</div>
+        <div id="btn-m${idx}-sp-${keyA}" class="bet-btn${aIsProjFav?' fav':''}${selSpA}" onclick="toggleBet('m${idx}-sp-${keyA}')"><span class="btn-line">${spA}</span><span class="btn-odds">−110</span>${openSpA}</div>
+        <div id="btn-m${idx}-tot-o"      class="bet-btn${selTotO}"                       onclick="toggleBet('m${idx}-tot-o')"><span class="btn-line">O ${D.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span>${openTot}</div>
+        <div id="btn-m${idx}-ml-${keyA}" class="bet-btn${aIsMLFav?' fav':''}${selMlA}"   onclick="toggleBet('m${idx}-ml-${keyA}')"><span class="btn-line ${mlClassA}">${fmtML(D.mlA)}</span><span class="btn-odds">${(D.pA*100).toFixed(0)}% win</span>${openMLA}</div>
       </div>
       <div class="team-row">
         <div class="team-info">${dotB}<div style="min-width:0"><div class="team-name">${tB.name}</div><div class="team-meta">${tB.wins}–${tB.losses} &nbsp;·&nbsp; AP ${tB.apW}/${AP_TOTAL}</div></div></div>
-        <div class="bet-btn${!aIsProjFav?' fav':''}"><span class="btn-line">${spB}</span><span class="btn-odds">−110</span>${openSpB}</div>
-        <div class="bet-btn"><span class="btn-line">U ${D.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span>${openTot}</div>
-        <div class="bet-btn${!aIsMLFav?' fav':''}"><span class="btn-line ${mlClassB}">${fmtML(D.mlB)}</span><span class="btn-odds">${(D.pB*100).toFixed(0)}% win</span>${openMLB}</div>
+        <div id="btn-m${idx}-sp-${keyB}" class="bet-btn${!aIsProjFav?' fav':''}${selSpB}" onclick="toggleBet('m${idx}-sp-${keyB}')"><span class="btn-line">${spB}</span><span class="btn-odds">−110</span>${openSpB}</div>
+        <div id="btn-m${idx}-tot-u"      class="bet-btn${selTotU}"                        onclick="toggleBet('m${idx}-tot-u')"><span class="btn-line">U ${D.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span>${openTot}</div>
+        <div id="btn-m${idx}-ml-${keyB}" class="bet-btn${!aIsMLFav?' fav':''}${selMlB}"   onclick="toggleBet('m${idx}-ml-${keyB}')"><span class="btn-line ${mlClassB}">${fmtML(D.mlB)}</span><span class="btn-odds">${(D.pB*100).toFixed(0)}% win</span>${openMLB}</div>
       </div>
       <div class="proj-footer">
         <span style="font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">${LL?'Live Proj':'Proj'}</span>
@@ -772,6 +1009,10 @@ function loadLive() {
       // Update week label vars
       if (data.weekLabel) WEEK_LABEL = data.weekLabel;
       if (data.dateRange) DATE_RANGE = data.dateRange;
+
+      // Update Supabase config
+      if (data.supabaseUrl)     SUPABASE_URL      = data.supabaseUrl;
+      if (data.supabaseAnonKey) SUPABASE_ANON_KEY = data.supabaseAnonKey;
 
       // Update header
       const pill = document.getElementById('status-pill');

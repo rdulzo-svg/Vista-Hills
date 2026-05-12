@@ -27,8 +27,11 @@ jobs:
 
       - name: Update live lines
         env:
-          ESPN_S2:    ${{ secrets.ESPN_S2 }}
-          ESPN_SWID:  ${{ secrets.ESPN_SWID }}
+          ESPN_S2:              ${{ secrets.ESPN_S2 }}
+          ESPN_SWID:            ${{ secrets.ESPN_SWID }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY:    ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/update_lines.py
 
       - name: Commit and push if changed

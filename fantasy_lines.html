@@ -281,6 +281,28 @@
   .slip-msg { padding: 10px 16px; font-size: 12px; text-align: center; border-radius: 6px; margin-bottom: 10px; }
   .slip-msg.success { background: rgba(30,199,95,0.12); color: var(--green); border: 1px solid rgba(30,199,95,0.3); }
   .slip-msg.error   { background: rgba(240,84,84,0.12); color: var(--red);   border: 1px solid rgba(240,84,84,0.3); }
+
+  /* ── Mobile portrait ── */
+  @media (max-width: 580px) {
+    .col-headers { display: none; }
+
+    .team-row {
+      grid-template-columns: repeat(3, 1fr);
+      row-gap: 8px;
+      padding: 10px 10px;
+    }
+    .team-row .team-info { grid-column: 1 / -1; }
+
+    .bet-btn { padding: 7px 5px; }
+    .btn-line { font-size: 12px; }
+    .btn-odds { font-size: 10px; }
+
+    .header-right { display: none; }
+    .brand { padding-right: 12px; margin-right: 10px; }
+    .nav-tab { padding: 0 10px; font-size: 11px; }
+
+    .page-body { padding: 14px 10px; }
+  }
 </style>
 </head>
 <body>

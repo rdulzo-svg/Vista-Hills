@@ -1,22 +1,535 @@
 {
-  "updated": "May 12, 9:00 AM",
+  "updated": "May 12, 11:57 AM ET",
   "matchupPeriod": 7,
   "currentPeriod": 49,
   "weekStartPeriod": 48,
   "totalPeriods": 7,
   "spCap": 13,
+  "weekLabel": "7",
+  "dateRange": "May 11\u201317, 2026",
+  "apTotal": 66,
+  "matchups": [
+    {
+      "away": "RM",
+      "home": "TB"
+    },
+    {
+      "away": "BB",
+      "home": "MM"
+    },
+    {
+      "away": "WG",
+      "home": "DH"
+    },
+    {
+      "away": "MN",
+      "home": "AA"
+    },
+    {
+      "away": "SK",
+      "home": "IR"
+    },
+    {
+      "away": "SP",
+      "home": "JK"
+    }
+  ],
+  "history": [
+    [
+      "RM",
+      "SP",
+      "SP",
+      1,
+      505.0,
+      595.5
+    ],
+    [
+      "JK",
+      "SK",
+      "JK",
+      1,
+      812.5,
+      643.0
+    ],
+    [
+      "IR",
+      "MN",
+      "IR",
+      1,
+      755.0,
+      723.0
+    ],
+    [
+      "AA",
+      "WG",
+      "WG",
+      1,
+      646.5,
+      656.5
+    ],
+    [
+      "DH",
+      "BB",
+      "DH",
+      1,
+      603.5,
+      522.5
+    ],
+    [
+      "MM",
+      "TB",
+      "MM",
+      1,
+      567.5,
+      506.0
+    ],
+    [
+      "JK",
+      "RM",
+      "RM",
+      2,
+      334.0,
+      484.0
+    ],
+    [
+      "SP",
+      "IR",
+      "IR",
+      2,
+      484.5,
+      538.5
+    ],
+    [
+      "SK",
+      "AA",
+      "AA",
+      2,
+      390.0,
+      537.0
+    ],
+    [
+      "MN",
+      "DH",
+      "MN",
+      2,
+      546.5,
+      300.5
+    ],
+    [
+      "WG",
+      "MM",
+      "MM",
+      2,
+      354.5,
+      467.5
+    ],
+    [
+      "BB",
+      "TB",
+      "TB",
+      2,
+      325.5,
+      363.0
+    ],
+    [
+      "RM",
+      "IR",
+      "IR",
+      3,
+      321.5,
+      554.0
+    ],
+    [
+      "AA",
+      "JK",
+      "JK",
+      3,
+      296.0,
+      475.5
+    ],
+    [
+      "DH",
+      "SP",
+      "DH",
+      3,
+      510.5,
+      468.0
+    ],
+    [
+      "MM",
+      "SK",
+      "MM",
+      3,
+      475.0,
+      377.5
+    ],
+    [
+      "TB",
+      "MN",
+      "TB",
+      3,
+      481.5,
+      401.0
+    ],
+    [
+      "BB",
+      "WG",
+      "BB",
+      3,
+      478.0,
+      394.0
+    ],
+    [
+      "AA",
+      "RM",
+      "RM",
+      4,
+      391.5,
+      429.5
+    ],
+    [
+      "IR",
+      "DH",
+      "IR",
+      4,
+      411.0,
+      310.0
+    ],
+    [
+      "JK",
+      "MM",
+      "MM",
+      4,
+      392.0,
+      461.5
+    ],
+    [
+      "SP",
+      "TB",
+      "TB",
+      4,
+      458.0,
+      501.5
+    ],
+    [
+      "SK",
+      "BB",
+      "BB",
+      4,
+      369.0,
+      469.0
+    ],
+    [
+      "MN",
+      "WG",
+      "WG",
+      4,
+      501.0,
+      508.0
+    ],
+    [
+      "RM",
+      "DH",
+      "DH",
+      5,
+      407.0,
+      438.5
+    ],
+    [
+      "MM",
+      "AA",
+      "AA",
+      5,
+      449.0,
+      494.5
+    ],
+    [
+      "TB",
+      "IR",
+      "IR",
+      5,
+      327.5,
+      409.5
+    ],
+    [
+      "BB",
+      "JK",
+      "BB",
+      5,
+      476.5,
+      276.5
+    ],
+    [
+      "WG",
+      "SP",
+      "WG",
+      5,
+      469.5,
+      434.0
+    ],
+    [
+      "MN",
+      "SK",
+      "SK",
+      5,
+      409.0,
+      414.5
+    ],
+    [
+      "MM",
+      "RM",
+      "MM",
+      6,
+      401.0,
+      351.0
+    ],
+    [
+      "DH",
+      "TB",
+      "TB",
+      6,
+      376.0,
+      379.5
+    ],
+    [
+      "AA",
+      "BB",
+      "AA",
+      6,
+      413.5,
+      326.0
+    ],
+    [
+      "IR",
+      "WG",
+      "IR",
+      6,
+      443.5,
+      381.0
+    ],
+    [
+      "JK",
+      "MN",
+      "JK",
+      6,
+      457.5,
+      431.0
+    ],
+    [
+      "SP",
+      "SK",
+      "SK",
+      6,
+      392.0,
+      468.5
+    ]
+  ],
   "teams": {
-    "SP": {"score": 45.0,  "starts": 1},
-    "JK": {"score": 21.0,  "starts": 1},
-    "RM": {"score": 26.0,  "starts": 2},
-    "TB": {"score": 30.5,  "starts": 0},
-    "BB": {"score": 14.0,  "starts": 0},
-    "MM": {"score": 25.0,  "starts": 1},
-    "WG": {"score": 15.0,  "starts": 1},
-    "DH": {"score": 14.0,  "starts": 0},
-    "MN": {"score": 34.5,  "starts": 0},
-    "AA": {"score": 58.0,  "starts": 2},
-    "SK": {"score": 17.5,  "starts": 0},
-    "IR": {"score": 23.5,  "starts": 1}
-  }
+    "WG": {
+      "name": "WITTnessing Greatness",
+      "color": "#2a9d8f",
+      "wins": 3,
+      "losses": 3,
+      "apW": 38,
+      "scores": [
+        656.5,
+        354.5,
+        394.0,
+        508.0,
+        469.5,
+        381.0
+      ],
+      "score": 15.0,
+      "starts": 1
+    },
+    "BB": {
+      "name": "Back 2 Back CY Young",
+      "color": "#e9c46a",
+      "wins": 3,
+      "losses": 3,
+      "apW": 29,
+      "scores": [
+        522.5,
+        325.5,
+        478.0,
+        469.0,
+        476.5,
+        326.0
+      ],
+      "score": 14.0,
+      "starts": 0
+    },
+    "RM": {
+      "name": "Raleighing My Way",
+      "color": "#52b788",
+      "wins": 2,
+      "losses": 4,
+      "apW": 16,
+      "scores": [
+        505.0,
+        484.0,
+        321.5,
+        429.5,
+        407.0,
+        351.0
+      ],
+      "score": 26.0,
+      "starts": 2
+    },
+    "TB": {
+      "name": "Thicc Bois",
+      "color": "#f4a261",
+      "wins": 4,
+      "losses": 2,
+      "apW": 28,
+      "scores": [
+        506.0,
+        363.0,
+        481.5,
+        501.5,
+        327.5,
+        379.5
+      ],
+      "score": 30.5,
+      "starts": 0
+    },
+    "AA": {
+      "name": "All ARRAEZ for the JUDGE",
+      "color": "#6a4c93",
+      "wins": 3,
+      "losses": 3,
+      "apW": 36,
+      "scores": [
+        646.5,
+        537.0,
+        296.0,
+        391.5,
+        494.5,
+        413.5
+      ],
+      "score": 58.0,
+      "starts": 2
+    },
+    "JK": {
+      "name": "Jung H King",
+      "color": "#ff6b6b",
+      "wins": 3,
+      "losses": 3,
+      "apW": 33,
+      "scores": [
+        812.5,
+        334.0,
+        475.5,
+        392.0,
+        276.5,
+        457.5
+      ],
+      "score": 21.0,
+      "starts": 1
+    },
+    "MN": {
+      "name": "MANNY MEN",
+      "color": "#f77f00",
+      "wins": 1,
+      "losses": 5,
+      "apW": 44,
+      "scores": [
+        723.0,
+        546.5,
+        401.0,
+        501.0,
+        409.0,
+        431.0
+      ],
+      "score": 34.5,
+      "starts": 0
+    },
+    "SK": {
+      "name": "Stop looking at me Kwan",
+      "color": "#4cc9f0",
+      "wins": 2,
+      "losses": 4,
+      "apW": 30,
+      "scores": [
+        643.0,
+        390.0,
+        377.5,
+        369.0,
+        414.5,
+        468.5
+      ],
+      "score": 17.5,
+      "starts": 0
+    },
+    "SP": {
+      "name": "16 percent",
+      "color": "#90be6d",
+      "wins": 1,
+      "losses": 5,
+      "apW": 34,
+      "scores": [
+        595.5,
+        484.5,
+        468.0,
+        458.0,
+        434.0,
+        392.0
+      ],
+      "score": 45.0,
+      "starts": 1
+    },
+    "IR": {
+      "name": "Ima Ride For My MF McGGonicle",
+      "color": "#e63946",
+      "wins": 6,
+      "losses": 0,
+      "apW": 48,
+      "scores": [
+        755.0,
+        538.5,
+        554.0,
+        411.0,
+        409.5,
+        443.5
+      ],
+      "score": 23.5,
+      "starts": 1
+    },
+    "DH": {
+      "name": "Dom's House of Fun",
+      "color": "#a8dadc",
+      "wins": 3,
+      "losses": 3,
+      "apW": 24,
+      "scores": [
+        603.5,
+        300.5,
+        510.5,
+        310.0,
+        438.5,
+        376.0
+      ],
+      "score": 14.0,
+      "starts": 0
+    },
+    "MM": {
+      "name": "Mike and Mike In The Mornin'",
+      "color": "#457b9d",
+      "wins": 5,
+      "losses": 1,
+      "apW": 36,
+      "scores": [
+        567.5,
+        467.5,
+        475.0,
+        461.5,
+        449.0,
+        401.0
+      ],
+      "score": 25.0,
+      "starts": 1
+    }
+  },
+  "supabaseUrl": "https://akppyivrfgfcwskfazuf.supabase.co/rest/v1/",
+  "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrcHB5aXZyZmdmY3dza2ZhenVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTEwMjMsImV4cCI6MjA5NDE2NzAyM30.E6M4RjVCp9hGdsgSSDrqk_9KFeFkz1epoJ-RU7ulzWI"
 }

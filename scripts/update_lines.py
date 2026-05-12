@@ -272,12 +272,8 @@ def main():
             if not key:
                 continue
             score  = side_data.get("totalPoints") or 0
-            starts = (
-                side_data.get("cumulativeScore", {})
-                         .get("statBySlot", {})
-                         .get("22", {})
-                         .get("value") or 0
-            )
+            cum    = side_data.get("cumulativeScore") or {}
+            starts = int(((cum.get("statBySlot") or {}).get("22") or {}).get("value") or 0)
             team_live[key] = {"score": round(float(score), 1), "starts": int(starts)}
 
     # Matchup pairings for current week

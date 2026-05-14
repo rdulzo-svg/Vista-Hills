@@ -1,7 +1,7 @@
 {
-  "updated": "May 13, 3:36 AM ET",
+  "updated": "May 14, 3:30 AM ET",
   "matchupPeriod": 7,
-  "currentPeriod": 50,
+  "currentPeriod": 51,
   "weekStartPeriod": 48,
   "totalPeriods": 7,
   "spCap": 13,
@@ -339,8 +339,8 @@
         469.5,
         381.0
       ],
-      "score": 65.0,
-      "starts": 4
+      "score": 135.5,
+      "starts": 7
     },
     "BB": {
       "name": "Back 2 Back CY Young",
@@ -356,8 +356,8 @@
         476.5,
         328.0
       ],
-      "score": 73.0,
-      "starts": 2
+      "score": 213.0,
+      "starts": 5
     },
     "RM": {
       "name": "Raleighing My Way",
@@ -373,8 +373,8 @@
         407.0,
         352.0
       ],
-      "score": 162.5,
-      "starts": 3
+      "score": 205.5,
+      "starts": 5
     },
     "TB": {
       "name": "Thicc Bois",
@@ -390,8 +390,8 @@
         327.5,
         379.5
       ],
-      "score": 140.0,
-      "starts": 4
+      "score": 198.5,
+      "starts": 8
     },
     "AA": {
       "name": "All ARRAEZ for the JUDGE",
@@ -407,8 +407,8 @@
         494.5,
         413.5
       ],
-      "score": 92.0,
-      "starts": 2
+      "score": 158.0,
+      "starts": 4
     },
     "JK": {
       "name": "Jung H King",
@@ -424,8 +424,8 @@
         276.5,
         458.5
       ],
-      "score": 78.5,
-      "starts": 3
+      "score": 149.0,
+      "starts": 5
     },
     "MN": {
       "name": "MANNY MEN",
@@ -441,8 +441,8 @@
         409.0,
         431.0
       ],
-      "score": 90.5,
-      "starts": 4
+      "score": 155.5,
+      "starts": 7
     },
     "SK": {
       "name": "Stop looking at me Kwan",
@@ -458,8 +458,8 @@
         414.5,
         468.5
       ],
-      "score": 65.0,
-      "starts": 1
+      "score": 133.0,
+      "starts": 3
     },
     "SP": {
       "name": "16 percent",
@@ -475,8 +475,8 @@
         434.0,
         392.0
       ],
-      "score": 134.5,
-      "starts": 5
+      "score": 226.5,
+      "starts": 6
     },
     "IR": {
       "name": "Ima Ride For My MF McGGonicle",
@@ -492,8 +492,8 @@
         409.5,
         443.5
       ],
-      "score": 101.5,
-      "starts": 2
+      "score": 161.5,
+      "starts": 3
     },
     "DH": {
       "name": "Dom's House of Fun",
@@ -509,8 +509,8 @@
         438.5,
         376.0
       ],
-      "score": 43.0,
-      "starts": 0
+      "score": 116.0,
+      "starts": 3
     },
     "MM": {
       "name": "Mike and Mike In The Mornin'",
@@ -526,8 +526,8 @@
         449.0,
         401.0
       ],
-      "score": 66.0,
-      "starts": 2
+      "score": 116.5,
+      "starts": 5
     }
   },
   "supabaseUrl": "https://akppyivrfgfcwskfazuf.supabase.co/rest/v1/",

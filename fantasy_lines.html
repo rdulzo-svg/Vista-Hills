@@ -331,7 +331,7 @@
     <strong>Line methodology:</strong>
     Spread &amp; total from blended score projection (40% season avg + 60% last-2-week avg).
     Moneyline derived from projected score differential normalized by each team's historical score volatility (normal CDF) — so all three markets move together.
-    Standard −110 juice on spread &amp; total. ~4.8% overround on ML. <strong>For entertainment only.</strong>
+    Standard −115 juice on spread &amp; total. ~7% overround on ML. <strong>For entertainment only.</strong>
   </div>
   <div class="section-label" id="week-section-label">Matchup 7 &nbsp;·&nbsp; May 11–17, 2026</div>
   <div class="col-headers">
@@ -460,7 +460,7 @@ let WEEK_LABEL = '7';
 let DATE_RANGE = 'May 11–17, 2026';
 
 let AP_TOTAL = 66;
-const JUICE  = 1.0476;
+const JUICE  = 1.07;
 const SP_PTS   = 10; // pts adjustment per start above/below expected pace
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -951,10 +951,10 @@ function renderAll() {
     const mp = parseInt(WEEK_LABEL);
     const shortA = tA.name.split(' ').slice(0,3).join(' ');
     const shortB = tB.name.split(' ').slice(0,3).join(' ');
-    BET_DEFS[`m${idx}-sp-${keyA}`] = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'spread', pickKey:keyA, desc:`${shortA} ${spA}`,            line:D.spreadLineA, odds:-110 };
-    BET_DEFS[`m${idx}-sp-${keyB}`] = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'spread', pickKey:keyB, desc:`${shortB} ${spB}`,            line:D.spreadLineB, odds:-110 };
-    BET_DEFS[`m${idx}-tot-o`]      = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'total',  pickKey:'over',  desc:`Over ${D.totalLine.toFixed(1)}`,  line:D.totalLine, odds:-110 };
-    BET_DEFS[`m${idx}-tot-u`]      = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'total',  pickKey:'under', desc:`Under ${D.totalLine.toFixed(1)}`, line:D.totalLine, odds:-110 };
+    BET_DEFS[`m${idx}-sp-${keyA}`] = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'spread', pickKey:keyA, desc:`${shortA} ${spA}`,            line:D.spreadLineA, odds:-115 };
+    BET_DEFS[`m${idx}-sp-${keyB}`] = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'spread', pickKey:keyB, desc:`${shortB} ${spB}`,            line:D.spreadLineB, odds:-115 };
+    BET_DEFS[`m${idx}-tot-o`]      = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'total',  pickKey:'over',  desc:`Over ${D.totalLine.toFixed(1)}`,  line:D.totalLine, odds:-115 };
+    BET_DEFS[`m${idx}-tot-u`]      = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'total',  pickKey:'under', desc:`Under ${D.totalLine.toFixed(1)}`, line:D.totalLine, odds:-115 };
     BET_DEFS[`m${idx}-ml-${keyA}`] = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'ml',     pickKey:keyA, desc:`${shortA} ML`,                 line:D.mlA, odds:D.mlA };
     BET_DEFS[`m${idx}-ml-${keyB}`] = { matchupPeriod:mp, awayKey:keyA, homeKey:keyB, type:'ml',     pickKey:keyB, desc:`${shortB} ML`,                 line:D.mlB, odds:D.mlB };
 
@@ -977,14 +977,14 @@ function renderAll() {
       ${liveBanner}
       <div class="team-row">
         <div class="team-info">${dotA}<div style="min-width:0"><div class="team-name">${tA.name}</div><div class="team-meta">${tA.wins}–${tA.losses} &nbsp;·&nbsp; AP ${tA.apW}/${AP_TOTAL}</div></div></div>
-        <div id="btn-m${idx}-sp-${keyA}" class="bet-btn${aIsProjFav?' fav':''}${selSpA}" onclick="toggleBet('m${idx}-sp-${keyA}')"><span class="btn-line">${spA}</span><span class="btn-odds">−110</span>${openSpA}</div>
-        <div id="btn-m${idx}-tot-o"      class="bet-btn${selTotO}"                       onclick="toggleBet('m${idx}-tot-o')"><span class="btn-line">O ${D.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span>${openTot}</div>
+        <div id="btn-m${idx}-sp-${keyA}" class="bet-btn${aIsProjFav?' fav':''}${selSpA}" onclick="toggleBet('m${idx}-sp-${keyA}')"><span class="btn-line">${spA}</span><span class="btn-odds">−115</span>${openSpA}</div>
+        <div id="btn-m${idx}-tot-o"      class="bet-btn${selTotO}"                       onclick="toggleBet('m${idx}-tot-o')"><span class="btn-line">O ${D.totalLine.toFixed(1)}</span><span class="btn-odds">−115</span>${openTot}</div>
         <div id="btn-m${idx}-ml-${keyA}" class="bet-btn${aIsMLFav?' fav':''}${selMlA}"   onclick="toggleBet('m${idx}-ml-${keyA}')"><span class="btn-line ${mlClassA}">${fmtML(D.mlA)}</span><span class="btn-odds">${(D.pA*100).toFixed(0)}% win</span>${openMLA}</div>
       </div>
       <div class="team-row">
         <div class="team-info">${dotB}<div style="min-width:0"><div class="team-name">${tB.name}</div><div class="team-meta">${tB.wins}–${tB.losses} &nbsp;·&nbsp; AP ${tB.apW}/${AP_TOTAL}</div></div></div>
-        <div id="btn-m${idx}-sp-${keyB}" class="bet-btn${!aIsProjFav?' fav':''}${selSpB}" onclick="toggleBet('m${idx}-sp-${keyB}')"><span class="btn-line">${spB}</span><span class="btn-odds">−110</span>${openSpB}</div>
-        <div id="btn-m${idx}-tot-u"      class="bet-btn${selTotU}"                        onclick="toggleBet('m${idx}-tot-u')"><span class="btn-line">U ${D.totalLine.toFixed(1)}</span><span class="btn-odds">−110</span>${openTot}</div>
+        <div id="btn-m${idx}-sp-${keyB}" class="bet-btn${!aIsProjFav?' fav':''}${selSpB}" onclick="toggleBet('m${idx}-sp-${keyB}')"><span class="btn-line">${spB}</span><span class="btn-odds">−115</span>${openSpB}</div>
+        <div id="btn-m${idx}-tot-u"      class="bet-btn${selTotU}"                        onclick="toggleBet('m${idx}-tot-u')"><span class="btn-line">U ${D.totalLine.toFixed(1)}</span><span class="btn-odds">−115</span>${openTot}</div>
         <div id="btn-m${idx}-ml-${keyB}" class="bet-btn${!aIsMLFav?' fav':''}${selMlB}"   onclick="toggleBet('m${idx}-ml-${keyB}')"><span class="btn-line ${mlClassB}">${fmtML(D.mlB)}</span><span class="btn-odds">${(D.pB*100).toFixed(0)}% win</span>${openMLB}</div>
       </div>
       <div class="proj-footer">

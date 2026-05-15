@@ -329,8 +329,8 @@
   <a class="back-link" href="index.html">← Back to Vista Hills</a>
   <div class="method-box">
     <strong>Line methodology:</strong>
-    Spread &amp; total magnitude from blended score projection (40% season avg + 60% last-2-week avg).
-    ML win probability: 70% all-play win % + 30% projected scores. Spread direction constrained to match ML favorite.
+    Spread &amp; total from blended score projection (40% season avg + 60% last-2-week avg).
+    Moneyline derived from projected score differential normalized by each team's historical score volatility (normal CDF) — so all three markets move together.
     Standard −110 juice on spread &amp; total. ~4.8% overround on ML. <strong>For entertainment only.</strong>
   </div>
   <div class="section-label" id="week-section-label">Matchup 7 &nbsp;·&nbsp; May 11–17, 2026</div>
@@ -466,6 +466,28 @@ const SP_PTS   = 10; // pts adjustment per start above/below expected pace
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function avg(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
 
+function stdDev(arr) {
+  const m = avg(arr);
+  return Math.sqrt(arr.reduce((s,x) => s + (x-m)**2, 0) / arr.length);
+}
+
+// Normal CDF approximation (Horner's method, max error < 7.5e-8)
+function normalCDF(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-z * z / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.8212560 + t * 1.3302744))));
+  return z >= 0 ? 1 - p : p;
+}
+
+// Combined σ for a matchup — blend team σ with league floor so thin data
+// doesn't produce extreme odds early in the season
+const LEAGUE_SIGMA_FLOOR = 120; // pts — roughly the league-wide weekly std dev
+function matchupSigma(keyA, keyB) {
+  const sA = stdDev(TEAMS[keyA].scores), sB = stdDev(TEAMS[keyB].scores);
+  const raw = Math.sqrt(sA * sA + sB * sB);
+  return Math.max(raw, LEAGUE_SIGMA_FLOOR);
+}
+
 function projScore(key) {
   const t = TEAMS[key];
   return 0.4 * avg(t.scores) + 0.6 * avg(t.scores.slice(-2));
@@ -482,24 +504,24 @@ function fmtML(ml) { return ml > 0 ? `+${ml}` : `${ml}`; }
 function computeLines(keyA, keyB) {
   const tA = TEAMS[keyA], tB = TEAMS[keyB];
   const projA = projScore(keyA), projB = projScore(keyB);
-  const apRatioA  = (tA.apW/AP_TOTAL) / (tA.apW/AP_TOTAL + tB.apW/AP_TOTAL);
-  const projRatioA = projA / (projA + projB);
-  const pA = 0.70*apRatioA + 0.30*projRatioA;
-  const pB = 1 - pA;
-  const mlA = toAmericanML(pA), mlB = toAmericanML(pB);
-  const aIsMLFav = pA >= pB;
-  const spreadMag = Math.floor(Math.abs(projA - projB)) + 0.5;
+  const diff  = projA - projB;
+  const σ     = matchupSigma(keyA, keyB);
+  const pA    = normalCDF(diff / σ);
+  const pB    = 1 - pA;
+  const mlA   = toAmericanML(pA), mlB = toAmericanML(pB);
+  const aIsMLFav   = pA >= pB;
+  const spreadMag  = Math.floor(Math.abs(diff)) + 0.5;
   const spreadLineA = aIsMLFav ? -spreadMag : +spreadMag;
   const spreadLineB = aIsMLFav ? +spreadMag : -spreadMag;
-  const total = projA + projB;
-  const totalLine = Math.round(total*2)/2;
+  const total      = projA + projB;
+  const totalLine  = Math.round(total * 2) / 2;
   return { projA, projB, total, totalLine, spreadLineA, spreadLineB, mlA, mlB, pA, pB };
 }
 
 function computeLiveLines(keyA, keyB) {
   const tA = TEAMS[keyA], tB = TEAMS[keyB];
   const ldA = LIVE.teams[keyA], ldB = LIVE.teams[keyB];
-  const daysElapsed  = LIVE.currentPeriod - LIVE.weekStartPeriod;
+  const daysElapsed   = LIVE.currentPeriod - LIVE.weekStartPeriod;
   const daysRemaining = LIVE.totalPeriods - daysElapsed;
   const expectedStartsRem = LIVE.spCap * daysRemaining / LIVE.totalPeriods;
   const startsRemA = LIVE.spCap - ldA.starts;
@@ -508,19 +530,19 @@ function computeLiveLines(keyA, keyB) {
                         + (startsRemA - expectedStartsRem) * SP_PTS;
   const projRemainingB = projScore(keyB) * (daysRemaining / LIVE.totalPeriods)
                         + (startsRemB - expectedStartsRem) * SP_PTS;
-  const projA = ldA.score + projRemainingA;
-  const projB = ldB.score + projRemainingB;
-  const apRatioA  = (tA.apW/AP_TOTAL) / (tA.apW/AP_TOTAL + tB.apW/AP_TOTAL);
-  const projRatioA = projA / (projA + projB);
-  const pA = 0.70*apRatioA + 0.30*projRatioA;
-  const pB = 1 - pA;
-  const mlA = toAmericanML(pA), mlB = toAmericanML(pB);
-  const aIsMLFav = pA >= pB;
-  const spreadMag = Math.floor(Math.abs(projA - projB)) + 0.5;
+  const projA  = ldA.score + projRemainingA;
+  const projB  = ldB.score + projRemainingB;
+  const diff   = projA - projB;
+  const σ      = matchupSigma(keyA, keyB);
+  const pA     = normalCDF(diff / σ);
+  const pB     = 1 - pA;
+  const mlA    = toAmericanML(pA), mlB = toAmericanML(pB);
+  const aIsMLFav   = pA >= pB;
+  const spreadMag  = Math.floor(Math.abs(diff)) + 0.5;
   const spreadLineA = aIsMLFav ? -spreadMag : +spreadMag;
   const spreadLineB = aIsMLFav ? +spreadMag : -spreadMag;
-  const total = projA + projB;
-  const totalLine = Math.round(total*2)/2;
+  const total      = projA + projB;
+  const totalLine  = Math.round(total * 2) / 2;
   return { projA, projB, total, totalLine, spreadLineA, spreadLineB, mlA, mlB, pA, pB,
            currentA: ldA.score, currentB: ldB.score, startsA: ldA.starts, startsB: ldB.starts,
            startsRemA, startsRemB, daysElapsed, daysRemaining };

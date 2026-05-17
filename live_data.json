@@ -1,7 +1,7 @@
 {
-  "updated": "May 16, 2:54 AM ET",
+  "updated": "May 17, 3:13 AM ET",
   "matchupPeriod": 7,
-  "currentPeriod": 53,
+  "currentPeriod": 54,
   "weekStartPeriod": 48,
   "totalPeriods": 7,
   "spCap": 13,
@@ -297,7 +297,7 @@
       "AA",
       6,
       413.5,
-      328.0
+      333.0
     ],
     [
       "IR",
@@ -313,7 +313,7 @@
       "JK",
       6,
       458.5,
-      431.0
+      428.0
     ],
     [
       "SP",
@@ -339,8 +339,8 @@
         469.5,
         381.0
       ],
-      "score": 248.0,
-      "starts": 9
+      "score": 332.5,
+      "starts": 11
     },
     "BB": {
       "name": "Back 2 Back CY Young",
@@ -354,10 +354,10 @@
         478.0,
         469.0,
         476.5,
-        328.0
+        333.0
       ],
-      "score": 276.0,
-      "starts": 10
+      "score": 371.0,
+      "starts": 13
     },
     "RM": {
       "name": "Raleighing My Way",
@@ -373,8 +373,8 @@
         407.0,
         352.0
       ],
-      "score": 323.0,
-      "starts": 10
+      "score": 371.0,
+      "starts": 12
     },
     "TB": {
       "name": "Thicc Bois",
@@ -390,8 +390,8 @@
         327.5,
         379.5
       ],
-      "score": 252.0,
-      "starts": 8
+      "score": 300.5,
+      "starts": 9
     },
     "AA": {
       "name": "All ARRAEZ for the JUDGE",
@@ -407,8 +407,8 @@
         494.5,
         413.5
       ],
-      "score": 244.0,
-      "starts": 10
+      "score": 333.0,
+      "starts": 11
     },
     "JK": {
       "name": "Jung H King",
@@ -424,8 +424,8 @@
         276.5,
         458.5
       ],
-      "score": 354.5,
-      "starts": 9
+      "score": 405.5,
+      "starts": 11
     },
     "MN": {
       "name": "MANNY MEN",
@@ -439,10 +439,10 @@
         401.0,
         501.0,
         409.0,
-        431.0
+        428.0
       ],
-      "score": 268.0,
-      "starts": 10
+      "score": 366.0,
+      "starts": 11
     },
     "SK": {
       "name": "Stop looking at me Kwan",
@@ -458,8 +458,8 @@
         414.5,
         468.5
       ],
-      "score": 248.0,
-      "starts": 8
+      "score": 373.0,
+      "starts": 11
     },
     "SP": {
       "name": "16 percent",
@@ -475,8 +475,8 @@
         434.0,
         392.0
       ],
-      "score": 365.0,
-      "starts": 10
+      "score": 438.0,
+      "starts": 11
     },
     "IR": {
       "name": "Ima Ride For My MF McGGonicle",
@@ -492,8 +492,8 @@
         409.5,
         443.5
       ],
-      "score": 228.5,
-      "starts": 5
+      "score": 309.0,
+      "starts": 10
     },
     "DH": {
       "name": "Dom's House of Fun",
@@ -509,8 +509,8 @@
         438.5,
         376.0
       ],
-      "score": 247.5,
-      "starts": 9
+      "score": 353.0,
+      "starts": 11
     },
     "MM": {
       "name": "Mike and Mike In The Mornin'",
@@ -526,8 +526,8 @@
         449.0,
         401.0
       ],
-      "score": 260.0,
-      "starts": 8
+      "score": 314.5,
+      "starts": 12
     }
   },
   "supabaseUrl": "https://akppyivrfgfcwskfazuf.supabase.co/rest/v1/",

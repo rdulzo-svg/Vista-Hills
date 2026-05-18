@@ -49,50 +49,8 @@
 <button id="downloadBtn" onclick="downloadChart()">⬇ Download PNG</button>
 
 <script>
-// Teams ordered by 6-week all-play quality (AP wins out of 66)
-const teams = [
-  { name: "Ima Ride For My MF McGGonicle", color: "#e63946", apW: 48 },
-  { name: "MANNY MEN",                     color: "#f77f00", apW: 44 },
-  { name: "WITTnessing Greatness",          color: "#2a9d8f", apW: 38 },
-  { name: "Mike and Mike In The Mornin'",  color: "#457b9d", apW: 36 },
-  { name: "All ARRAEZ for the JUDGE",      color: "#6a4c93", apW: 36 },
-  { name: "16 percent",                    color: "#90be6d", apW: 34 },
-  { name: "Jung H King",                   color: "#ff6b6b", apW: 33 },
-  { name: "Stop looking at me Kwan",       color: "#4cc9f0", apW: 30 },
-  { name: "Back 2 Back CY Young",          color: "#e9c46a", apW: 29 },
-  { name: "Thicc Bois",                    color: "#f4a261", apW: 28 },
-  { name: "Dom's House of Fun",            color: "#a8dadc", apW: 24 },
-  { name: "Raleighing My Way",             color: "#52b788", apW: 16 },
-];
-
-const weeklyScores = {
-  "Ima Ride For My MF McGGonicle": [755.0, 538.5, 554.0, 411.0, 409.5, 443.5],
-  "MANNY MEN":                     [723.0, 546.5, 401.0, 501.0, 409.0, 429.0],
-  "WITTnessing Greatness":         [656.5, 354.5, 394.0, 508.0, 469.5, 381.0],
-  "Mike and Mike In The Mornin'":  [567.5, 467.5, 475.0, 461.5, 449.0, 401.0],
-  "All ARRAEZ for the JUDGE":      [646.5, 537.0, 296.0, 391.5, 494.5, 413.5],
-  "16 percent":                    [595.5, 484.5, 468.0, 458.0, 434.0, 392.0],
-  "Jung H King":                   [812.5, 334.0, 475.5, 392.0, 276.5, 457.5],
-  "Stop looking at me Kwan":       [643.0, 390.0, 377.5, 369.0, 414.5, 467.5],
-  "Back 2 Back CY Young":          [522.5, 325.5, 478.0, 469.0, 476.5, 326.0],
-  "Thicc Bois":                    [506.0, 363.0, 481.5, 501.5, 327.5, 379.5],
-  "Dom's House of Fun":            [603.5, 300.5, 510.5, 310.0, 438.5, 375.0],
-  "Raleighing My Way":             [505.0, 484.0, 321.5, 429.5, 407.0, 351.0],
-};
-
-const n = teams.length;
-const weeks = 6;
-
-// Compute rank per week per team (1 = best)
-const weekRanks = Array.from({ length: weeks }, (_, w) => {
-  const scores = teams.map(t => weeklyScores[t.name][w]);
-  const sorted = [...scores].sort((a, b) => b - a);
-  return scores.map(s => sorted.indexOf(s) + 1);
-});
-
-function rankColor(rank) {
-  const t = (rank - 1) / (n - 1); // 0 (best) → 1 (worst)
-  // green #4ade80 → yellow #facc15 → red #f87171
+function rankColor(rank, n) {
+  const t = (rank - 1) / (n - 1);
   let r, g, b;
   if (t < 0.5) {
     const u = t * 2;
@@ -107,33 +65,54 @@ function rankColor(rank) {
   }
   return `rgb(${r},${g},${b})`;
 }
-
-function textColor(rank) {
-  return rank <= 4 ? 'rgba(0,0,0,0.75)' : rank >= 9 ? 'rgba(0,0,0,0.75)' : '#111';
+function textColor(rank, n) {
+  return (rank <= Math.floor(n/3) || rank >= Math.ceil(n*2/3)) ? 'rgba(0,0,0,0.75)' : '#111';
 }
 
-const tbody = document.getElementById('heatmap-body');
-teams.forEach((team, ti) => {
-  const scores = weeklyScores[team.name];
-  const total = scores.reduce((a, b) => a + b, 0);
-  const avg = total / weeks;
-  const dot = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${team.color};margin-right:6px;vertical-align:middle;"></span>`;
+function render(data) {
+  const teams = Object.values(data.teams).sort((a, b) => b.apW - a.apW);
+  const n     = teams.length;
+  const weeks = teams[0].scores.length;
 
-  let cells = '';
-  for (let w = 0; w < weeks; w++) {
-    const rank = weekRanks[w][ti];
-    const bg = rankColor(rank);
-    const tc = textColor(rank);
-    cells += `<td class="score-cell" style="background:${bg};color:${tc};">${scores[w].toFixed(1)}<span class="rank-badge">#${rank}</span></td>`;
-  }
+  // Build week column headers dynamically
+  const weekLabels = Array.from({length: weeks}, (_, i) => i === 0 ? 'Wk 1 (12d)*' : `Wk ${i+1}`);
+  const headerRow  = document.querySelector('thead tr');
+  headerRow.innerHTML = '<th class="team-col">Team</th>' +
+    weekLabels.map(l => `<th>${l}</th>`).join('') +
+    '<th class="sep">Total PF</th><th>Avg/Wk</th>';
 
-  tbody.innerHTML += `<tr>
-    <td class="team-name">${dot}${team.name}</td>
-    ${cells}
-    <td class="total-col">${total.toFixed(1)}</td>
-    <td class="avg-col">${avg.toFixed(1)}</td>
-  </tr>`;
-});
+  document.querySelector('h2').textContent = `Vista Hills — Weekly Score Heatmap (2026)`;
+  document.querySelector('.subtitle').textContent =
+    `Through Week ${weeks} · Green = highest score · Red = lowest · #rank shown · Sorted by all-play quality`;
+
+  const weekRanks = Array.from({length: weeks}, (_, w) => {
+    const scores = teams.map(t => t.scores[w]);
+    const sorted = [...scores].sort((a, b) => b - a);
+    return scores.map(s => sorted.indexOf(s) + 1);
+  });
+
+  const tbody = document.getElementById('heatmap-body');
+  tbody.innerHTML = '';
+  teams.forEach((team, ti) => {
+    const scores = team.scores;
+    const total  = scores.reduce((a, b) => a + b, 0);
+    const avg    = total / weeks;
+    const dot    = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${team.color};margin-right:6px;vertical-align:middle;"></span>`;
+    let cells = '';
+    for (let w = 0; w < weeks; w++) {
+      const rank = weekRanks[w][ti];
+      cells += `<td class="score-cell" style="background:${rankColor(rank,n)};color:${textColor(rank,n)};">${scores[w].toFixed(1)}<span class="rank-badge">#${rank}</span></td>`;
+    }
+    tbody.innerHTML += `<tr>
+      <td class="team-name">${dot}${team.name}</td>
+      ${cells}
+      <td class="total-col">${total.toFixed(1)}</td>
+      <td class="avg-col">${avg.toFixed(1)}</td>
+    </tr>`;
+  });
+}
+
+fetch('live_data.json').then(r => r.json()).then(render);
 
 function downloadChart() {
   const target = document.getElementById('capture');

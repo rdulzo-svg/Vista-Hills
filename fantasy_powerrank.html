@@ -268,72 +268,14 @@
 </div><!-- end capture-root -->
 
 <script>
-/* ── Data ─────────────────────────────────────────────────────────────── */
-const TEAMS = [
-  { name: "Ima Ride For My MF McGGonicle", short: "McGGonicle",  color: "#e63946", apW: 48, wins: 6, scores: [755.0,538.5,554.0,411.0,409.5,443.5] },
-  { name: "MANNY MEN",                     short: "MANNY MEN",   color: "#f77f00", apW: 44, wins: 1, scores: [723.0,546.5,401.0,501.0,409.0,429.0] },
-  { name: "WITTnessing Greatness",          short: "WITTnessing", color: "#2a9d8f", apW: 38, wins: 3, scores: [656.5,354.5,394.0,508.0,469.5,381.0] },
-  { name: "Mike and Mike In The Mornin'",  short: "Mike & Mike", color: "#457b9d", apW: 36, wins: 5, scores: [567.5,467.5,475.0,461.5,449.0,401.0] },
-  { name: "All ARRAEZ for the JUDGE",      short: "All ARRAEZ",  color: "#6a4c93", apW: 36, wins: 3, scores: [646.5,537.0,296.0,391.5,494.5,413.5] },
-  { name: "16 percent",                    short: "16 percent",  color: "#90be6d", apW: 34, wins: 1, scores: [595.5,484.5,468.0,458.0,434.0,392.0] },
-  { name: "Jung H King",                   short: "Jung H King", color: "#ff6b6b", apW: 33, wins: 3, scores: [812.5,334.0,475.5,392.0,276.5,457.5] },
-  { name: "Stop looking at me Kwan",       short: "Kwan",        color: "#4cc9f0", apW: 30, wins: 2, scores: [643.0,390.0,377.5,369.0,414.5,467.5] },
-  { name: "Back 2 Back CY Young",          short: "CY Young",    color: "#e9c46a", apW: 29, wins: 3, scores: [522.5,325.5,478.0,469.0,476.5,326.0] },
-  { name: "Thicc Bois",                    short: "Thicc Bois",  color: "#f4a261", apW: 28, wins: 4, scores: [506.0,363.0,481.5,501.5,327.5,379.5] },
-  { name: "Dom's House of Fun",            short: "Dom's House", color: "#a8dadc", apW: 24, wins: 3, scores: [603.5,300.5,510.5,310.0,438.5,375.0] },
-  { name: "Raleighing My Way",             short: "Raleighing",  color: "#52b788", apW: 16, wins: 2, scores: [505.0,484.0,321.5,429.5,407.0,351.0] },
-];
-const AP_TOTAL     = 66;   // 6 weeks × 11 opponents
-const WEEKS        = 6;
-const RECENT_WEEKS = 2;    // last 2 weeks = indices 4 and 5
-const N            = TEAMS.length; // 12
+const SHORT = {
+  IR:"McGGonicle", MN:"MANNY MEN", WG:"WITTnessing", MM:"Mike & Mike",
+  AA:"All ARRAEZ", SP:"16 percent", JK:"Jung H King", SK:"Kwan",
+  BB:"CY Young", TB:"Thicc Bois", DH:"Dom's House", RM:"Raleighing"
+};
 
-/* ── Compute recent all-play wins (weeks 5 & 6, 0-indexed 4 & 5) ─────── */
-const RECENT_WEEK_INDICES = [WEEKS - 2, WEEKS - 1]; // [4, 5]
+const RECENT_WEEKS = 2;
 
-function computeRecentAPWins() {
-  RECENT_WEEK_INDICES.forEach(wi => {
-    // Sort teams by score descending for this week
-    const sorted = TEAMS.map((t, i) => ({ idx: i, score: t.scores[wi] }))
-                        .sort((a, b) => b.score - a.score);
-    sorted.forEach((entry, rank) => {
-      if (!TEAMS[entry.idx]._recentAPW) TEAMS[entry.idx]._recentAPW = 0;
-      TEAMS[entry.idx]._recentAPW += rank; // rank 0 = best → beats all 11 others = 11 wins
-    });
-  });
-}
-computeRecentAPWins();
-
-const RECENT_MAX = RECENT_WEEKS * (N - 1); // 2 × 11 = 22
-
-/* ── Compute actual W% ─────────────────────────────────────────────────── */
-// Max wins possible = WEEKS = 6
-function actualWPct(t) { return t.wins / WEEKS; }
-
-/* ── Power Score ───────────────────────────────────────────────────────── */
-// 0.30 × Season AP W% + 0.50 × Recent AP W% + 0.20 × Actual W%
-function powerScore(t) {
-  const seasonAPpct  = t.apW / AP_TOTAL;
-  const recentAPpct  = t._recentAPW / RECENT_MAX;
-  const actualPct    = actualWPct(t);
-  return 0.30 * seasonAPpct + 0.50 * recentAPpct + 0.20 * actualPct;
-}
-
-// Attach scores
-TEAMS.forEach(t => { t._ps = powerScore(t); });
-
-/* ── AP Rank (by apW desc, stable) ─────────────────────────────────────── */
-const apSorted = [...TEAMS].sort((a, b) => b.apW - a.apW || b.wins - a.wins);
-apSorted.forEach((t, i) => { t._apRank = i + 1; }); // 1-based
-
-/* ── Power Rank ─────────────────────────────────────────────────────────── */
-const psSorted = [...TEAMS].sort((a, b) => b._ps - a._ps);
-psSorted.forEach((t, i) => { t._psRank = i + 1; });
-
-/* ── Max power score (for bar scaling) ─────────────────────────────────── */
-const maxPS = Math.max(...TEAMS.map(t => t._ps));
-
-/* ── Rank badge class ─────────────────────────────────────────────────── */
 function rankClass(r) {
   if (r === 1) return 'rank-badge rank-1';
   if (r === 2) return 'rank-badge rank-2';
@@ -343,121 +285,27 @@ function rankClass(r) {
   return 'rank-badge rank-bot';
 }
 
-/* ── Movement cell ──────────────────────────────────────────────────────── */
 function moveHTML(t) {
-  // positive delta = power rank is BETTER (lower number) than AP rank → trending up
   const delta = t._apRank - t._psRank;
   if (delta === 0) return `<span class="move move-same">—</span>`;
   if (delta > 0)   return `<span class="move move-up">▲${delta}</span>`;
   return `<span class="move move-down">▼${Math.abs(delta)}</span>`;
 }
 
-/* ── Render table ─────────────────────────────────────────────────────── */
-function fmt3(v) { return v.toFixed(3).replace(/^0/, ''); } // ".727"
+function fmt3(v) { return v.toFixed(3).replace(/^0/, ''); }
 
-const tbody = document.getElementById('pr-tbody');
-psSorted.forEach(t => {
-  const ps        = t._ps;
-  const barPct    = (ps / maxPS * 100).toFixed(1);
-  const seasonPct = fmt3(t.apW / AP_TOTAL);
-  const recentPct = fmt3(t._recentAPW / RECENT_MAX);
-  const rec       = `${t.wins}&ndash;${WEEKS - t.wins}`;
-
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td class="center"><span class="${rankClass(t._psRank)}">${t._psRank}</span></td>
-    <td class="center">${moveHTML(t)}</td>
-    <td>
-      <div class="team-cell">
-        <span class="team-dot" style="background:${t.color}"></span>
-        <span class="team-short">${t.short}</span>
-      </div>
-    </td>
-    <td>
-      <div class="bar-wrap">
-        <div class="bar-track">
-          <div class="bar-fill" style="width:${barPct}%;background:${t.color}"></div>
-        </div>
-        <span class="bar-label">${(ps * 100).toFixed(1)}</span>
-      </div>
-    </td>
-    <td class="center stat-pct">${seasonPct}</td>
-    <td class="center stat-pct">${recentPct}</td>
-    <td class="right stat-rec">${rec}</td>
-  `;
-  tbody.appendChild(tr);
-});
-
-/* ── Render chart ─────────────────────────────────────────────────────── */
-const chartLabels  = psSorted.map(t => t.short);
-const chartScores  = psSorted.map(t => parseFloat((t._ps * 100).toFixed(2)));
-const chartColors  = psSorted.map(t => t.color);
-const chartBorders = psSorted.map(t => t.color);
-
-const ctx = document.getElementById('pr-chart').getContext('2d');
-new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: chartLabels,
-    datasets: [{
-      label: 'Power Score',
-      data: chartScores,
-      backgroundColor: chartColors.map(c => c + 'cc'),
-      borderColor: chartBorders,
-      borderWidth: 1.5,
-      borderRadius: 4,
-    }]
-  },
-  options: {
-    indexAxis: 'y',
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: ctx => ` ${ctx.parsed.x.toFixed(1)}`
-        }
-      }
-    },
-    scales: {
-      x: {
-        min: 0,
-        max: 100,
-        grid: { color: 'rgba(255,255,255,.07)' },
-        ticks: { color: '#888', font: { size: 11 } },
-        title: {
-          display: true,
-          text: 'Power Score (×100)',
-          color: '#888',
-          font: { size: 11 }
-        }
-      },
-      y: {
-        grid: { color: 'rgba(255,255,255,.05)' },
-        ticks: {
-          color: '#ccc',
-          font: { size: 11 },
-          // color each label by team color
-          callback: function(value, index) {
-            return chartLabels[index];
-          }
-        }
-      }
-    }
-  }
-});
-
-// Color y-axis tick labels to match team colors
-// We do it post-render via a plugin
+// Register color tick plugin once
 Chart.register({
   id: 'coloredTicks',
   afterDraw(chart) {
     const yAxis = chart.scales.y;
     if (!yAxis) return;
+    const teamColors = chart.data.datasets[0]._teamColors;
+    if (!teamColors) return;
     const ctx2 = chart.ctx;
     ctx2.save();
     yAxis.ticks.forEach((tick, i) => {
-      const color = chartColors[i] || '#ccc';
+      const color = teamColors[i] || '#ccc';
       const y = yAxis.getPixelForTick(i);
       const x = yAxis.right - 6;
       ctx2.fillStyle = color;
@@ -470,20 +318,129 @@ Chart.register({
   }
 });
 
-// Re-render chart to apply color plugin (plugin registered after creation — rebuild)
-(function recolorChart() {
-  const existingChart = Chart.getChart('pr-chart');
-  if (existingChart) existingChart.update();
-})();
+let prChart = null;
 
-/* ── Download PNG ─────────────────────────────────────────────────────── */
+function render(data) {
+  const AP_TOTAL = data.apTotal;
+  const TEAMS = Object.entries(data.teams).map(([key, t]) => ({
+    ...t,
+    short: SHORT[key] || key
+  }));
+  const WEEKS = TEAMS[0].scores.length;
+  const N = TEAMS.length;
+  const RECENT_WEEK_INDICES = [WEEKS - 2, WEEKS - 1];
+  const RECENT_MAX = RECENT_WEEKS * (N - 1);
+
+  // Update header
+  document.querySelector('.page-header div[style]').textContent = `Through Matchup ${WEEKS}, 2026`;
+
+  // Compute recent AP wins
+  TEAMS.forEach(t => { t._recentAPW = 0; });
+  RECENT_WEEK_INDICES.forEach(wi => {
+    const sorted = TEAMS.map((t, i) => ({ idx: i, score: t.scores[wi] }))
+                        .sort((a, b) => b.score - a.score);
+    sorted.forEach((entry, rank) => { TEAMS[entry.idx]._recentAPW += rank; });
+  });
+
+  // Power score
+  TEAMS.forEach(t => {
+    const seasonAPpct = t.apW / AP_TOTAL;
+    const recentAPpct = t._recentAPW / RECENT_MAX;
+    const actualPct   = t.wins / WEEKS;
+    t._ps = 0.30 * seasonAPpct + 0.50 * recentAPpct + 0.20 * actualPct;
+  });
+
+  // AP rank
+  const apSorted = [...TEAMS].sort((a, b) => b.apW - a.apW || b.wins - a.wins);
+  apSorted.forEach((t, i) => { t._apRank = i + 1; });
+
+  // Power rank
+  const psSorted = [...TEAMS].sort((a, b) => b._ps - a._ps);
+  psSorted.forEach((t, i) => { t._psRank = i + 1; });
+
+  const maxPS = Math.max(...TEAMS.map(t => t._ps));
+
+  // Render table
+  const tbody = document.getElementById('pr-tbody');
+  tbody.innerHTML = '';
+  psSorted.forEach(t => {
+    const ps        = t._ps;
+    const barPct    = (ps / maxPS * 100).toFixed(1);
+    const seasonPct = fmt3(t.apW / AP_TOTAL);
+    const recentPct = fmt3(t._recentAPW / RECENT_MAX);
+    const rec       = `${t.wins}&ndash;${WEEKS - t.wins}`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="center"><span class="${rankClass(t._psRank)}">${t._psRank}</span></td>
+      <td class="center">${moveHTML(t)}</td>
+      <td>
+        <div class="team-cell">
+          <span class="team-dot" style="background:${t.color}"></span>
+          <span class="team-short">${t.short}</span>
+        </div>
+      </td>
+      <td>
+        <div class="bar-wrap">
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${barPct}%;background:${t.color}"></div>
+          </div>
+          <span class="bar-label">${(ps * 100).toFixed(1)}</span>
+        </div>
+      </td>
+      <td class="center stat-pct">${seasonPct}</td>
+      <td class="center stat-pct">${recentPct}</td>
+      <td class="right stat-rec">${rec}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Render chart
+  const chartLabels = psSorted.map(t => t.short);
+  const chartScores = psSorted.map(t => parseFloat((t._ps * 100).toFixed(2)));
+  const chartColors = psSorted.map(t => t.color);
+
+  if (prChart) prChart.destroy();
+  const ctx = document.getElementById('pr-chart').getContext('2d');
+  const ds = {
+    label: 'Power Score',
+    data: chartScores,
+    backgroundColor: chartColors.map(c => c + 'cc'),
+    borderColor: chartColors,
+    borderWidth: 1.5,
+    borderRadius: 4,
+  };
+  ds._teamColors = chartColors; // attach for coloredTicks plugin
+  prChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: chartLabels, datasets: [ds] },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toFixed(1)}` } }
+      },
+      scales: {
+        x: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(255,255,255,.07)' },
+          ticks: { color: '#888', font: { size: 11 } },
+          title: { display: true, text: 'Power Score (×100)', color: '#888', font: { size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,.05)' },
+          ticks: { color: '#ccc', font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+fetch('live_data.json').then(r => r.json()).then(render);
+
 function downloadPNG() {
-  const root = document.getElementById('capture-root');
-  html2canvas(root, {
-    backgroundColor: '#1a1a2e',
-    scale: 2,
-    useCORS: true,
-    logging: false
+  html2canvas(document.getElementById('capture-root'), {
+    backgroundColor: '#1a1a2e', scale: 2, useCORS: true, logging: false
   }).then(canvas => {
     const link = document.createElement('a');
     link.download = 'vista_hills_power_rankings_2026.png';

@@ -60,165 +60,159 @@
 
 <script>
 // ── Config ────────────────────────────────────────────────────────────────────
-const PLAYOFF_SPOTS = 6;   // top N teams make playoffs — verify in league settings
+const PLAYOFF_SPOTS = 6;
 const SIMS = 10000;
 const TOTAL_WEEKS = 19;
 
-// ── Team data after Week 6 ────────────────────────────────────────────────────
-// apW = all-play wins over 6 weeks (out of 66 = 6 × 11 opponents)
-const TEAMS = {
-  IR: { name: "Ima Ride For My MF McGGonicle",   wins: 6, apW: 48, color: "#e63946" },
-  MN: { name: "MANNY MEN",                        wins: 1, apW: 44, color: "#f77f00" },
-  WG: { name: "WITTnessing Greatness",            wins: 3, apW: 38, color: "#2a9d8f" },
-  MM: { name: "Mike and Mike In The Mornin'",     wins: 5, apW: 36, color: "#457b9d" },
-  AA: { name: "All ARRAEZ for the JUDGE",         wins: 3, apW: 36, color: "#6a4c93" },
-  SP: { name: "16 percent",                       wins: 1, apW: 34, color: "#90be6d" },
-  JK: { name: "Jung H King",                      wins: 3, apW: 33, color: "#ff6b6b" },
-  SK: { name: "Stop looking at me Kwan",          wins: 2, apW: 30, color: "#4cc9f0" },
-  BB: { name: "Back 2 Back CY Young",             wins: 3, apW: 29, color: "#e9c46a" },
-  TB: { name: "Thicc Bois",                       wins: 4, apW: 28, color: "#f4a261" },
-  DH: { name: "Dom's House of Fun",               wins: 3, apW: 24, color: "#a8dadc" },
-  RM: { name: "Raleighing My Way",                wins: 2, apW: 16, color: "#52b788" },
-};
-
-// ── Remaining schedule (Matchups 7–19) ───────────────────────────────────────
-const schedule = [
-  // M7  (May 11–17)
+// ── Full schedule M7–M19 (hardcoded — ESPN schedule doesn't change) ───────────
+const FULL_SCHEDULE = [
+  // M7
   ["SP","JK"],["RM","TB"],["BB","MM"],["WG","DH"],["MN","AA"],["SK","IR"],
-  // M8  (May 18–24)
+  // M8
   ["AA","SP"],["BB","RM"],["TB","WG"],["MM","MN"],["DH","SK"],["IR","JK"],
-  // M9  (May 25–31)
+  // M9
   ["SP","MM"],["RM","WG"],["MN","BB"],["SK","TB"],["JK","DH"],["IR","AA"],
-  // M10 (Jun 1–7)
+  // M10
   ["BB","SP"],["MN","RM"],["WG","SK"],["TB","JK"],["MM","IR"],["DH","AA"],
-  // M11 (Jun 8–14)
+  // M11
   ["SP","MN"],["RM","SK"],["JK","WG"],["IR","BB"],["AA","TB"],["DH","MM"],
-  // M12 (Jun 15–21)
+  // M12
   ["SP","RM"],["SK","JK"],["MN","IR"],["WG","AA"],["BB","DH"],["TB","MM"],
-  // M13 (Jun 22–28)
+  // M13
   ["IR","SP"],["RM","JK"],["AA","SK"],["DH","MN"],["MM","WG"],["TB","BB"],
-  // M14 (Jun 29–Jul 5)
+  // M14
   ["SP","DH"],["IR","RM"],["JK","AA"],["SK","MM"],["MN","TB"],["WG","BB"],
-  // M15 (Jul 6–19)
+  // M15
   ["TB","SP"],["RM","AA"],["DH","IR"],["MM","JK"],["BB","SK"],["WG","MN"],
-  // M16 (Jul 20–26)
+  // M16
   ["SP","WG"],["DH","RM"],["AA","MM"],["IR","TB"],["JK","BB"],["SK","MN"],
-  // M17 (Jul 27–Aug 2)
+  // M17
   ["SK","SP"],["RM","MM"],["TB","DH"],["BB","AA"],["WG","IR"],["MN","JK"],
-  // M18 (Aug 3–9)
+  // M18
   ["JK","SP"],["TB","RM"],["MM","BB"],["DH","WG"],["AA","MN"],["IR","SK"],
-  // M19 (Aug 10–16)
+  // M19
   ["SP","AA"],["RM","BB"],["WG","TB"],["MN","MM"],["SK","DH"],["JK","IR"],
 ];
 
-// ── Monte Carlo simulation ────────────────────────────────────────────────────
-const keys = Object.keys(TEAMS);
-const AP_TOTAL = 66; // 6 weeks × 11 opponents
+function runSimulation(TEAMS, AP_TOTAL, currentPeriod) {
+  // Slice off matchups already played (M7 = index 0, M8 = index 1, ...)
+  const scheduleStart = (currentPeriod - 7) * 6;
+  const schedule = FULL_SCHEDULE.slice(scheduleStart);
 
-const playoffCount  = Object.fromEntries(keys.map(k => [k, 0]));
-const winSum        = Object.fromEntries(keys.map(k => [k, 0]));
+  const keys = Object.keys(TEAMS);
+  const playoffCount = Object.fromEntries(keys.map(k => [k, 0]));
+  const winSum       = Object.fromEntries(keys.map(k => [k, 0]));
 
-for (let s = 0; s < SIMS; s++) {
-  const wins = Object.fromEntries(keys.map(k => [k, TEAMS[k].wins]));
-
-  for (const [a, b] of schedule) {
-    const pa = TEAMS[a].apW / AP_TOTAL;
-    const pb = TEAMS[b].apW / AP_TOTAL;
-    if (Math.random() < pa / (pa + pb)) wins[a]++; else wins[b]++;
+  for (let s = 0; s < SIMS; s++) {
+    const wins = Object.fromEntries(keys.map(k => [k, TEAMS[k].wins]));
+    for (const [a, b] of schedule) {
+      const pa = TEAMS[a].apW / AP_TOTAL;
+      const pb = TEAMS[b].apW / AP_TOTAL;
+      if (Math.random() < pa / (pa + pb)) wins[a]++; else wins[b]++;
+    }
+    const ranked = keys.slice().sort((a, b) =>
+      wins[b] !== wins[a] ? wins[b] - wins[a] : TEAMS[b].apW - TEAMS[a].apW
+    );
+    for (let i = 0; i < PLAYOFF_SPOTS; i++) playoffCount[ranked[i]]++;
+    keys.forEach(k => winSum[k] += wins[k]);
   }
 
-  // Sort: wins desc, tiebreak by apW (proxy for season PF)
-  const ranked = keys.slice().sort((a, b) =>
-    wins[b] !== wins[a] ? wins[b] - wins[a] : TEAMS[b].apW - TEAMS[a].apW
-  );
-  for (let i = 0; i < PLAYOFF_SPOTS; i++) playoffCount[ranked[i]]++;
-  keys.forEach(k => winSum[k] += wins[k]);
+  return { playoffCount, winSum, keys };
 }
 
-// ── Build results array sorted by playoff odds ────────────────────────────────
-const results = keys.map(k => ({
-  key: k,
-  name: TEAMS[k].name,
-  color: TEAMS[k].color,
-  wins: TEAMS[k].wins,
-  losses: 6 - TEAMS[k].wins + (19 - 6 - (TOTAL_WEEKS - 6)),  // current losses
-  apPct: TEAMS[k].apW / AP_TOTAL,
-  odds: playoffCount[k] / SIMS,
-  expWins: winSum[k] / SIMS,
-})).map(r => ({ ...r, losses: 6 - r.wins }))
-  .sort((a, b) => b.odds - a.odds);
+fetch('live_data.json').then(r => r.json()).then(data => {
+  const TEAMS = data.teams;
+  const AP_TOTAL = data.apTotal;
+  const currentPeriod = data.matchupPeriod; // current week being played
+  const completedWeeks = currentPeriod - 1; // weeks fully scored
 
-// ── Detail table ──────────────────────────────────────────────────────────────
-const tbody = document.getElementById('detail-tbody');
-results.forEach(r => {
-  const pct = (r.odds * 100).toFixed(1);
-  const cls = r.odds >= 0.60 ? 'odds-hi' : r.odds >= 0.30 ? 'odds-mid' : 'odds-lo';
-  const dot = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${r.color};margin-right:6px;vertical-align:middle;"></span>`;
-  const expL = (TOTAL_WEEKS - r.expWins).toFixed(1);
-  tbody.innerHTML += `<tr>
-    <td>${dot}${r.name}</td>
-    <td style="color:#ccc">${r.wins}–${r.losses}</td>
-    <td style="color:#ccc">${r.expWins.toFixed(1)}–${expL}</td>
-    <td class="${cls}">${pct}%</td>
-  </tr>`;
-});
+  // Update subtitles dynamically
+  document.querySelector('.subtitle').textContent =
+    `10,000-season Monte Carlo simulation · Matchups ${currentPeriod}–${TOTAL_WEEKS} simulated using actual schedule · Win probability from all-play W%`;
 
-// ── Bar chart ─────────────────────────────────────────────────────────────────
-const barCtx = document.getElementById('bar').getContext('2d');
-new Chart(barCtx, {
-  type: 'bar',
-  data: {
-    labels: results.map(r => r.name.length > 24 ? r.name.substring(0, 22) + '…' : r.name),
-    datasets: [{
-      data: results.map(r => +(r.odds * 100).toFixed(1)),
-      backgroundColor: results.map(r => r.color + 'bb'),
-      borderColor:     results.map(r => r.color),
-      borderWidth: 1.5,
-    }]
-  },
-  options: {
-    responsive: false,
-    indexAxis: 'y',
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: ctx => {
-            const r = results[ctx.dataIndex];
-            return [
-              `Playoff odds: ${(r.odds * 100).toFixed(1)}%`,
-              `Current: ${r.wins}–${r.losses}`,
-              `Projected finish: ${r.expWins.toFixed(1)}–${(TOTAL_WEEKS - r.expWins).toFixed(1)}`,
-              `All-play quality: .${Math.round(r.apPct * 1000).toString().padStart(3,'0')}`,
-            ];
-          }
-        }
-      },
-      annotation: {
-        annotations: {
-          cutoff: {
-            type: 'line', scaleID: 'x', value: 50,
-            borderColor: 'rgba(255,255,255,0.35)', borderWidth: 1.5, borderDash: [5, 4],
-            label: { content: '50%', display: true, position: 'start',
-                     color: '#aaa', font: { size: 10 }, padding: 3,
-                     backgroundColor: 'rgba(0,0,0,0.4)' }
-          }
-        }
-      }
+  const { playoffCount, winSum, keys } = runSimulation(TEAMS, AP_TOTAL, currentPeriod);
+
+  const results = keys.map(k => ({
+    key: k,
+    name: TEAMS[k].name,
+    color: TEAMS[k].color,
+    wins: TEAMS[k].wins,
+    losses: completedWeeks - TEAMS[k].wins,
+    apPct: TEAMS[k].apW / AP_TOTAL,
+    odds: playoffCount[k] / SIMS,
+    expWins: winSum[k] / SIMS,
+  })).sort((a, b) => b.odds - a.odds);
+
+  // Detail table
+  const tbody = document.getElementById('detail-tbody');
+  results.forEach(r => {
+    const pct = (r.odds * 100).toFixed(1);
+    const cls = r.odds >= 0.60 ? 'odds-hi' : r.odds >= 0.30 ? 'odds-mid' : 'odds-lo';
+    const dot = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${r.color};margin-right:6px;vertical-align:middle;"></span>`;
+    tbody.innerHTML += `<tr>
+      <td>${dot}${r.name}</td>
+      <td style="color:#ccc">${r.wins}–${r.losses}</td>
+      <td style="color:#ccc">${r.expWins.toFixed(1)}–${(TOTAL_WEEKS - r.expWins).toFixed(1)}</td>
+      <td class="${cls}">${pct}%</td>
+    </tr>`;
+  });
+
+  // Bar chart
+  const barCtx = document.getElementById('bar').getContext('2d');
+  new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: results.map(r => r.name.length > 24 ? r.name.substring(0, 22) + '…' : r.name),
+      datasets: [{
+        data: results.map(r => +(r.odds * 100).toFixed(1)),
+        backgroundColor: results.map(r => r.color + 'bb'),
+        borderColor:     results.map(r => r.color),
+        borderWidth: 1.5,
+      }]
     },
-    scales: {
-      x: {
-        min: 0, max: 100,
-        title: { display: true, text: 'Playoff Probability (%)', color: '#ccc', font: { size: 12 } },
-        grid: { color: 'rgba(255,255,255,0.08)' },
-        ticks: { color: '#ccc', callback: v => v + '%' }
+    options: {
+      responsive: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const r = results[ctx.dataIndex];
+              return [
+                `Playoff odds: ${(r.odds * 100).toFixed(1)}%`,
+                `Current: ${r.wins}–${r.losses}`,
+                `Projected finish: ${r.expWins.toFixed(1)}–${(TOTAL_WEEKS - r.expWins).toFixed(1)}`,
+                `All-play quality: .${Math.round(r.apPct * 1000).toString().padStart(3,'0')}`,
+              ];
+            }
+          }
+        },
+        annotation: {
+          annotations: {
+            cutoff: {
+              type: 'line', scaleID: 'x', value: 50,
+              borderColor: 'rgba(255,255,255,0.35)', borderWidth: 1.5, borderDash: [5, 4],
+              label: { content: '50%', display: true, position: 'start',
+                       color: '#aaa', font: { size: 10 }, padding: 3,
+                       backgroundColor: 'rgba(0,0,0,0.4)' }
+            }
+          }
+        }
       },
-      y: { ticks: { color: '#ccc', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      scales: {
+        x: {
+          min: 0, max: 100,
+          title: { display: true, text: 'Playoff Probability (%)', color: '#ccc', font: { size: 12 } },
+          grid: { color: 'rgba(255,255,255,0.08)' },
+          ticks: { color: '#ccc', callback: v => v + '%' }
+        },
+        y: { ticks: { color: '#ccc', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
     }
-  }
+  });
 });
 
-// ── Download ──────────────────────────────────────────────────────────────────
 function downloadChart() {
   const target = document.getElementById('capture');
   html2canvas(target, {

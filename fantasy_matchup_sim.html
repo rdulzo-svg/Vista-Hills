@@ -176,33 +176,11 @@
 </div>
 
 <script>
-const WEEKS = ['Wk 1*','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'];
+let TEAMS = [];
+let WEEKS = [];
 
-const TEAMS = [
-  { name: "Ima Ride For My MF McGGonicle", color: "#e63946", scores: [755.0, 538.5, 554.0, 411.0, 409.5, 443.5] },
-  { name: "MANNY MEN",                     color: "#f77f00", scores: [723.0, 546.5, 401.0, 501.0, 409.0, 429.0] },
-  { name: "WITTnessing Greatness",          color: "#2a9d8f", scores: [656.5, 354.5, 394.0, 508.0, 469.5, 381.0] },
-  { name: "Mike and Mike In The Mornin'",  color: "#457b9d", scores: [567.5, 467.5, 475.0, 461.5, 449.0, 401.0] },
-  { name: "All ARRAEZ for the JUDGE",      color: "#6a4c93", scores: [646.5, 537.0, 296.0, 391.5, 494.5, 413.5] },
-  { name: "16 percent",                    color: "#90be6d", scores: [595.5, 484.5, 468.0, 458.0, 434.0, 392.0] },
-  { name: "Jung H King",                   color: "#ff6b6b", scores: [812.5, 334.0, 475.5, 392.0, 276.5, 457.5] },
-  { name: "Stop looking at me Kwan",       color: "#4cc9f0", scores: [643.0, 390.0, 377.5, 369.0, 414.5, 467.5] },
-  { name: "Back 2 Back CY Young",          color: "#e9c46a", scores: [522.5, 325.5, 478.0, 469.0, 476.5, 326.0] },
-  { name: "Thicc Bois",                    color: "#f4a261", scores: [506.0, 363.0, 481.5, 501.5, 327.5, 379.5] },
-  { name: "Dom's House of Fun",            color: "#a8dadc", scores: [603.5, 300.5, 510.5, 310.0, 438.5, 375.0] },
-  { name: "Raleighing My Way",             color: "#52b788", scores: [505.0, 484.0, 321.5, 429.5, 407.0, 351.0] },
-];
-
-// Populate dropdowns
 const selA = document.getElementById('teamA');
 const selB = document.getElementById('teamB');
-TEAMS.forEach((t, i) => {
-  selA.innerHTML += `<option value="${i}">${t.name}</option>`;
-  selB.innerHTML += `<option value="${i}">${t.name}</option>`;
-});
-// Default to 16 percent vs MANNY MEN
-selA.value = TEAMS.findIndex(t => t.name === '16 percent');
-selB.value = TEAMS.findIndex(t => t.name === 'MANNY MEN');
 
 function calculate() {
   const idxA = parseInt(selA.value);
@@ -215,11 +193,12 @@ function calculate() {
 
   const a = TEAMS[idxA];
   const b = TEAMS[idxB];
+  const numWeeks = WEEKS.length;
 
   let winsA = 0, winsB = 0;
   let rows = '';
 
-  for (let w = 0; w < WEEKS.length; w++) {
+  for (let w = 0; w < numWeeks; w++) {
     const sA = a.scores[w];
     const sB = b.scores[w];
     const aWon = sA > sB;
@@ -249,7 +228,7 @@ function calculate() {
 
   document.getElementById('result').innerHTML = `
     <div class="record-banner">
-      <div class="record-teams">Hypothetical 6-week record if these two played every week</div>
+      <div class="record-teams">Hypothetical ${numWeeks}-week record if these two played every week</div>
       <div class="record-vs">
         <div>
           <div class="record-team-name">${dotA}${a.name}</div>
@@ -278,8 +257,22 @@ function calculate() {
   `;
 }
 
-// Auto-run on load
-calculate();
+fetch('live_data.json').then(r => r.json()).then(data => {
+  TEAMS = Object.values(data.teams);
+  const numWeeks = TEAMS[0].scores.length;
+  WEEKS = Array.from({length: numWeeks}, (_, i) => i === 0 ? 'Wk 1*' : `Wk ${i+1}`);
+
+  selA.innerHTML = '';
+  selB.innerHTML = '';
+  TEAMS.forEach((t, i) => {
+    selA.innerHTML += `<option value="${i}">${t.name}</option>`;
+    selB.innerHTML += `<option value="${i}">${t.name}</option>`;
+  });
+  // Default: first two teams
+  selA.value = 0;
+  selB.value = 1;
+  calculate();
+});
 </script>
 </body>
 </html>

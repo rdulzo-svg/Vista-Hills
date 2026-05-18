@@ -165,20 +165,11 @@
 </div>
 
 <script>
-const TEAMS = [
-  { name: "Ima Ride For My MF McGGonicle", short: "McGGonicle",  color: "#e63946", wins: 6,  scores: [755.0,538.5,554.0,411.0,409.5,443.5] },
-  { name: "MANNY MEN",                     short: "MANNY MEN",   color: "#f77f00", wins: 1,  scores: [723.0,546.5,401.0,501.0,409.0,429.0] },
-  { name: "WITTnessing Greatness",          short: "WITTnessing", color: "#2a9d8f", wins: 3,  scores: [656.5,354.5,394.0,508.0,469.5,381.0] },
-  { name: "Mike and Mike In The Mornin'",  short: "Mike & Mike", color: "#457b9d", wins: 5,  scores: [567.5,467.5,475.0,461.5,449.0,401.0] },
-  { name: "All ARRAEZ for the JUDGE",      short: "All ARRAEZ",  color: "#6a4c93", wins: 3,  scores: [646.5,537.0,296.0,391.5,494.5,413.5] },
-  { name: "16 percent",                    short: "16 percent",  color: "#90be6d", wins: 1,  scores: [595.5,484.5,468.0,458.0,434.0,392.0] },
-  { name: "Jung H King",                   short: "Jung H King", color: "#ff6b6b", wins: 3,  scores: [812.5,334.0,475.5,392.0,276.5,457.5] },
-  { name: "Stop looking at me Kwan",       short: "Kwan",        color: "#4cc9f0", wins: 2,  scores: [643.0,390.0,377.5,369.0,414.5,467.5] },
-  { name: "Back 2 Back CY Young",          short: "CY Young",    color: "#e9c46a", wins: 3,  scores: [522.5,325.5,478.0,469.0,476.5,326.0] },
-  { name: "Thicc Bois",                    short: "Thicc Bois",  color: "#f4a261", wins: 4,  scores: [506.0,363.0,481.5,501.5,327.5,379.5] },
-  { name: "Dom's House of Fun",            short: "Dom's House", color: "#a8dadc", wins: 3,  scores: [603.5,300.5,510.5,310.0,438.5,375.0] },
-  { name: "Raleighing My Way",             short: "Raleighing",  color: "#52b788", wins: 2,  scores: [505.0,484.0,321.5,429.5,407.0,351.0] },
-];
+const SHORT = {
+  IR:"McGGonicle", MN:"MANNY MEN", WG:"WITTnessing", MM:"Mike & Mike",
+  AA:"All ARRAEZ", SP:"16 percent", JK:"Jung H King", SK:"Kwan",
+  BB:"CY Young", TB:"Thicc Bois", DH:"Dom's House", RM:"Raleighing"
+};
 
 function mean(arr) {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
@@ -188,184 +179,18 @@ function stddev(arr) {
   return Math.sqrt(arr.reduce((s, x) => s + (x - m) ** 2, 0) / arr.length);
 }
 
-// Augment teams with stats
-TEAMS.forEach(t => {
-  t.avg = mean(t.scores);
-  t.std = stddev(t.scores);
-  t.cv  = t.std / t.avg * 100;
-});
-
-const leagueMeanAvg = mean(TEAMS.map(t => t.avg));
-const leagueMeanStd = mean(TEAMS.map(t => t.std));
-
-// Build bubble chart dataset — one dataset per team so each gets its own color
-const datasets = TEAMS.map(t => ({
-  label: t.short,
-  data: [{ x: t.avg, y: t.std, r: 5 + t.wins * 2.5 }],
-  backgroundColor: t.color + 'cc',
-  borderColor: t.color,
-  borderWidth: 1.5,
-  hoverBackgroundColor: t.color,
-}));
-
-const ctx = document.getElementById('consistencyChart').getContext('2d');
-
-// Custom plugin: quadrant labels + crosshairs + team name labels
-const quadrantPlugin = {
-  id: 'quadrantPlugin',
-  afterDatasetsDraw(chart) {
-    const { ctx, chartArea: { left, right, top, bottom }, scales } = chart;
-    const cx = scales.x.getPixelForValue(leagueMeanAvg);
-    const cy = scales.y.getPixelForValue(leagueMeanStd);
-
-    ctx.save();
-
-    // Crosshair lines
-    ctx.setLineDash([5, 5]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(cx, top);
-    ctx.lineTo(cx, bottom);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(left, cy);
-    ctx.lineTo(right, cy);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Quadrant labels
-    ctx.font = '600 12px "Segoe UI", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.13)';
-    ctx.textAlign = 'center';
-
-    const pad = 10;
-    // Top-right: Boom/Bust Elite
-    ctx.fillText('Boom/Bust Elite',    (cx + right)  / 2, top + pad + 14);
-    // Top-left: Boom/Bust Weak
-    ctx.fillText('Boom/Bust Weak',     (left + cx)   / 2, top + pad + 14);
-    // Bottom-right: Consistent Elite
-    ctx.fillText('Consistent Elite',   (cx + right)  / 2, bottom - pad - 4);
-    // Bottom-left: Consistent Weak
-    ctx.fillText('Consistent Weak',    (left + cx)   / 2, bottom - pad - 4);
-
-    ctx.restore();
-  },
-
-  afterDraw(chart) {
-    const { ctx, scales } = chart;
-    ctx.save();
-    ctx.font = '600 10px "Segoe UI", system-ui, sans-serif';
-    ctx.textBaseline = 'middle';
-
-    TEAMS.forEach((t, i) => {
-      const px = scales.x.getPixelForValue(t.avg);
-      const py = scales.y.getPixelForValue(t.std);
-      const r  = 5 + t.wins * 2.5;
-
-      // Determine label placement — push label to right of bubble
-      // Nudge left-edge teams inward
-      let lx = px + r + 5;
-      let ly = py;
-
-      // Measure text
-      const tw = ctx.measureText(t.short).width;
-      const chartRight = scales.x.right;
-      if (lx + tw > chartRight - 4) {
-        lx = px - r - 5;
-        ctx.textAlign = 'right';
-      } else {
-        ctx.textAlign = 'left';
-      }
-
-      // Shadow for legibility
-      ctx.shadowColor = '#0a0a1a';
-      ctx.shadowBlur = 4;
-      ctx.fillStyle = t.color;
-      ctx.fillText(t.short, lx, ly);
-      ctx.shadowBlur = 0;
-    });
-
-    ctx.restore();
-  }
-};
-
-const chart = new Chart(ctx, {
-  type: 'bubble',
-  data: { datasets },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: { duration: 600, easing: 'easeOutQuart' },
-    layout: { padding: { top: 10, right: 20, bottom: 10, left: 10 } },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Avg Score / Week',
-          color: '#94a3b8',
-          font: { size: 12, weight: '600' },
-        },
-        grid: { color: 'rgba(255,255,255,0.06)' },
-        ticks: { color: '#94a3b8', font: { size: 11 } },
-        border: { color: 'rgba(255,255,255,0.1)' },
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Std Dev — higher = more volatile',
-          color: '#94a3b8',
-          font: { size: 12, weight: '600' },
-        },
-        grid: { color: 'rgba(255,255,255,0.06)' },
-        ticks: { color: '#94a3b8', font: { size: 11 } },
-        border: { color: 'rgba(255,255,255,0.1)' },
-      },
-    },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#0f172a',
-        borderColor: 'rgba(255,255,255,0.15)',
-        borderWidth: 1,
-        titleColor: '#f1f5f9',
-        bodyColor: '#94a3b8',
-        padding: 12,
-        callbacks: {
-          title(items) {
-            const idx = datasets.findIndex(d => d.label === items[0].dataset.label);
-            return TEAMS[idx].name;
-          },
-          label(item) {
-            const idx = datasets.findIndex(d => d.label === item.dataset.label);
-            const t = TEAMS[idx];
-            return [
-              `Avg/Week: ${t.avg.toFixed(1)}`,
-              `Std Dev:  ${t.std.toFixed(1)}`,
-              `Wins: ${t.wins}`,
-            ];
-          },
-        },
-      },
-    },
-  },
-  plugins: [quadrantPlugin],
-});
-
-// --- Table ---
 let sortCol = 'avg';
-let sortDir = -1; // -1 = desc
+let sortDir = -1;
+let currentTeams = [];
+let chartInstance = null;
 
 function renderTable() {
-  const sorted = [...TEAMS].sort((a, b) => {
-    const av = typeof a[sortCol] === 'string' ? a[sortCol] : a[sortCol];
-    const bv = typeof b[sortCol] === 'string' ? b[sortCol] : b[sortCol];
+  const sorted = [...currentTeams].sort((a, b) => {
+    const av = a[sortCol], bv = b[sortCol];
     if (typeof av === 'string') return sortDir * av.localeCompare(bv);
     return sortDir * (av - bv);
   });
-
-  const tbody = document.getElementById('rankBody');
-  tbody.innerHTML = sorted.map(t => `
+  document.getElementById('rankBody').innerHTML = sorted.map(t => `
     <tr>
       <td><div class="team-cell"><span class="dot" style="background:${t.color}"></span>${t.name}</div></td>
       <td class="num">${t.avg.toFixed(1)}</td>
@@ -379,29 +204,143 @@ function renderTable() {
 document.querySelectorAll('thead th').forEach(th => {
   th.addEventListener('click', () => {
     const col = th.dataset.col;
-    if (sortCol === col) {
-      sortDir *= -1;
-    } else {
-      sortCol = col;
-      sortDir = col === 'name' ? 1 : -1;
-    }
-    document.querySelectorAll('thead th').forEach(h => {
-      h.classList.remove('sorted', 'asc');
-    });
+    if (sortCol === col) { sortDir *= -1; }
+    else { sortCol = col; sortDir = col === 'name' ? 1 : -1; }
+    document.querySelectorAll('thead th').forEach(h => h.classList.remove('sorted', 'asc'));
     th.classList.add('sorted');
     if (sortDir === 1) th.classList.add('asc');
     renderTable();
   });
 });
 
-renderTable();
+function render(data) {
+  const TEAMS = Object.entries(data.teams).map(([key, t]) => ({
+    ...t,
+    short: SHORT[key] || key
+  }));
 
-// --- Download PNG ---
+  TEAMS.forEach(t => {
+    t.avg = mean(t.scores);
+    t.std = stddev(t.scores);
+    t.cv  = t.std / t.avg * 100;
+  });
+
+  const leagueMeanAvg = mean(TEAMS.map(t => t.avg));
+  const leagueMeanStd = mean(TEAMS.map(t => t.std));
+
+  const datasets = TEAMS.map(t => ({
+    label: t.short,
+    data: [{ x: t.avg, y: t.std, r: 5 + t.wins * 2.5 }],
+    backgroundColor: t.color + 'cc',
+    borderColor: t.color,
+    borderWidth: 1.5,
+    hoverBackgroundColor: t.color,
+  }));
+
+  const quadrantPlugin = {
+    id: 'quadrantPlugin',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea: { left, right, top, bottom }, scales } = chart;
+      const cx = scales.x.getPixelForValue(leagueMeanAvg);
+      const cy = scales.y.getPixelForValue(leagueMeanStd);
+      ctx.save();
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(cx, bottom); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(left, cy); ctx.lineTo(right, cy); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '600 12px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.13)';
+      ctx.textAlign = 'center';
+      const pad = 10;
+      ctx.fillText('Boom/Bust Elite',   (cx + right) / 2, top + pad + 14);
+      ctx.fillText('Boom/Bust Weak',    (left + cx)  / 2, top + pad + 14);
+      ctx.fillText('Consistent Elite',  (cx + right) / 2, bottom - pad - 4);
+      ctx.fillText('Consistent Weak',   (left + cx)  / 2, bottom - pad - 4);
+      ctx.restore();
+    },
+    afterDraw(chart) {
+      const { ctx, scales } = chart;
+      ctx.save();
+      ctx.font = '600 10px "Segoe UI", system-ui, sans-serif';
+      ctx.textBaseline = 'middle';
+      TEAMS.forEach(t => {
+        const px = scales.x.getPixelForValue(t.avg);
+        const py = scales.y.getPixelForValue(t.std);
+        const r  = 5 + t.wins * 2.5;
+        let lx = px + r + 5;
+        const tw = ctx.measureText(t.short).width;
+        if (lx + tw > scales.x.right - 4) { lx = px - r - 5; ctx.textAlign = 'right'; }
+        else { ctx.textAlign = 'left'; }
+        ctx.shadowColor = '#0a0a1a'; ctx.shadowBlur = 4;
+        ctx.fillStyle = t.color;
+        ctx.fillText(t.short, lx, py);
+        ctx.shadowBlur = 0;
+      });
+      ctx.restore();
+    }
+  };
+
+  if (chartInstance) chartInstance.destroy();
+  const ctx = document.getElementById('consistencyChart').getContext('2d');
+  chartInstance = new Chart(ctx, {
+    type: 'bubble',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 600, easing: 'easeOutQuart' },
+      layout: { padding: { top: 10, right: 20, bottom: 10, left: 10 } },
+      scales: {
+        x: {
+          title: { display: true, text: 'Avg Score / Week', color: '#94a3b8', font: { size: 12, weight: '600' } },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          ticks: { color: '#94a3b8', font: { size: 11 } },
+          border: { color: 'rgba(255,255,255,0.1)' },
+        },
+        y: {
+          title: { display: true, text: 'Std Dev — higher = more volatile', color: '#94a3b8', font: { size: 12, weight: '600' } },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          ticks: { color: '#94a3b8', font: { size: 11 } },
+          border: { color: 'rgba(255,255,255,0.1)' },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f172a',
+          borderColor: 'rgba(255,255,255,0.15)',
+          borderWidth: 1,
+          titleColor: '#f1f5f9',
+          bodyColor: '#94a3b8',
+          padding: 12,
+          callbacks: {
+            title(items) {
+              const idx = datasets.findIndex(d => d.label === items[0].dataset.label);
+              return TEAMS[idx].name;
+            },
+            label(item) {
+              const idx = datasets.findIndex(d => d.label === item.dataset.label);
+              const t = TEAMS[idx];
+              return [`Avg/Week: ${t.avg.toFixed(1)}`, `Std Dev:  ${t.std.toFixed(1)}`, `Wins: ${t.wins}`];
+            },
+          },
+        },
+      },
+    },
+    plugins: [quadrantPlugin],
+  });
+
+  currentTeams = TEAMS;
+  renderTable();
+}
+
+fetch('live_data.json').then(r => r.json()).then(render);
+
 function downloadPng() {
   html2canvas(document.getElementById('chartCard'), {
-    backgroundColor: '#16213e',
-    scale: 2,
-    useCORS: true,
+    backgroundColor: '#16213e', scale: 2, useCORS: true,
   }).then(canvas => {
     const link = document.createElement('a');
     link.download = 'vista-hills-consistency-2026.png';

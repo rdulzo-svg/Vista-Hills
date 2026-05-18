@@ -20,7 +20,7 @@
 </head>
 <body>
 <div id="capture" style="background:#1a1a2e; padding: 24px 40px; display:inline-flex; flex-direction:column; align-items:center;">
-<h2>Vista Hills — Hitting vs. Pitching (Matchups 1–6, 2026)</h2>
+<h2 id="scatter-title">Vista Hills — Hitting vs. Pitching (2026)</h2>
 <p class="subtitle">Axes = z-scores (SDs from league mean) &nbsp;|&nbsp; Bubble size = wins &nbsp;|&nbsp; n=12 (descriptive only)</p>
 <div id="chart-container">
   <canvas id="myChart"></canvas>
@@ -38,20 +38,29 @@
 </div>
 
 <script>
-const raw = [
-  { name: "Ima Ride For My MF McGGonicle",    hit: 1840.0, pit: 1270.8, w: 6 },
-  { name: "Mike and Mike In The Mornin'",     hit: 1312.5, pit: 1509.0, w: 5 },
-  { name: "Thicc Bois",                       hit: 1321.5, pit: 1236.8, w: 4 },
-  { name: "All ARRAEZ for the JUDGE",         hit: 1620.0, pit: 1159.0, w: 3 },
-  { name: "WITTnessing Greatness",            hit: 1513.5, pit: 1249.3, w: 3 },
-  { name: "Jung H King",                      hit: 1486.0, pit: 1260.6, w: 3 },
-  { name: "Back 2 Back CY Young",             hit: 1518.0, pit: 1079.5, w: 3 },
-  { name: "Dom's House of Fun",               hit: 1374.0, pit: 1164.0, w: 3 },
-  { name: "Stop looking at me Kwan",          hit: 1464.5, pit: 1196.3, w: 2 },
-  { name: "Raleighing My Way",                hit: 1325.5, pit: 1172.5, w: 2 },
-  { name: "MANNY MEN MANNY MANNY MANNY MEN", hit: 1632.0, pit: 1376.1, w: 1 },
-  { name: "16 percent",                       hit: 1519.5, pit: 1311.8, w: 1 },
-];
+// Multipliers matching the scoring system (batting = hit, pitching = pit)
+const BAT_MULTS = {r:1,s:1,d:2,t:3,hr:4,rbi:2,gw:1,bbB:1,hbp:1,sac:1,sb:2,kB:-1,cs:-0.5};
+const PIT_MULTS = {ip:3,kP:1,qs:2,so:3,w:8,sv:4.5,hd:2,hP:-1,er:-2,bbP:-1,hb:-1,l:-2,bs:-2};
+
+fetch('live_data.json').then(r => r.json()).then(liveData => {
+  const maxPeriod = (liveData.matchupPeriod || 1) - 1;
+  document.getElementById('scatter-title').textContent =
+    `Vista Hills — Hitting vs. Pitching (Matchups 1–${maxPeriod}, 2026)`;
+
+  const catStats = liveData.catStats || {};
+  const teams    = liveData.teams   || {};
+
+  const raw = Object.entries(catStats).map(([key, cats]) => {
+    const hit = Object.entries(BAT_MULTS).reduce((s,[k,m]) => s + (cats[k]||0)*m, 0);
+    const pit = Object.entries(PIT_MULTS).reduce((s,[k,m]) => s + (cats[k]||0)*m, 0);
+    return {
+      name:  teams[key]?.name  || key,
+      color: teams[key]?.color || '#888',
+      hit:   Math.round(hit * 10) / 10,
+      pit:   Math.round(pit * 10) / 10,
+      w:     teams[key]?.wins  || 0,
+    };
+  });
 
 const n = raw.length;
 const mean = arr => arr.reduce((a, b) => a + b, 0) / n;
@@ -62,24 +71,18 @@ const pits = raw.map(t => t.pit);
 const mHit = mean(hits), mPit = mean(pits);
 const sHit = sd(hits, mHit), sPit = sd(pits, mPit);
 
-const teams = raw.map(t => ({
+const zTeams = raw.map(t => ({
   ...t,
   zHit: (t.hit - mHit) / sHit,
   zPit: (t.pit - mPit) / sPit,
 }));
 
 // Pearson r (on z-scores: r = mean of zx*zy)
-const r = teams.reduce((s, t) => s + t.zHit * t.zPit, 0) / n;
+const r = zTeams.reduce((s, t) => s + t.zHit * t.zPit, 0) / n;
 
 // Regression line on z-score space: zy = r * zx (passes through origin)
 const xMin = -3, xMax = 3;
 const regLine = [{ x: xMin, y: r * xMin }, { x: xMax, y: r * xMax }];
-
-const colors = [
-  "#e63946","#457b9d","#2a9d8f","#e9c46a","#f4a261",
-  "#a8dadc","#6a4c93","#ff6b6b","#52b788","#f77f00",
-  "#90be6d","#4cc9f0"
-];
 
 // Bubble radius scaled to wins (1–5)
 const winRadius = w => 7 + (w - 1) * 4;  // 7, 11, 15, 19, 23
@@ -102,11 +105,11 @@ new Chart(ctx, {
         tension: 0,
       },
       // Team dots
-      ...teams.map((t, i) => ({
+      ...zTeams.map(t => ({
         label: t.name,
         data: [{ x: t.zHit, y: t.zPit }],
-        backgroundColor: colors[i] + 'cc',
-        borderColor: colors[i],
+        backgroundColor: t.color + 'cc',
+        borderColor: t.color,
         borderWidth: 2,
         pointRadius: winRadius(t.w),
         pointHoverRadius: winRadius(t.w) + 3,
@@ -129,12 +132,12 @@ new Chart(ctx, {
         callbacks: {
           label: ctx => {
             if (ctx.datasetIndex === 0) return null;
-            const t = teams[ctx.datasetIndex - 1];
+            const t = zTeams[ctx.datasetIndex - 1];
             return [
               t.name,
               `Hitting z: ${t.zHit.toFixed(2)}  (${t.hit} pts)`,
               `Pitching z: ${t.zPit.toFixed(2)}  (${t.pit} pts)`,
-              `Record: ${t.w}-${5 - t.w}`,
+              `Record: ${t.w}-${maxPeriod - t.w}`,
             ];
           }
         }
@@ -184,7 +187,7 @@ new Chart(ctx, {
         const meta = chart.getDatasetMeta(i);
         if (!meta.hidden && meta.data.length) {
           const pt = meta.data[0];
-          const t = teams[i - 1];
+          const t = zTeams[i - 1];
           const r = winRadius(t.w);
           ctx.font = '10.5px Arial';
           ctx.fillStyle = '#fff';
@@ -219,6 +222,8 @@ new Chart(ctx, {
     }
   }]
 });
+}); // end fetch
+
 function downloadChart() {
   const chartCanvas = document.getElementById('myChart');
   const dpr = window.devicePixelRatio || 1;

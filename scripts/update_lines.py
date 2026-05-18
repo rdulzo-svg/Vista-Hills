@@ -24,6 +24,19 @@ ID_TO_KEY = {
     11: "SP", 12: "IR", 13: "DH", 14: "MM",
 }
 
+# Lineup slot IDs treated as bench (not counted for fantasy points)
+BENCH_SLOTS = {15, 16, 17}   # 15=BE, 16=IL, 17=NA/TS
+
+# ESPN raw stat ID → our category key
+ESPN_STAT_TO_CAT = {
+    6:  "r",    13: "s",   11: "d",   12: "t",    5: "hr",
+    7:  "rbi",  15: "gw",   3: "bbB", 14: "kB",   4: "hbp",
+    8:  "sac",   9: "sb",  10: "cs",
+    17: "ip",   18: "hP",  21: "er",  19: "bbP",  20: "hb",
+    24: "kP",   25: "qs",  30: "so",  26: "w",    27: "l",
+    28: "sv",   29: "bs",  31: "hd",
+}
+
 # Static display data — only changes if teams rename themselves
 TEAM_META = {
     "IR": {"name": "Ima Ride For My MF McGGonicle", "color": "#e63946"},
@@ -60,6 +73,62 @@ def fmt_date_range(start: datetime, end: datetime) -> str:
     if start.month == end.month:
         return f"{start.strftime('%b')} {start.day}–{end.day}, {end.year}"
     return f"{start.strftime('%b')} {start.day}–{end.strftime('%b')} {end.day}, {end.year}"
+
+
+def fetch_cat_stats(cookies):
+    """
+    Fetch per-category raw stat totals per team using the mRoster view.
+    Sums season-to-date actual stats (scoringPeriodId=0, statSourceId=0)
+    for active (non-bench) roster players only.
+    Returns {team_key: {stat_key: value, ...}} or {} on failure.
+    """
+    try:
+        resp = requests.get(
+            BASE_URL, params={"view": "mRoster"}, cookies=cookies, timeout=20
+        )
+        resp.raise_for_status()
+        roster_json = resp.json()
+    except Exception as exc:
+        print(f"  Warning: mRoster fetch failed — {exc}", file=sys.stderr)
+        return {}
+
+    cat_stats = {}
+    for t in roster_json.get("teams", []):
+        key = ID_TO_KEY.get(t["id"])
+        if not key:
+            continue
+
+        cats = {c: 0.0 for c in ESPN_STAT_TO_CAT.values()}
+
+        for entry in (t.get("roster") or {}).get("entries", []):
+            if entry.get("lineupSlotId") in BENCH_SLOTS:
+                continue  # skip bench / IL / NA slots
+
+            ppe = entry.get("playerPoolEntry") or {}
+            for se in (ppe.get("stats") or []):
+                # Season-to-date actual stats entry
+                if se.get("scoringPeriodId") == 0 and se.get("statSourceId") == 0:
+                    for sid_str, val in (se.get("stats") or {}).items():
+                        cat = ESPN_STAT_TO_CAT.get(int(sid_str))
+                        if cat and val:
+                            cats[cat] += float(val)
+                    break  # one matching entry per player is enough
+
+        # Normalise IP: ESPN may return total outs (>1000) or decimal innings
+        ip_val = cats.get("ip", 0.0)
+        if ip_val > 1000:                       # stored as total outs
+            full_inn  = int(ip_val) // 3
+            rem_outs  = int(ip_val) % 3
+            cats["ip"] = round(full_inn + rem_outs / 10, 1)
+        elif ip_val > 0:                        # decimal innings → X.Y notation
+            full_inn = int(ip_val)
+            frac_inn = ip_val - full_inn
+            thirds   = round(frac_inn * 3)
+            cats["ip"] = round(full_inn + thirds / 10, 1)
+
+        cat_stats[key] = {k: round(v, 1) for k, v in cats.items()}
+
+    return cat_stats
 
 
 def grade_single(bet, away_final, home_final):
@@ -272,6 +341,11 @@ def main():
     print("Fetching ESPN data…")
     score_data = espn_get("mMatchupScore", cookies)
     team_data  = espn_get("mTeam",         cookies)
+    cat_stats  = fetch_cat_stats(cookies)
+    if cat_stats:
+        print(f"  Got category stats for {len(cat_stats)} teams.")
+    else:
+        print("  Warning: no category stats retrieved.", file=sys.stderr)
 
     status                = score_data["status"]
     current_matchup       = status["currentMatchupPeriod"]
@@ -412,6 +486,7 @@ def main():
         "apTotal":          ap_total,
         "matchups":         matchup_pairs,
         "history":          history,
+        "catStats":         cat_stats,
         "teams":            {},
     }
 

@@ -164,7 +164,7 @@
 
 <div class="page-header">
   <h1>Vista Hills — Category Kings &amp; Doormats (2026)</h1>
-  <p>Best and worst team in each scoring category through Matchup 6</p>
+  <p id="subtitle">Best and worst team in each scoring category</p>
 </div>
 
 <div class="tables-row">
@@ -231,20 +231,7 @@ const COLS = [
   { id:'bs',  label:'BS',    mult:-2,   group:'pit-', desc:'Blown Saves' },
 ];
 
-const RAW = [
-  { name:"Ima Ride For My MF McGGonicle", color:"#e63946", r:321,s:338,d:109,t:15,hr:88,rbi:308,gw:38,bbB:265,kB:519,hbp:35,sac:20,sb:59,cs:14, ip:469.1,hP:391,er:184,bbP:171,hb:15,kP:443,qs:36,so:0,w:36,l:29,sv:7,bs:6,hd:22 },
-  { name:"Mike and Mike In The Mornin'",  color:"#457b9d", r:249,s:269,d:87,t:4,hr:64,rbi:268,gw:29,bbB:197,kB:556,hbp:30,sac:17,sb:53,cs:13, ip:550.0,hP:457,er:208,bbP:175,hb:24,kP:585,qs:38,so:0,w:31,l:28,sv:16,bs:2,hd:5 },
-  { name:"Thicc Bois",                    color:"#f4a261", r:212,s:317,d:90,t:8,hr:57,rbi:230,gw:27,bbB:174,kB:432,hbp:21,sac:29,sb:44,cs:13, ip:490.1,hP:419,er:199,bbP:185,hb:15,kP:435,qs:30,so:0,w:31,l:35,sv:25,bs:6,hd:5 },
-  { name:"All ARRAEZ for the JUDGE",      color:"#6a4c93", r:293,s:323,d:105,t:8,hr:71,rbi:275,gw:29,bbB:255,kB:457,hbp:14,sac:26,sb:37,cs:10, ip:537.0,hP:514,er:265,bbP:188,hb:25,kP:462,qs:30,so:0,w:32,l:40,sv:18,bs:6,hd:19 },
-  { name:"WITTnessing Greatness",         color:"#2a9d8f", r:269,s:349,d:107,t:7,hr:69,rbi:260,gw:42,bbB:198,kB:459,hbp:14,sac:16,sb:30,cs:13, ip:545.1,hP:506,er:249,bbP:183,hb:30,kP:487,qs:28,so:0,w:33,l:33,sv:16,bs:7,hd:16 },
-  { name:"Jung H King",                   color:"#ff6b6b", r:277,s:323,d:80,t:13,hr:67,rbi:248,gw:27,bbB:243,kB:452,hbp:21,sac:15,sb:38,cs:14, ip:483.2,hP:399,er:212,bbP:202,hb:24,kP:507,qs:25,so:0,w:33,l:30,sv:22,bs:4,hd:4 },
-  { name:"Back 2 Back CY Young",          color:"#e9c46a", r:298,s:320,d:91,t:5,hr:78,rbi:280,gw:34,bbB:241,kB:554,hbp:20,sac:24,sb:35,cs:8, ip:569.0,hP:559,er:291,bbP:232,hb:25,kP:534,qs:29,so:0,w:24,l:43,sv:9,bs:9,hd:25 },
-  { name:"Dom's House of Fun",            color:"#a8dadc", r:270,s:309,d:92,t:5,hr:57,rbi:218,gw:30,bbB:209,kB:425,hbp:29,sac:15,sb:38,cs:4, ip:538.0,hP:495,er:250,bbP:217,hb:19,kP:458,qs:28,so:0,w:32,l:38,sv:10,bs:5,hd:26 },
-  { name:"Stop looking at me Kwan",       color:"#4cc9f0", r:269,s:337,d:91,t:2,hr:68,rbi:250,gw:34,bbB:210,kB:450,hbp:20,sac:21,sb:35,cs:13, ip:512.1,hP:493,er:242,bbP:205,hb:15,kP:556,qs:30,so:0,w:29,l:32,sv:10,bs:6,hd:20 },
-  { name:"Raleighing My Way",             color:"#52b788", r:260,s:300,d:99,t:9,hr:70,rbi:230,gw:29,bbB:234,kB:558,hbp:24,sac:17,sb:31,cs:15, ip:475.0,hP:444,er:215,bbP:175,hb:31,kP:475,qs:25,so:0,w:31,l:31,sv:25,bs:5,hd:7 },
-  { name:"MANNY MEN",                     color:"#f77f00", r:307,s:336,d:100,t:11,hr:75,rbi:261,gw:32,bbB:267,kB:538,hbp:29,sac:18,sb:68,cs:20, ip:546.2,hP:470,er:244,bbP:216,hb:25,kP:541,qs:34,so:1,w:34,l:30,sv:25,bs:8,hd:8 },
-  { name:"16 percent",                    color:"#90be6d", r:296,s:303,d:81,t:9,hr:85,rbi:261,gw:28,bbB:257,kB:551,hbp:19,sac:10,sb:56,cs:11, ip:553.1,hP:522,er:263,bbP:228,hb:16,kP:554,qs:23,so:0,w:39,l:34,sv:21,bs:6,hd:9 },
-];
+let RAW = [];
 
 // Doormat flavor text per category
 const DOORMAT_QUIPS = {
@@ -276,15 +263,8 @@ const DOORMAT_QUIPS = {
   bs:  '💣 Blown saves connoisseur',
 };
 
-// Compute points per team per category
-// categoryPoints[col.id][teamIdx] = points value
+// categoryPoints[col.id][teamIdx] = points value — populated in fetch callback
 const categoryPoints = {};
-COLS.forEach(col => {
-  categoryPoints[col.id] = RAW.map(team => {
-    const raw = team[col.id];
-    return raw * col.mult;
-  });
-});
 
 // Group order and labels
 const GROUP_META = {
@@ -355,8 +335,28 @@ function buildTable(tbodyId, mode) {
   tbody.innerHTML = html;
 }
 
-buildTable('kingsTbody', 'king');
-buildTable('doormatsTbody', 'doormat');
+fetch('live_data.json').then(r => r.json()).then(liveData => {
+  const maxPeriod = (liveData.matchupPeriod || 1) - 1;
+  document.getElementById('subtitle').textContent =
+    `Best and worst team in each scoring category through Matchup ${maxPeriod}`;
+
+  const catStats = liveData.catStats || {};
+  const teams    = liveData.teams   || {};
+
+  RAW = Object.entries(catStats).map(([key, cats]) => ({
+    name:  teams[key]?.name  || key,
+    color: teams[key]?.color || '#888',
+    ...cats,
+  }));
+
+  // Re-compute categoryPoints with live RAW
+  COLS.forEach(col => {
+    categoryPoints[col.id] = RAW.map(team => (team[col.id] || 0) * col.mult);
+  });
+
+  buildTable('kingsTbody',    'king');
+  buildTable('doormatsTbody', 'doormat');
+});
 </script>
 </body>
 </html>

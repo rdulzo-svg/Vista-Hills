@@ -109,27 +109,22 @@ def fetch_cat_stats(cookies):
 
             ppe = entry.get("playerPoolEntry") or {}
 
-            # Debug: dump ALL stat entries for first active player once
+            # Debug: dump matching stat entry's full keys and relevant values
             if not _debug_printed:
-                ppe_stats  = ppe.get("stats") or []
                 plyr_stats = (ppe.get("player") or {}).get("stats") or []
-                print(f"  [DEBUG] ppe keys: {list(ppe.keys())}", file=sys.stderr)
-                print(f"  [DEBUG] ppe.stats entries ({len(ppe_stats)}):", file=sys.stderr)
-                for i, se in enumerate(ppe_stats[:5]):
+                for i, se in enumerate(plyr_stats):
                     sp  = se.get("scoringPeriodId")
                     src = se.get("statSourceId")
                     spl = se.get("statSplitTypeId")
-                    nstats = len(se.get("stats") or {})
-                    print(f"    [{i}] scoringPeriodId={sp} statSourceId={src} statSplitTypeId={spl} nstats={nstats}", file=sys.stderr)
-                print(f"  [DEBUG] player.stats entries ({len(plyr_stats)}):", file=sys.stderr)
-                for i, se in enumerate(plyr_stats[:5]):
-                    sp  = se.get("scoringPeriodId")
-                    src = se.get("statSourceId")
-                    spl = se.get("statSplitTypeId")
-                    nstats = len(se.get("stats") or {})
-                    sample = dict(list((se.get("stats") or {}).items())[:3])
-                    print(f"    [{i}] scoringPeriodId={sp} statSourceId={src} statSplitTypeId={spl} nstats={nstats} sample={sample}", file=sys.stderr)
-                _debug_printed = True
+                    if (sp == 0 and src == 0) or (sp == 0 and spl == 0):
+                        sd = se.get("stats") or {}
+                        # Print ALL stat IDs that map to our categories
+                        mapped = {k: sd.get(str(k)) for k in ESPN_STAT_TO_CAT if str(k) in sd}
+                        print(f"  [DEBUG] Matching entry [{i}]: sp={sp} src={src} spl={spl}", file=sys.stderr)
+                        print(f"  [DEBUG] Keys in stats dict: {sorted(int(k) for k in sd.keys())}", file=sys.stderr)
+                        print(f"  [DEBUG] Mapped category values: {mapped}", file=sys.stderr)
+                        _debug_printed = True
+                        break
 
             # Stats may be on playerPoolEntry.stats OR playerPoolEntry.player.stats
             stat_sources = []

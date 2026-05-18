@@ -18,8 +18,17 @@ create table if not exists public.bets (
   status         text        not null default 'open' check (status in ('open', 'won', 'lost', 'push')),
   payout         numeric,                -- null while open; set on grading
   away_final     numeric,               -- null while open; final score on grading
-  home_final     numeric
+  home_final     numeric,
+  -- Parlay columns (null for straight bets)
+  parlay_id      uuid,                  -- shared UUID links all legs of one parlay
+  parlay_odds    integer,               -- combined American odds for the whole parlay
+  leg_num        integer                -- 1 = primary leg (holds amount/payout); 2+ = other legs
 );
+
+-- ── Parlay migration (run this if table already exists) ─────────────────────
+-- ALTER TABLE public.bets ADD COLUMN IF NOT EXISTS parlay_id    uuid;
+-- ALTER TABLE public.bets ADD COLUMN IF NOT EXISTS parlay_odds  integer;
+-- ALTER TABLE public.bets ADD COLUMN IF NOT EXISTS leg_num      integer;
 
 alter table public.bets enable row level security;
 

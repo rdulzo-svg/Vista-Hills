@@ -118,8 +118,18 @@ def grade_single(bet, away_final, home_final):
     return status, payout
 
 
+def _to_decimal(american):
+    return (american / 100) + 1 if american > 0 else (100 / abs(american)) + 1
+
+
+def _to_american(decimal):
+    if decimal >= 2:
+        return round((decimal - 1) * 100)
+    return round(-100 / (decimal - 1))
+
+
 def grade_bets(supabase_url, service_key, history, current_matchup):
-    """Grade open bets for any matchup periods that have now completed."""
+    """Grade open bets (straight and parlay) for any completed matchup periods."""
     headers = {
         "apikey":        service_key,
         "Authorization": f"Bearer {service_key}",
@@ -140,25 +150,31 @@ def grade_bets(supabase_url, service_key, history, current_matchup):
         print("  No open bets to grade.")
         return
 
-    # Build lookup: (away_key, home_key, matchup_period) -> (away_final, home_final)
+    # Build score lookup: (away_key, home_key, matchup_period) -> (away_final, home_final)
     result_map = {}
     for row in history:
         away_key, home_key, _winner, mp, away_score, home_score = row
         result_map[(away_key, home_key, mp)] = (float(away_score), float(home_score))
 
+    # Separate straight bets from parlay legs
+    straight_bets = [b for b in open_bets if not b.get("parlay_id")]
+    parlay_legs   = [b for b in open_bets if b.get("parlay_id")]
+
     graded = 0
-    for bet in open_bets:
+
+    # ── Grade straight bets ───────────────────────────────────────────────────
+    for bet in straight_bets:
         key = (bet["away_key"], bet["home_key"], bet["matchup_period"])
         if key not in result_map:
             continue
         away_final, home_final = result_map[key]
         status, payout = grade_single(bet, away_final, home_final)
-        patch = {"status": status, "payout": payout, "away_final": away_final, "home_final": home_final}
+        patch = {"status": status, "payout": payout,
+                 "away_final": away_final, "home_final": home_final}
         r2 = requests.patch(
             f"{supabase_url}/rest/v1/bets?id=eq.{bet['id']}",
             headers={**headers, "Prefer": "return=minimal"},
-            json=patch,
-            timeout=15,
+            json=patch, timeout=15,
         )
         if r2.ok:
             graded += 1
@@ -166,7 +182,82 @@ def grade_bets(supabase_url, service_key, history, current_matchup):
         else:
             print(f"  Failed to grade {bet['id']}: {r2.status_code}", file=sys.stderr)
 
-    print(f"  Graded {graded}/{len(open_bets)} open bets.")
+    # ── Grade parlays ─────────────────────────────────────────────────────────
+    from collections import defaultdict
+    parlays = defaultdict(list)
+    for leg in parlay_legs:
+        parlays[leg["parlay_id"]].append(leg)
+
+    for parlay_id, legs in parlays.items():
+        legs.sort(key=lambda x: x.get("leg_num") or 0)
+
+        # Grade each leg individually; skip parlay if any leg's result is missing
+        graded_legs = []
+        can_grade = True
+        for leg in legs:
+            key = (leg["away_key"], leg["home_key"], leg["matchup_period"])
+            if key not in result_map:
+                can_grade = False
+                break
+            away_final, home_final = result_map[key]
+            leg_status, _ = grade_single(leg, away_final, home_final)
+            graded_legs.append((leg, leg_status, away_final, home_final))
+
+        if not can_grade:
+            continue
+
+        statuses = [g[1] for g in graded_legs]
+
+        # Determine parlay outcome
+        if "lost" in statuses:
+            parlay_status = "lost"
+            primary_payout = 0.0
+        elif all(s == "push" for s in statuses):
+            parlay_status = "push"
+            primary_payout = float(legs[0]["amount"])
+        else:
+            # All won, or mix of won+push → recalculate odds using only winning legs
+            winning_odds = [g[0]["odds"] for g in graded_legs if g[1] == "won"]
+            if not winning_odds:
+                parlay_status = "push"
+                primary_payout = float(legs[0]["amount"])
+            elif len(winning_odds) == 1:
+                # Single winning leg after pushes — pay at that leg's odds
+                wo = winning_odds[0]
+                amt = float(legs[0]["amount"])
+                profit = amt * wo / 100 if wo > 0 else amt * 100 / abs(wo)
+                parlay_status = "won"
+                primary_payout = round(amt + profit, 2)
+            else:
+                # Multiple winning legs — recalculate combined parlay odds
+                combined = 1.0
+                for wo in winning_odds:
+                    combined *= _to_decimal(wo)
+                recalc_odds = _to_american(combined)
+                amt = float(legs[0]["amount"])
+                profit = amt * recalc_odds / 100 if recalc_odds > 0 else amt * 100 / abs(recalc_odds)
+                parlay_status = "won"
+                primary_payout = round(amt + profit, 2)
+
+        # Patch all legs in the DB
+        for i, (leg, _leg_status, away_final, home_final) in enumerate(graded_legs):
+            is_primary = (i == 0)
+            payout = primary_payout if is_primary else 0.0
+            patch = {"status": parlay_status, "payout": payout,
+                     "away_final": away_final, "home_final": home_final}
+            r2 = requests.patch(
+                f"{supabase_url}/rest/v1/bets?id=eq.{leg['id']}",
+                headers={**headers, "Prefer": "return=minimal"},
+                json=patch, timeout=15,
+            )
+            if r2.ok and is_primary:
+                graded += 1
+                pid_short = parlay_id[:8]
+                print(f"  Graded parlay {pid_short}… ({len(legs)}-leg, {leg['bettor']}): {parlay_status}")
+            elif not r2.ok:
+                print(f"  Failed to grade parlay leg {leg['id']}: {r2.status_code}", file=sys.stderr)
+
+    print(f"  Graded {graded} bets ({len(straight_bets)} straight, {len(parlays)} parlays).")
 
 
 def main():

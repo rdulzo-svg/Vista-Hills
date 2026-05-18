@@ -282,6 +282,35 @@
   .slip-msg.success { background: rgba(30,199,95,0.12); color: var(--green); border: 1px solid rgba(30,199,95,0.3); }
   .slip-msg.error   { background: rgba(240,84,84,0.12); color: var(--red);   border: 1px solid rgba(240,84,84,0.3); }
 
+  /* ── Slip mode toggle ── */
+  .slip-mode-toggle { display: flex; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 3px; margin: 0 16px 0; border-bottom: 1px solid var(--border); }
+  .slip-mode-btn { flex: 1; text-align: center; padding: 7px; font-size: 12px; font-weight: 600; color: var(--dim); border: none; background: none; cursor: pointer; border-radius: 6px; transition: background 0.15s, color 0.15s; }
+  .slip-mode-btn.active { background: var(--green); color: #000; }
+
+  /* ── Parlay leg rows ── */
+  .slip-leg { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border-lt); }
+  .slip-leg-num { font-size: 11px; font-weight: 700; color: var(--muted); width: 18px; flex-shrink: 0; }
+  .slip-leg-info { flex: 1; min-width: 0; }
+  .slip-leg-desc { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slip-leg-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .slip-leg-odds { font-size: 12px; font-weight: 700; color: var(--dim); white-space: nowrap; }
+
+  /* ── Parlay amount section ── */
+  .parlay-section { padding: 12px 16px; border-bottom: 1px solid var(--border); background: rgba(30,199,95,0.03); }
+  .parlay-combined { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .parlay-combined-label { font-size: 11px; color: var(--muted); }
+  .parlay-combined-odds { font-size: 20px; font-weight: 800; color: var(--green); }
+  .parlay-amount-row { display: flex; align-items: center; gap: 10px; }
+  .parlay-amount-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .parlay-amount-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 13px; padding: 8px 12px; text-align: right; outline: none; }
+  .parlay-amount-input:focus { border-color: var(--green); }
+  .parlay-payout-row { font-size: 11px; color: var(--muted); margin-top: 8px; text-align: right; }
+  .parlay-payout-row strong { color: var(--green); }
+
+  /* ── Conflict toast ── */
+  .conflict-toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1e2f42; border: 1px solid var(--red); color: var(--red); border-radius: 8px; padding: 10px 18px; font-size: 12px; font-weight: 600; z-index: 300; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+  .conflict-toast.visible { opacity: 1; }
+
   /* ── Mobile portrait ── */
   @media (max-width: 580px) {
     .col-headers { display: none; }
@@ -364,12 +393,18 @@
     <label for="slip-name">Your name / team nickname</label>
     <input class="slip-name-input" type="text" id="slip-name" placeholder="e.g. Jung H King" autocomplete="off">
   </div>
+  <div class="slip-mode-toggle" id="slip-mode-toggle" style="display:none">
+    <button class="slip-mode-btn active" data-mode="straight" onclick="setSlipMode('straight')">Straight</button>
+    <button class="slip-mode-btn" data-mode="parlay" onclick="setSlipMode('parlay')">Parlay</button>
+  </div>
   <div id="slip-items"></div>
   <div class="slip-dfooter" id="slip-footer" style="display:none">
     <div class="slip-summary" id="slip-summary"></div>
     <button class="slip-place-btn" id="slip-submit" onclick="placeBets()">Place Bets</button>
   </div>
 </div>
+
+<div id="conflict-toast" class="conflict-toast"></div>
 
 <!-- Preview panel -->
 <div id="preview-overlay" onclick="closePreview()"></div>
@@ -387,6 +422,41 @@ let SUPABASE_URL = '';
 let SUPABASE_ANON_KEY = '';
 let slip = [];
 const BET_DEFS = {};
+let slipMode    = 'straight'; // 'straight' | 'parlay'
+let parlayAmt   = 0;
+
+// ── Parlay odds math ─────────────────────────────────────────────────────────
+function toDecimal(american) {
+  return american > 0 ? (american / 100) + 1 : (100 / Math.abs(american)) + 1;
+}
+function toAmericanParlay(decimal) {
+  if (decimal >= 2) return Math.round((decimal - 1) * 100);
+  return Math.round(-100 / (decimal - 1));
+}
+function calcParlayOdds(ids) {
+  const combined = ids.reduce((p, id) => p * toDecimal(BET_DEFS[id]?.odds || -115), 1);
+  return toAmericanParlay(combined);
+}
+function fmtParlay(odds) { return odds > 0 ? `+${odds}` : `${odds}`; }
+function parlayProfit(odds, amount) {
+  return odds > 0 ? amount * odds / 100 : amount * 100 / Math.abs(odds);
+}
+
+function setSlipMode(mode) {
+  slipMode = mode;
+  document.querySelectorAll('.slip-mode-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === mode));
+  renderSlipItems();
+}
+
+let conflictTimer = null;
+function showConflict(msg) {
+  const t = document.getElementById('conflict-toast');
+  t.textContent = msg;
+  t.classList.add('visible');
+  clearTimeout(conflictTimer);
+  conflictTimer = setTimeout(() => t.classList.remove('visible'), 2600);
+}
 
 // ── Team data ─────────────────────────────────────────────────────────────────
 const TEAMS = {
@@ -755,11 +825,25 @@ function toggleBet(betId) {
   if (idx >= 0) {
     slip.splice(idx, 1);
   } else {
+    // In parlay mode, block adding a second leg from the same matchup
+    if (slipMode === 'parlay') {
+      const def = BET_DEFS[betId];
+      const conflict = slip.some(s => {
+        const d = BET_DEFS[s.id];
+        return d && d.awayKey === def.awayKey && d.homeKey === def.homeKey;
+      });
+      if (conflict) {
+        showConflict("Can't parlay both sides of the same matchup");
+        return;
+      }
+    }
     slip.push({ id: betId, amount: 0 });
   }
   const btn = document.getElementById('btn-' + betId);
   if (btn) btn.classList.toggle('selected', slip.some(s => s.id === betId));
   updateSlipBar();
+  // Live-update slip if open
+  if (document.getElementById('slip-drawer').classList.contains('open')) renderSlipItems();
 }
 
 function updateSlipBar() {
@@ -768,7 +852,12 @@ function updateSlipBar() {
   if (!bar) return;
   if (slip.length === 0) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
-  cnt.textContent = `${slip.length} bet${slip.length === 1 ? '' : 's'} selected`;
+  if (slipMode === 'parlay' && slip.length >= 2) {
+    const odds = calcParlayOdds(slip.map(s => s.id));
+    cnt.textContent = `${slip.length}-leg parlay · ${fmtParlay(odds)}`;
+  } else {
+    cnt.textContent = `${slip.length} bet${slip.length === 1 ? '' : 's'} selected`;
+  }
 }
 
 function openSlip() {
@@ -788,6 +877,10 @@ function clearSlip() {
     if (b) b.classList.remove('selected');
   });
   slip = [];
+  slipMode = 'straight';
+  parlayAmt = 0;
+  document.querySelectorAll('.slip-mode-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === 'straight'));
   updateSlipBar();
   renderSlipItems();
 }
@@ -801,14 +894,36 @@ function removeBet(betId) {
 }
 
 function renderSlipItems() {
-  const container = document.getElementById('slip-items');
-  const footer    = document.getElementById('slip-footer');
+  const container  = document.getElementById('slip-items');
+  const footer     = document.getElementById('slip-footer');
+  const modeToggle = document.getElementById('slip-mode-toggle');
+
   if (!slip.length) {
     container.innerHTML = '<div class="slip-empty">No bets selected.<br>Tap any spread, total, or ML button to add.</div>';
     footer.style.display = 'none';
+    if (modeToggle) modeToggle.style.display = 'none';
     return;
   }
+
   footer.style.display = 'block';
+
+  // Show mode toggle only when 2+ bets; fall back to straight if < 2
+  if (modeToggle) modeToggle.style.display = slip.length >= 2 ? 'flex' : 'none';
+  if (slip.length < 2 && slipMode === 'parlay') {
+    slipMode = 'straight';
+    document.querySelectorAll('.slip-mode-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.mode === 'straight'));
+  }
+
+  if (slipMode === 'parlay') {
+    renderParlaySlip(container);
+  } else {
+    renderStraightSlip(container);
+  }
+  updateSlipSummary();
+}
+
+function renderStraightSlip(container) {
   container.innerHTML = slip.map(s => {
     const def = BET_DEFS[s.id];
     if (!def) return '';
@@ -825,37 +940,112 @@ function renderSlipItems() {
       <button class="slip-remove" onclick="removeBet('${s.id}')">✕</button>
     </div>`;
   }).join('');
-  updateSlipSummary();
+}
+
+function renderParlaySlip(container) {
+  const ids    = slip.map(s => s.id);
+  const odds   = calcParlayOdds(ids);
+  const profit = parlayAmt > 0 ? parlayProfit(odds, parlayAmt) : 0;
+  const payout = parlayAmt + profit;
+
+  const legRows = slip.map((s, i) => {
+    const def = BET_DEFS[s.id];
+    if (!def) return '';
+    const oddsStr = def.odds > 0 ? `+${def.odds}` : `${def.odds}`;
+    const muStr   = `M${def.matchupPeriod} · ${(TEAMS[def.awayKey]?.name||def.awayKey).split(' ')[0]} vs ${(TEAMS[def.homeKey]?.name||def.homeKey).split(' ')[0]}`;
+    return `<div class="slip-leg">
+      <span class="slip-leg-num">${i + 1}</span>
+      <div class="slip-leg-info">
+        <div class="slip-leg-desc">${def.desc}</div>
+        <div class="slip-leg-meta">${muStr}</div>
+      </div>
+      <span class="slip-leg-odds">${oddsStr}</span>
+      <button class="slip-remove" onclick="removeBet('${s.id}')">✕</button>
+    </div>`;
+  }).join('');
+
+  const payoutStr = parlayAmt > 0
+    ? `To win: <strong>+${profit.toFixed(2)}u</strong> &nbsp;(return ${payout.toFixed(2)}u)`
+    : 'Enter amount to see payout';
+
+  container.innerHTML = legRows + `
+    <div class="parlay-section">
+      <div class="parlay-combined">
+        <span class="parlay-combined-label">${slip.length}-Leg Parlay</span>
+        <span class="parlay-combined-odds">${fmtParlay(odds)}</span>
+      </div>
+      <div class="parlay-amount-row">
+        <label class="parlay-amount-label">Wager (units)</label>
+        <input class="parlay-amount-input" id="parlay-amt-input" type="number" min="0.5" step="0.5"
+               placeholder="0.0" value="${parlayAmt || ''}"
+               oninput="parlayAmt=parseFloat(this.value)||0;renderParlaySlip(document.getElementById('slip-items'));updateSlipSummary()">
+      </div>
+      <div class="parlay-payout-row">${payoutStr}</div>
+    </div>`;
 }
 
 function updateSlipSummary() {
-  const el = document.getElementById('slip-summary');
+  const el  = document.getElementById('slip-summary');
+  const btn = document.getElementById('slip-submit');
   if (!el) return;
-  const total = slip.reduce((sum, s) => sum + (s.amount || 0), 0);
-  const count = slip.filter(s => s.amount > 0).length;
-  el.textContent = total > 0
-    ? `${count} bet${count === 1 ? '' : 's'} · ${total.toFixed(1)} units wagered`
-    : 'Enter unit amounts above to place bets';
+
+  if (slipMode === 'parlay') {
+    const odds = calcParlayOdds(slip.map(s => s.id));
+    el.textContent = parlayAmt > 0
+      ? `${slip.length}-leg parlay · ${fmtParlay(odds)} · ${parlayAmt.toFixed(1)}u wagered`
+      : `${slip.length}-leg parlay · ${fmtParlay(odds)} · enter amount above`;
+    if (btn) btn.textContent = 'Place Parlay';
+  } else {
+    const total = slip.reduce((sum, s) => sum + (s.amount || 0), 0);
+    const count = slip.filter(s => s.amount > 0).length;
+    el.textContent = total > 0
+      ? `${count} bet${count === 1 ? '' : 's'} · ${total.toFixed(1)} units wagered`
+      : 'Enter unit amounts above to place bets';
+    if (btn) btn.textContent = 'Place Bets';
+  }
 }
 
 async function placeBets() {
   const name = (document.getElementById('slip-name')?.value || '').trim();
   if (!name) { alert('Please enter your name or team nickname.'); document.getElementById('slip-name')?.focus(); return; }
-
-  const betsToPlace = slip.filter(s => s.amount > 0).map(s => {
-    const def = BET_DEFS[s.id];
-    return { bettor: name, matchup_period: def.matchupPeriod,
-             away_key: def.awayKey, home_key: def.homeKey,
-             pick_type: def.type, pick_key: def.pickKey,
-             pick_desc: def.desc, line: def.line, odds: def.odds, amount: s.amount };
-  });
-  if (!betsToPlace.length) { alert('Enter a unit amount for at least one bet.'); return; }
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) { alert('Sportsbook is not configured yet — check back soon!'); return; }
+
+  let betsToPlace = [];
+
+  if (slipMode === 'parlay') {
+    if (slip.length < 2)     { alert('A parlay needs at least 2 legs.'); return; }
+    if (!parlayAmt || parlayAmt <= 0) { alert('Enter a unit amount for your parlay.'); return; }
+
+    const combinedOdds = calcParlayOdds(slip.map(s => s.id));
+    const pid = crypto.randomUUID();
+
+    betsToPlace = slip.map((s, i) => {
+      const def = BET_DEFS[s.id];
+      return {
+        bettor: name, matchup_period: def.matchupPeriod,
+        away_key: def.awayKey, home_key: def.homeKey,
+        pick_type: def.type, pick_key: def.pickKey,
+        pick_desc: def.desc, line: def.line, odds: def.odds,
+        amount: i === 0 ? parlayAmt : 0,   // stake on primary leg only
+        parlay_id: pid, parlay_odds: combinedOdds, leg_num: i + 1,
+      };
+    });
+  } else {
+    betsToPlace = slip.filter(s => s.amount > 0).map(s => {
+      const def = BET_DEFS[s.id];
+      return {
+        bettor: name, matchup_period: def.matchupPeriod,
+        away_key: def.awayKey, home_key: def.homeKey,
+        pick_type: def.type, pick_key: def.pickKey,
+        pick_desc: def.desc, line: def.line, odds: def.odds, amount: s.amount,
+        parlay_id: null, parlay_odds: null, leg_num: null,
+      };
+    });
+    if (!betsToPlace.length) { alert('Enter a unit amount for at least one bet.'); return; }
+  }
 
   const btn = document.getElementById('slip-submit');
   btn.disabled = true; btn.textContent = 'Placing…';
-
-  // Remove any prior message
   document.querySelectorAll('.slip-msg').forEach(m => m.remove());
 
   try {
@@ -867,9 +1057,12 @@ async function placeBets() {
     });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
 
+    const label = slipMode === 'parlay'
+      ? `${betsToPlace.length}-leg parlay`
+      : `${betsToPlace.length} bet${betsToPlace.length === 1 ? '' : 's'}`;
     const msg = document.createElement('div');
     msg.className = 'slip-msg success';
-    msg.textContent = `${betsToPlace.length} bet${betsToPlace.length === 1 ? '' : 's'} placed! Good luck.`;
+    msg.textContent = `${label} placed! Good luck.`;
     document.getElementById('slip-footer').prepend(msg);
     btn.textContent = '✓ Placed!';
     clearSlip();
@@ -879,7 +1072,8 @@ async function placeBets() {
     msg.className = 'slip-msg error';
     msg.textContent = 'Something went wrong. Please try again.';
     document.getElementById('slip-footer').prepend(msg);
-    btn.disabled = false; btn.textContent = 'Place Bets';
+    btn.disabled = false;
+    btn.textContent = slipMode === 'parlay' ? 'Place Parlay' : 'Place Bets';
   }
 }
 

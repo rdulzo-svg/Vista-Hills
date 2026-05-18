@@ -221,6 +221,9 @@ function setWeek(w) {
 function renderLeaderboard() {
   const bettors = {};
   for (const bet of ALL_BETS) {
+    // Skip non-primary parlay legs — financials live on leg_num=1 only
+    if (bet.parlay_id && bet.leg_num !== 1) continue;
+
     if (!bettors[bet.bettor]) bettors[bet.bettor] = { w:0, l:0, p:0, open:0, wagered:0, gradedWagered:0, net:0 };
     const b = bettors[bet.bettor];
     b.wagered += bet.amount;
@@ -298,40 +301,115 @@ function renderFeed() {
     return;
   }
 
-  const html = bets.map(bet => {
-    const statusCls = { open:'s-open', won:'s-won', lost:'s-lost', push:'s-push' }[bet.status] || 's-open';
-    const oddsStr = bet.odds > 0 ? `+${bet.odds}` : `${bet.odds}`;
-    let payoutLine = '';
-    if (bet.status === 'won') {
-      const profit = bet.payout - bet.amount;
-      payoutLine = `<div class="payout-line payout-won">+${profit.toFixed(2)}u payout</div>`;
-    } else if (bet.status === 'lost') {
-      payoutLine = `<div class="payout-line payout-lost">−${bet.amount.toFixed(2)}u lost</div>`;
-    } else if (bet.status === 'push') {
-      payoutLine = `<div class="payout-line" style="color:var(--muted)">Push — returned</div>`;
+  // Group bets: straight bets render individually; parlays render as one card
+  const parlayMap = {};
+  const rows = [];
+  const seenParlays = new Set();
+
+  for (const bet of bets) {
+    if (!bet.parlay_id) {
+      rows.push({ type: 'straight', bet });
+    } else {
+      if (!parlayMap[bet.parlay_id]) parlayMap[bet.parlay_id] = [];
+      parlayMap[bet.parlay_id].push(bet);
+      if (!seenParlays.has(bet.parlay_id)) {
+        seenParlays.add(bet.parlay_id);
+        rows.push({ type: 'parlay', parlay_id: bet.parlay_id });
+      }
     }
+  }
 
-    const typeLabel = { spread:'Spread', total:'Total', ml:'Moneyline' }[bet.pick_type] || bet.pick_type;
-    const ts = new Date(bet.created_at);
-    const timeStr = ts.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' +
-                    ts.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+  // Sort each parlay's legs by leg_num
+  Object.values(parlayMap).forEach(legs => legs.sort((a, b) => (a.leg_num||0) - (b.leg_num||0)));
 
-    return `<div class="bet-row">
-      <div>
-        <div class="bet-mu">M${bet.matchup_period}</div>
-        <div style="font-size:9px;color:var(--muted);margin-top:3px">${typeLabel}</div>
-      </div>
-      <div>
-        <div class="bet-desc">${esc(bet.pick_desc)}</div>
-        <div class="bet-sub">${esc(bet.bettor)} · ${timeStr}</div>
-        ${payoutLine}
-      </div>
-      <div class="bet-amt">${oddsStr}<br><strong>${bet.amount.toFixed(1)}u</strong></div>
-      <div><span class="status-badge ${statusCls}">${bet.status}</span></div>
+  const html = rows.map(row =>
+    row.type === 'straight'
+      ? renderStraightRow(row.bet)
+      : renderParlayCard(parlayMap[row.parlay_id])
+  ).join('');
+
+  document.getElementById('feed-wrap').innerHTML = html;
+}
+
+function renderStraightRow(bet) {
+  const statusCls = { open:'s-open', won:'s-won', lost:'s-lost', push:'s-push' }[bet.status] || 's-open';
+  const oddsStr = bet.odds > 0 ? `+${bet.odds}` : `${bet.odds}`;
+  let payoutLine = '';
+  if (bet.status === 'won') {
+    const profit = bet.payout - bet.amount;
+    payoutLine = `<div class="payout-line payout-won">+${profit.toFixed(2)}u payout</div>`;
+  } else if (bet.status === 'lost') {
+    payoutLine = `<div class="payout-line payout-lost">−${bet.amount.toFixed(2)}u lost</div>`;
+  } else if (bet.status === 'push') {
+    payoutLine = `<div class="payout-line" style="color:var(--muted)">Push — returned</div>`;
+  }
+  const typeLabel = { spread:'Spread', total:'Total', ml:'Moneyline' }[bet.pick_type] || bet.pick_type;
+  const ts = new Date(bet.created_at);
+  const timeStr = ts.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' +
+                  ts.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+  return `<div class="bet-row">
+    <div>
+      <div class="bet-mu">M${bet.matchup_period}</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:3px">${typeLabel}</div>
+    </div>
+    <div>
+      <div class="bet-desc">${esc(bet.pick_desc)}</div>
+      <div class="bet-sub">${esc(bet.bettor)} · ${timeStr}</div>
+      ${payoutLine}
+    </div>
+    <div class="bet-amt">${oddsStr}<br><strong>${bet.amount.toFixed(1)}u</strong></div>
+    <div><span class="status-badge ${statusCls}">${bet.status}</span></div>
+  </div>`;
+}
+
+function renderParlayCard(legs) {
+  const primary   = legs.find(l => l.leg_num === 1) || legs[0];
+  const statusCls = { open:'s-open', won:'s-won', lost:'s-lost', push:'s-push' }[primary.status] || 's-open';
+  const parlayOddsStr = primary.parlay_odds > 0 ? `+${primary.parlay_odds}` : `${primary.parlay_odds}`;
+
+  let payoutLine = '';
+  if (primary.status === 'won') {
+    const profit = primary.payout - primary.amount;
+    payoutLine = `<div class="payout-line payout-won">+${profit.toFixed(2)}u payout</div>`;
+  } else if (primary.status === 'lost') {
+    payoutLine = `<div class="payout-line payout-lost">−${primary.amount.toFixed(2)}u lost</div>`;
+  } else if (primary.status === 'push') {
+    payoutLine = `<div class="payout-line" style="color:var(--muted)">Push — returned</div>`;
+  }
+
+  const ts = new Date(primary.created_at);
+  const timeStr = ts.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' +
+                  ts.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+
+  const legRows = legs.map((leg, i) => {
+    const legOddsStr = leg.odds > 0 ? `+${leg.odds}` : `${leg.odds}`;
+    const icon  = { won:'✓', lost:'✗', push:'~', open:'·' }[leg.status] || '·';
+    const color = { won:'var(--green)', lost:'var(--red)', push:'var(--muted)', open:'var(--gold)' }[leg.status] || 'var(--muted)';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid var(--border-lt);font-size:11px">
+      <span style="color:var(--muted)">${i+1}. ${esc(leg.pick_desc)}</span>
+      <span style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+        <span style="color:var(--muted)">${legOddsStr}</span>
+        <span style="color:${color};font-weight:700;width:12px;text-align:center">${icon}</span>
+      </span>
     </div>`;
   }).join('');
 
-  document.getElementById('feed-wrap').innerHTML = html;
+  return `<div class="bet-row" style="display:block">
+    <div style="display:grid;grid-template-columns:auto 1fr auto auto;gap:10px 14px;align-items:start;margin-bottom:6px">
+      <div>
+        <div class="bet-mu">M${primary.matchup_period}</div>
+        <div style="font-size:9px;color:var(--gold);font-weight:700;margin-top:3px;letter-spacing:.5px">PARLAY</div>
+      </div>
+      <div>
+        <div class="bet-desc">${legs.length}-Leg Parlay</div>
+        <div class="bet-sub">${esc(primary.bettor)} · ${timeStr}</div>
+        ${payoutLine}
+      </div>
+      <div class="bet-amt">${parlayOddsStr}<br><strong>${primary.amount.toFixed(1)}u</strong></div>
+      <div><span class="status-badge ${statusCls}">${primary.status}</span></div>
+    </div>
+    <div>${legRows}</div>
+  </div>`;
 }
 
 function esc(s) {

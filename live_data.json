@@ -1,36 +1,36 @@
 {
-  "updated": "May 17, 3:13 AM ET",
-  "matchupPeriod": 7,
-  "currentPeriod": 54,
-  "weekStartPeriod": 48,
+  "updated": "May 18, 4:46 AM ET",
+  "matchupPeriod": 8,
+  "currentPeriod": 55,
+  "weekStartPeriod": 55,
   "totalPeriods": 7,
   "spCap": 13,
-  "weekLabel": "7",
-  "dateRange": "May 11\u201317, 2026",
-  "apTotal": 66,
+  "weekLabel": "8",
+  "dateRange": "May 18\u201324, 2026",
+  "apTotal": 77,
   "matchups": [
     {
-      "away": "RM",
-      "home": "TB"
-    },
-    {
       "away": "BB",
-      "home": "MM"
+      "home": "RM"
     },
     {
-      "away": "WG",
-      "home": "DH"
+      "away": "TB",
+      "home": "WG"
     },
     {
-      "away": "MN",
-      "home": "AA"
+      "away": "MM",
+      "home": "MN"
     },
     {
-      "away": "SK",
-      "home": "IR"
+      "away": "DH",
+      "home": "SK"
     },
     {
-      "away": "SP",
+      "away": "AA",
+      "home": "SP"
+    },
+    {
+      "away": "IR",
       "home": "JK"
     }
   ],
@@ -322,65 +322,116 @@
       6,
       392.0,
       468.5
+    ],
+    [
+      "RM",
+      "TB",
+      "RM",
+      7,
+      449.0,
+      367.0
+    ],
+    [
+      "BB",
+      "MM",
+      "BB",
+      7,
+      406.0,
+      367.5
+    ],
+    [
+      "WG",
+      "DH",
+      "WG",
+      7,
+      427.5,
+      399.0
+    ],
+    [
+      "MN",
+      "AA",
+      "MN",
+      7,
+      444.0,
+      403.0
+    ],
+    [
+      "SK",
+      "IR",
+      "SK",
+      7,
+      433.5,
+      397.5
+    ],
+    [
+      "SP",
+      "JK",
+      "SP",
+      7,
+      539.0,
+      488.0
     ]
   ],
   "teams": {
     "WG": {
       "name": "WITTnessing Greatness",
       "color": "#2a9d8f",
-      "wins": 3,
+      "wins": 4,
       "losses": 3,
-      "apW": 38,
+      "apW": 44,
       "scores": [
         656.5,
         354.5,
         394.0,
         508.0,
         469.5,
-        381.0
+        381.0,
+        427.5
       ],
-      "score": 332.5,
-      "starts": 11
+      "score": 0.0,
+      "starts": 0
     },
     "BB": {
       "name": "Back 2 Back CY Young",
       "color": "#e9c46a",
-      "wins": 3,
+      "wins": 4,
       "losses": 3,
-      "apW": 29,
+      "apW": 34,
       "scores": [
         522.5,
         325.5,
         478.0,
         469.0,
         476.5,
-        333.0
+        333.0,
+        406.0
       ],
-      "score": 371.0,
-      "starts": 13
+      "score": 0.0,
+      "starts": 0
     },
     "RM": {
       "name": "Raleighing My Way",
       "color": "#52b788",
-      "wins": 2,
+      "wins": 3,
       "losses": 4,
-      "apW": 16,
+      "apW": 25,
       "scores": [
         505.0,
         484.0,
         321.5,
         429.5,
         407.0,
-        352.0
+        352.0,
+        449.0
       ],
-      "score": 371.0,
-      "starts": 12
+      "score": 0.0,
+      "starts": 0
     },
     "TB": {
       "name": "Thicc Bois",
       "color": "#f4a261",
       "wins": 4,
-      "losses": 2,
+      "losses": 3,
       "apW": 28,
       "scores": [
         506.0,
@@ -388,146 +439,155 @@
         481.5,
         501.5,
         327.5,
-        379.5
+        379.5,
+        367.0
       ],
-      "score": 300.5,
-      "starts": 9
+      "score": 0.0,
+      "starts": 0
     },
     "AA": {
       "name": "All ARRAEZ for the JUDGE",
       "color": "#6a4c93",
       "wins": 3,
-      "losses": 3,
-      "apW": 36,
+      "losses": 4,
+      "apW": 40,
       "scores": [
         646.5,
         537.0,
         296.0,
         391.5,
         494.5,
-        413.5
+        413.5,
+        403.0
       ],
-      "score": 333.0,
-      "starts": 11
+      "score": 0.0,
+      "starts": 0
     },
     "JK": {
       "name": "Jung H King",
       "color": "#ff6b6b",
       "wins": 3,
-      "losses": 3,
-      "apW": 33,
+      "losses": 4,
+      "apW": 43,
       "scores": [
         812.5,
         334.0,
         475.5,
         392.0,
         276.5,
-        458.5
+        458.5,
+        488.0
       ],
-      "score": 405.5,
-      "starts": 11
+      "score": 0.0,
+      "starts": 0
     },
     "MN": {
       "name": "MANNY MEN",
       "color": "#f77f00",
-      "wins": 1,
+      "wins": 2,
       "losses": 5,
-      "apW": 44,
+      "apW": 52,
       "scores": [
         723.0,
         546.5,
         401.0,
         501.0,
         409.0,
-        428.0
+        428.0,
+        444.0
       ],
-      "score": 366.0,
-      "starts": 11
+      "score": 0.0,
+      "starts": 0
     },
     "SK": {
       "name": "Stop looking at me Kwan",
       "color": "#4cc9f0",
-      "wins": 2,
+      "wins": 3,
       "losses": 4,
-      "apW": 30,
+      "apW": 37,
       "scores": [
         643.0,
         390.0,
         377.5,
         369.0,
         414.5,
-        468.5
+        468.5,
+        433.5
       ],
-      "score": 373.0,
-      "starts": 11
+      "score": 0.0,
+      "starts": 0
     },
     "SP": {
       "name": "16 percent",
       "color": "#90be6d",
-      "wins": 1,
+      "wins": 2,
       "losses": 5,
-      "apW": 34,
+      "apW": 45,
       "scores": [
         595.5,
         484.5,
         468.0,
         458.0,
         434.0,
-        392.0
+        392.0,
+        539.0
       ],
-      "score": 438.0,
-      "starts": 11
+      "score": 0.0,
+      "starts": 0
     },
     "IR": {
       "name": "Ima Ride For My MF McGGonicle",
       "color": "#e63946",
       "wins": 6,
-      "losses": 0,
-      "apW": 48,
+      "losses": 1,
+      "apW": 50,
       "scores": [
         755.0,
         538.5,
         554.0,
         411.0,
         409.5,
-        443.5
+        443.5,
+        397.5
       ],
-      "score": 309.0,
-      "starts": 10
+      "score": 0.0,
+      "starts": 0
     },
     "DH": {
       "name": "Dom's House of Fun",
       "color": "#a8dadc",
       "wins": 3,
-      "losses": 3,
-      "apW": 24,
+      "losses": 4,
+      "apW": 27,
       "scores": [
         603.5,
         300.5,
         510.5,
         310.0,
         438.5,
-        376.0
+        376.0,
+        399.0
       ],
-      "score": 353.0,
-      "starts": 11
+      "score": 0.0,
+      "starts": 0
     },
     "MM": {
       "name": "Mike and Mike In The Mornin'",
       "color": "#457b9d",
       "wins": 5,
-      "losses": 1,
-      "apW": 36,
+      "losses": 2,
+      "apW": 37,
       "scores": [
         567.5,
         467.5,
         475.0,
         461.5,
         449.0,
-        401.0
+        401.0,
+        367.5
       ],
-      "score": 314.5,
-      "starts": 12
+      "score": 0.0,
+      "starts": 0
     }
   },
   "supabaseUrl": "https://akppyivrfgfcwskfazuf.supabase.co/rest/v1/",

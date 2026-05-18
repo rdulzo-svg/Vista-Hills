@@ -35,10 +35,21 @@ ESPN_STAT_TO_CAT = {
     6:  "r",    20: "s",   11: "d",   12: "t",    5: "hr",
     7:  "rbi",  15: "gw",   3: "bbB", 14: "cs",   4: "hbp",
     24: "sac",  13: "sb",  10: "kB",
-    # Pitching — IDs unknown; placeholders below will be replaced after debug run
-    # 67: "ip",  68: "hP",  69: "er",  70: "bbP",  71: "hb",
-    # 72: "kP",  73: "qs",  74: "so",  75: "w",    76: "l",
-    # 77: "sv",  78: "bs",  79: "hd",
+    # Pitching — verified via debug runs (May 18 2026)
+    # ID 34 stores outs (IP × 3); divided by 3 during accumulation → actual IP
+    34: "ip",   # innings pitched (raw outs; see IP normalisation below)
+    48: "kP",   # pitcher strikeouts   (K/9 = ID 49 cross-checks perfectly)
+    53: "qs",   # quality starts
+    51: "so",   # shutouts
+    76: "w",    # wins
+    56: "sv",   # saves
+    83: "hd",   # holds
+    37: "hP",   # hits allowed         (WHIP verified)
+    45: "er",   # earned runs          (ERA verified)
+    39: "bbP",  # walks issued         (WHIP verified)
+    77: "hb",   # hit batters
+    42: "l",    # losses
+    59: "bs",   # blown saves
 }
 
 # Static display data — only changes if teams rename themselves
@@ -96,9 +107,6 @@ def fetch_cat_stats(cookies):
         print(f"  Warning: mRoster fetch failed — {exc}", file=sys.stderr)
         return {}
 
-    _debug_bat_n = 0   # batters printed (need 1 to confirm batting IDs)
-    _debug_pit_n = 0   # pitchers printed (need 3 to identify pitching IDs)
-    _debug_checked = 0  # total active players checked (cap to avoid infinite work)
     cat_stats = {}
     for t in roster_json.get("teams", []):
         key = ID_TO_KEY.get(t["id"])
@@ -112,47 +120,6 @@ def fetch_cat_stats(cookies):
                 continue  # skip bench / IL / NA slots
 
             ppe = entry.get("playerPoolEntry") or {}
-
-            # DEBUG: scan up to 60 active players looking for pitchers.
-            # Pitchers have non-zero stats in the 30–66 ID range; batters don't.
-            if _debug_checked < 60 and _debug_pit_n < 3:
-                player     = ppe.get("player") or {}
-                plyr_name  = player.get("fullName") or "unknown"
-                plyr_stats = player.get("stats") or []
-                slot       = entry.get("lineupSlotId")
-                ytd_entry  = None
-                for se in plyr_stats:
-                    if (se.get("scoringPeriodId") == 0
-                            and se.get("statSourceId")    == 0
-                            and se.get("statSplitTypeId") == 0):
-                        ytd_entry = se
-                if ytd_entry:
-                    sd = ytd_entry.get("stats") or {}
-                    pit_ids = sorted(
-                        ((int(k), v) for k, v in sd.items()
-                         if 30 <= int(k) <= 66 and v and v != 0),
-                        key=lambda x: x[0]
-                    )
-                    if pit_ids:
-                        # This player has pitching stats — dump everything
-                        all_nz = sorted(
-                            ((int(k), v) for k, v in sd.items() if v and v != 0),
-                            key=lambda x: x[0]
-                        )
-                        print(f"  [DEBUG-PIT #{_debug_pit_n+1} slot={slot}] {plyr_name}",
-                              file=sys.stderr)
-                        print(f"    All non-zero: {all_nz}", file=sys.stderr)
-                        _debug_pit_n += 1
-                    elif _debug_bat_n < 1:
-                        # Print one batter as sanity check
-                        all_nz = sorted(
-                            ((int(k), v) for k, v in sd.items() if v and v != 0),
-                            key=lambda x: x[0]
-                        )
-                        print(f"  [DEBUG-BAT slot={slot}] {plyr_name}: {all_nz}",
-                              file=sys.stderr)
-                        _debug_bat_n += 1
-                _debug_checked += 1
 
             # Stats may be on playerPoolEntry.stats OR playerPoolEntry.player.stats
             stat_sources = []
@@ -182,17 +149,9 @@ def fetch_cat_stats(cookies):
                             cats[cat] += float(val)
                     break  # don't double-count from both sources
 
-        # Normalise IP: ESPN may return total outs (>1000) or decimal innings
-        ip_val = cats.get("ip", 0.0)
-        if ip_val > 1000:                       # stored as total outs
-            full_inn  = int(ip_val) // 3
-            rem_outs  = int(ip_val) % 3
-            cats["ip"] = round(full_inn + rem_outs / 10, 1)
-        elif ip_val > 0:                        # decimal innings → X.Y notation
-            full_inn = int(ip_val)
-            frac_inn = ip_val - full_inn
-            thirds   = round(frac_inn * 3)
-            cats["ip"] = round(full_inn + thirds / 10, 1)
+        # ID 34 accumulates raw outs (ESPN stores IP × 3 internally).
+        # Divide by 3 to get actual innings pitched for scoring.
+        cats["ip"] = round(cats.get("ip", 0.0) / 3, 1)
 
         cat_stats[key] = {k: round(v, 1) for k, v in cats.items()}
 

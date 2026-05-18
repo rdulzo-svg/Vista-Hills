@@ -96,7 +96,9 @@ def fetch_cat_stats(cookies):
         print(f"  Warning: mRoster fetch failed — {exc}", file=sys.stderr)
         return {}
 
-    _debug_count = 0   # print full YTD stat dump for first 3 active players
+    _debug_bat_n = 0   # batters printed (need 1 to confirm batting IDs)
+    _debug_pit_n = 0   # pitchers printed (need 3 to identify pitching IDs)
+    _debug_checked = 0  # total active players checked (cap to avoid infinite work)
     cat_stats = {}
     for t in roster_json.get("teams", []):
         key = ID_TO_KEY.get(t["id"])
@@ -111,32 +113,46 @@ def fetch_cat_stats(cookies):
 
             ppe = entry.get("playerPoolEntry") or {}
 
-            # DEBUG: for first 3 active players dump ALL non-zero stats from the YTD entry
-            if _debug_count < 3:
+            # DEBUG: scan up to 60 active players looking for pitchers.
+            # Pitchers have non-zero stats in the 30–66 ID range; batters don't.
+            if _debug_checked < 60 and _debug_pit_n < 3:
                 player     = ppe.get("player") or {}
                 plyr_name  = player.get("fullName") or "unknown"
                 plyr_stats = player.get("stats") or []
-                # Find the YTD actual entry using the strict filter
-                ytd_entry = None
+                slot       = entry.get("lineupSlotId")
+                ytd_entry  = None
                 for se in plyr_stats:
                     if (se.get("scoringPeriodId") == 0
                             and se.get("statSourceId")    == 0
                             and se.get("statSplitTypeId") == 0):
-                        ytd_entry = se  # keep overwriting → last match = current season
-                print(f"  [DEBUG #{_debug_count+1}] {plyr_name}: {len(plyr_stats)} stat entries", file=sys.stderr)
+                        ytd_entry = se
                 if ytd_entry:
                     sd = ytd_entry.get("stats") or {}
-                    nonzero = sorted(
-                        ((int(k), v) for k, v in sd.items() if v and v != 0),
+                    pit_ids = sorted(
+                        ((int(k), v) for k, v in sd.items()
+                         if 30 <= int(k) <= 66 and v and v != 0),
                         key=lambda x: x[0]
                     )
-                    print(f"    YTD all non-zero stats: {nonzero}", file=sys.stderr)
-                else:
-                    print(f"    No YTD entry (sp=0,src=0,spl=0) found — entry headers:", file=sys.stderr)
-                    for i, se in enumerate(plyr_stats):
-                        print(f"      [{i}] sp={se.get('scoringPeriodId')} "
-                              f"src={se.get('statSourceId')} spl={se.get('statSplitTypeId')}", file=sys.stderr)
-                _debug_count += 1
+                    if pit_ids:
+                        # This player has pitching stats — dump everything
+                        all_nz = sorted(
+                            ((int(k), v) for k, v in sd.items() if v and v != 0),
+                            key=lambda x: x[0]
+                        )
+                        print(f"  [DEBUG-PIT #{_debug_pit_n+1} slot={slot}] {plyr_name}",
+                              file=sys.stderr)
+                        print(f"    All non-zero: {all_nz}", file=sys.stderr)
+                        _debug_pit_n += 1
+                    elif _debug_bat_n < 1:
+                        # Print one batter as sanity check
+                        all_nz = sorted(
+                            ((int(k), v) for k, v in sd.items() if v and v != 0),
+                            key=lambda x: x[0]
+                        )
+                        print(f"  [DEBUG-BAT slot={slot}] {plyr_name}: {all_nz}",
+                              file=sys.stderr)
+                        _debug_bat_n += 1
+                _debug_checked += 1
 
             # Stats may be on playerPoolEntry.stats OR playerPoolEntry.player.stats
             stat_sources = []

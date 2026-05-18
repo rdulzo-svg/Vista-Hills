@@ -92,6 +92,7 @@ def fetch_cat_stats(cookies):
         print(f"  Warning: mRoster fetch failed — {exc}", file=sys.stderr)
         return {}
 
+    _debug_printed = False
     cat_stats = {}
     for t in roster_json.get("teams", []):
         key = ID_TO_KEY.get(t["id"])
@@ -105,6 +106,19 @@ def fetch_cat_stats(cookies):
                 continue  # skip bench / IL / NA slots
 
             ppe = entry.get("playerPoolEntry") or {}
+
+            # DEBUG: dump ALL stat entries for the first active player
+            if not _debug_printed:
+                plyr_stats = (ppe.get("player") or {}).get("stats") or []
+                print(f"  [DEBUG] Player has {len(plyr_stats)} stat entries:", file=sys.stderr)
+                for i, se in enumerate(plyr_stats):
+                    sp  = se.get("scoringPeriodId")
+                    src = se.get("statSourceId")
+                    spl = se.get("statSplitTypeId")
+                    sd  = se.get("stats") or {}
+                    mapped = {k: sd.get(str(k)) for k in ESPN_STAT_TO_CAT if str(k) in sd}
+                    print(f"    entry[{i}]: sp={sp} src={src} spl={spl}  mapped={mapped}", file=sys.stderr)
+                _debug_printed = True
 
             # Stats may be on playerPoolEntry.stats OR playerPoolEntry.player.stats
             stat_sources = []

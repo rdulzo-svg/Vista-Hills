@@ -92,9 +92,6 @@ def fetch_cat_stats(cookies):
         print(f"  Warning: mRoster fetch failed — {exc}", file=sys.stderr)
         return {}
 
-    # Debug: print the stat entry structure for the first active player found
-    _debug_printed = False
-
     cat_stats = {}
     for t in roster_json.get("teams", []):
         key = ID_TO_KEY.get(t["id"])
@@ -109,23 +106,6 @@ def fetch_cat_stats(cookies):
 
             ppe = entry.get("playerPoolEntry") or {}
 
-            # Debug: dump matching stat entry's full keys and relevant values
-            if not _debug_printed:
-                plyr_stats = (ppe.get("player") or {}).get("stats") or []
-                for i, se in enumerate(plyr_stats):
-                    sp  = se.get("scoringPeriodId")
-                    src = se.get("statSourceId")
-                    spl = se.get("statSplitTypeId")
-                    if (sp == 0 and src == 0) or (sp == 0 and spl == 0):
-                        sd = se.get("stats") or {}
-                        # Print ALL stat IDs that map to our categories
-                        mapped = {k: sd.get(str(k)) for k in ESPN_STAT_TO_CAT if str(k) in sd}
-                        print(f"  [DEBUG] Matching entry [{i}]: sp={sp} src={src} spl={spl}", file=sys.stderr)
-                        print(f"  [DEBUG] Keys in stats dict: {sorted(int(k) for k in sd.keys())}", file=sys.stderr)
-                        print(f"  [DEBUG] Mapped category values: {mapped}", file=sys.stderr)
-                        _debug_printed = True
-                        break
-
             # Stats may be on playerPoolEntry.stats OR playerPoolEntry.player.stats
             stat_sources = []
             if ppe.get("stats"):
@@ -135,23 +115,23 @@ def fetch_cat_stats(cookies):
                 stat_sources.append(player_stats)
 
             for stat_list in stat_sources:
-                found = False
+                # "Last wins": ESPN returns prior-season entry first, then current-season entry.
+                # Both share the same filter (sp=0, src=0, spl=0), so we must keep updating
+                # best_stats until the loop ends — the final match is the 2026 season.
+                best_stats = None
                 for se in stat_list:
-                    # Season-to-date actual stats: scoringPeriodId=0, statSourceId=0
-                    # Also accept statSplitTypeId=0 (season total) as a fallback filter
                     sp  = se.get("scoringPeriodId")
                     src = se.get("statSourceId")
                     spl = se.get("statSplitTypeId")
                     if (sp == 0 and src == 0) or (sp == 0 and spl == 0):
-                        raw_stats = se.get("stats") or {}
-                        if raw_stats:
-                            for sid_str, val in raw_stats.items():
-                                cat = ESPN_STAT_TO_CAT.get(int(sid_str))
-                                if cat and val:
-                                    cats[cat] += float(val)
-                            found = True
-                            break
-                if found:
+                        candidate = se.get("stats") or {}
+                        if candidate:
+                            best_stats = candidate  # keep overwriting → last match wins
+                if best_stats:
+                    for sid_str, val in best_stats.items():
+                        cat = ESPN_STAT_TO_CAT.get(int(sid_str))
+                        if cat and val:
+                            cats[cat] += float(val)
                     break  # don't double-count from both sources
 
         # Normalise IP: ESPN may return total outs (>1000) or decimal innings

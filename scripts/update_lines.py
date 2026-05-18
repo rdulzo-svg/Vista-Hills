@@ -28,13 +28,17 @@ ID_TO_KEY = {
 BENCH_SLOTS = {15, 16, 17}   # 15=BE, 16=IL, 17=NA/TS
 
 # ESPN raw stat ID → our category key
+# Batting IDs confirmed via cross-time-split analysis (7-day vs 15-day vs 30-day vs YTD).
+# Pitching IDs (67+ range) TBD — debug output will reveal them.
 ESPN_STAT_TO_CAT = {
-    6:  "r",    13: "s",   11: "d",   12: "t",    5: "hr",
-    7:  "rbi",  15: "gw",   3: "bbB", 14: "kB",   4: "hbp",
-    8:  "sac",   9: "sb",  10: "cs",
-    17: "ip",   18: "hP",  21: "er",  19: "bbP",  20: "hb",
-    24: "kP",   25: "qs",  30: "so",  26: "w",    27: "l",
-    28: "sv",   29: "bs",  31: "hd",
+    # Batting — confirmed correct
+    6:  "r",    20: "s",   11: "d",   12: "t",    5: "hr",
+    7:  "rbi",  15: "gw",   3: "bbB", 14: "cs",   4: "hbp",
+    24: "sac",  13: "sb",  10: "kB",
+    # Pitching — IDs unknown; placeholders below will be replaced after debug run
+    # 67: "ip",  68: "hP",  69: "er",  70: "bbP",  71: "hb",
+    # 72: "kP",  73: "qs",  74: "so",  75: "w",    76: "l",
+    # 77: "sv",  78: "bs",  79: "hd",
 }
 
 # Static display data — only changes if teams rename themselves
@@ -92,7 +96,7 @@ def fetch_cat_stats(cookies):
         print(f"  Warning: mRoster fetch failed — {exc}", file=sys.stderr)
         return {}
 
-    _debug_printed = False
+    _debug_count = 0   # print full YTD stat dump for first 3 active players
     cat_stats = {}
     for t in roster_json.get("teams", []):
         key = ID_TO_KEY.get(t["id"])
@@ -107,18 +111,32 @@ def fetch_cat_stats(cookies):
 
             ppe = entry.get("playerPoolEntry") or {}
 
-            # DEBUG: dump ALL stat entries for the first active player
-            if not _debug_printed:
-                plyr_stats = (ppe.get("player") or {}).get("stats") or []
-                print(f"  [DEBUG] Player has {len(plyr_stats)} stat entries:", file=sys.stderr)
-                for i, se in enumerate(plyr_stats):
-                    sp  = se.get("scoringPeriodId")
-                    src = se.get("statSourceId")
-                    spl = se.get("statSplitTypeId")
-                    sd  = se.get("stats") or {}
-                    mapped = {k: sd.get(str(k)) for k in ESPN_STAT_TO_CAT if str(k) in sd}
-                    print(f"    entry[{i}]: sp={sp} src={src} spl={spl}  mapped={mapped}", file=sys.stderr)
-                _debug_printed = True
+            # DEBUG: for first 3 active players dump ALL non-zero stats from the YTD entry
+            if _debug_count < 3:
+                player     = ppe.get("player") or {}
+                plyr_name  = player.get("fullName") or "unknown"
+                plyr_stats = player.get("stats") or []
+                # Find the YTD actual entry using the strict filter
+                ytd_entry = None
+                for se in plyr_stats:
+                    if (se.get("scoringPeriodId") == 0
+                            and se.get("statSourceId")    == 0
+                            and se.get("statSplitTypeId") == 0):
+                        ytd_entry = se  # keep overwriting → last match = current season
+                print(f"  [DEBUG #{_debug_count+1}] {plyr_name}: {len(plyr_stats)} stat entries", file=sys.stderr)
+                if ytd_entry:
+                    sd = ytd_entry.get("stats") or {}
+                    nonzero = sorted(
+                        ((int(k), v) for k, v in sd.items() if v and v != 0),
+                        key=lambda x: x[0]
+                    )
+                    print(f"    YTD all non-zero stats: {nonzero}", file=sys.stderr)
+                else:
+                    print(f"    No YTD entry (sp=0,src=0,spl=0) found — entry headers:", file=sys.stderr)
+                    for i, se in enumerate(plyr_stats):
+                        print(f"      [{i}] sp={se.get('scoringPeriodId')} "
+                              f"src={se.get('statSourceId')} spl={se.get('statSplitTypeId')}", file=sys.stderr)
+                _debug_count += 1
 
             # Stats may be on playerPoolEntry.stats OR playerPoolEntry.player.stats
             stat_sources = []
@@ -137,7 +155,7 @@ def fetch_cat_stats(cookies):
                     sp  = se.get("scoringPeriodId")
                     src = se.get("statSourceId")
                     spl = se.get("statSplitTypeId")
-                    if (sp == 0 and src == 0) or (sp == 0 and spl == 0):
+                    if sp == 0 and src == 0 and spl == 0:
                         candidate = se.get("stats") or {}
                         if candidate:
                             best_stats = candidate  # keep overwriting → last match wins

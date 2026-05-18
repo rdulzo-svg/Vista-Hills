@@ -92,6 +92,9 @@ def fetch_cat_stats(cookies):
         print(f"  Warning: mRoster fetch failed — {exc}", file=sys.stderr)
         return {}
 
+    # Debug: print the stat entry structure for the first active player found
+    _debug_printed = False
+
     cat_stats = {}
     for t in roster_json.get("teams", []):
         key = ID_TO_KEY.get(t["id"])
@@ -105,14 +108,48 @@ def fetch_cat_stats(cookies):
                 continue  # skip bench / IL / NA slots
 
             ppe = entry.get("playerPoolEntry") or {}
-            for se in (ppe.get("stats") or []):
-                # Season-to-date actual stats entry
-                if se.get("scoringPeriodId") == 0 and se.get("statSourceId") == 0:
-                    for sid_str, val in (se.get("stats") or {}).items():
-                        cat = ESPN_STAT_TO_CAT.get(int(sid_str))
-                        if cat and val:
-                            cats[cat] += float(val)
-                    break  # one matching entry per player is enough
+
+            # Debug: dump stat keys for first active player once
+            if not _debug_printed:
+                ppe_stats  = ppe.get("stats") or []
+                plyr_stats = (ppe.get("player") or {}).get("stats") or []
+                print(f"  [DEBUG] ppe.stats entries: {len(ppe_stats)}", file=sys.stderr)
+                print(f"  [DEBUG] player.stats entries: {len(plyr_stats)}", file=sys.stderr)
+                if plyr_stats:
+                    se0 = plyr_stats[0]
+                    keys = {k: se0.get(k) for k in ("id","scoringPeriodId","statSourceId","statSplitTypeId")}
+                    print(f"  [DEBUG] first player stat entry keys: {keys}", file=sys.stderr)
+                    stat_dict = se0.get("stats") or {}
+                    print(f"  [DEBUG] stat dict sample (first 5): {dict(list(stat_dict.items())[:5])}", file=sys.stderr)
+                _debug_printed = True
+
+            # Stats may be on playerPoolEntry.stats OR playerPoolEntry.player.stats
+            stat_sources = []
+            if ppe.get("stats"):
+                stat_sources.append(ppe["stats"])
+            player_stats = (ppe.get("player") or {}).get("stats")
+            if player_stats:
+                stat_sources.append(player_stats)
+
+            for stat_list in stat_sources:
+                found = False
+                for se in stat_list:
+                    # Season-to-date actual stats: scoringPeriodId=0, statSourceId=0
+                    # Also accept statSplitTypeId=0 (season total) as a fallback filter
+                    sp  = se.get("scoringPeriodId")
+                    src = se.get("statSourceId")
+                    spl = se.get("statSplitTypeId")
+                    if (sp == 0 and src == 0) or (sp == 0 and spl == 0):
+                        raw_stats = se.get("stats") or {}
+                        if raw_stats:
+                            for sid_str, val in raw_stats.items():
+                                cat = ESPN_STAT_TO_CAT.get(int(sid_str))
+                                if cat and val:
+                                    cats[cat] += float(val)
+                            found = True
+                            break
+                if found:
+                    break  # don't double-count from both sources
 
         # Normalise IP: ESPN may return total outs (>1000) or decimal innings
         ip_val = cats.get("ip", 0.0)

@@ -109,18 +109,26 @@ def fetch_cat_stats(cookies):
 
             ppe = entry.get("playerPoolEntry") or {}
 
-            # Debug: dump stat keys for first active player once
+            # Debug: dump ALL stat entries for first active player once
             if not _debug_printed:
                 ppe_stats  = ppe.get("stats") or []
                 plyr_stats = (ppe.get("player") or {}).get("stats") or []
-                print(f"  [DEBUG] ppe.stats entries: {len(ppe_stats)}", file=sys.stderr)
-                print(f"  [DEBUG] player.stats entries: {len(plyr_stats)}", file=sys.stderr)
-                if plyr_stats:
-                    se0 = plyr_stats[0]
-                    keys = {k: se0.get(k) for k in ("id","scoringPeriodId","statSourceId","statSplitTypeId")}
-                    print(f"  [DEBUG] first player stat entry keys: {keys}", file=sys.stderr)
-                    stat_dict = se0.get("stats") or {}
-                    print(f"  [DEBUG] stat dict sample (first 5): {dict(list(stat_dict.items())[:5])}", file=sys.stderr)
+                print(f"  [DEBUG] ppe keys: {list(ppe.keys())}", file=sys.stderr)
+                print(f"  [DEBUG] ppe.stats entries ({len(ppe_stats)}):", file=sys.stderr)
+                for i, se in enumerate(ppe_stats[:5]):
+                    sp  = se.get("scoringPeriodId")
+                    src = se.get("statSourceId")
+                    spl = se.get("statSplitTypeId")
+                    nstats = len(se.get("stats") or {})
+                    print(f"    [{i}] scoringPeriodId={sp} statSourceId={src} statSplitTypeId={spl} nstats={nstats}", file=sys.stderr)
+                print(f"  [DEBUG] player.stats entries ({len(plyr_stats)}):", file=sys.stderr)
+                for i, se in enumerate(plyr_stats[:5]):
+                    sp  = se.get("scoringPeriodId")
+                    src = se.get("statSourceId")
+                    spl = se.get("statSplitTypeId")
+                    nstats = len(se.get("stats") or {})
+                    sample = dict(list((se.get("stats") or {}).items())[:3])
+                    print(f"    [{i}] scoringPeriodId={sp} statSourceId={src} statSplitTypeId={spl} nstats={nstats} sample={sample}", file=sys.stderr)
                 _debug_printed = True
 
             # Stats may be on playerPoolEntry.stats OR playerPoolEntry.player.stats

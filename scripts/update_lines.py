@@ -34,8 +34,8 @@ ESPN_STAT_TO_CAT = {
     # ── Batting (confirmed from mTeam.valuesByStat debug run, May 19 2026) ──────
     #   IDs 6/11/13/14 do NOT appear in valuesByStat; correct IDs below.
     21: "r",    20: "s",   33: "d",   12: "t",    5: "hr",
-    7:  "rbi",  15: "gw",   3: "bbB", 23: "cs",   4: "hbp",
-    24: "sac",  22: "sb",  10: "kB",
+    7:  "rbi",  15: "gw",   3: "bbB", 22: "cs",   4: "hbp",
+    24: "sac",  23: "sb",  10: "kB",
     # ── Pitching ─────────────────────────────────────────────────────────────────
     # ID 34 stores outs (IP × 3); divided by 3 in fetch_cat_stats → actual IP.
     34: "ip",   # innings pitched (raw outs)

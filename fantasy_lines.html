@@ -370,7 +370,7 @@
   <div class="section-label" style="margin-top:26px">Model's Best Bets</div>
   <div class="best-bets-grid" id="best-bets"></div>
   <p class="disclaimer">Vista Hills Fantasy Sportsbook is for entertainment purposes only. No real money wagering occurs.<br>
-  Lines generated from season scoring data through Matchup 7. Injury and roster changes not reflected.</p>
+  Lines generated from season scoring data through Matchup <span id="lines-through-period">7</span>. Injury and roster changes not reflected.</p>
 </div>
 
 <!-- Bet slip bar -->
@@ -523,8 +523,23 @@ let HISTORY = [
 ];
 
 // ── League average scores by week ─────────────────────────────────────────────
-const LEAGUE_AVGS = [628.0, 427.1, 436.0, 433.5, 417.2, 402.2, 424.2];
-const WEEK_LABELS = ['Wk1','Wk2','Wk3','Wk4','Wk5','Wk6','Wk7'];
+// Computed from live history; hardcoded values are the fallback until live_data.json loads.
+let LEAGUE_AVGS = [628.0, 427.1, 436.0, 433.5, 417.2, 402.2, 424.2];
+
+function computeLeagueAvgs(history) {
+  const byPeriod = {};
+  history.forEach(([,,,period,awayScore,homeScore]) => {
+    if (!byPeriod[period]) byPeriod[period] = [];
+    byPeriod[period].push(awayScore, homeScore);
+  });
+  return Object.keys(byPeriod)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map(p => {
+      const s = byPeriod[p];
+      return Math.round(s.reduce((a, v) => a + v, 0) / s.length * 10) / 10;
+    });
+}
 
 let WEEK_LABEL = '7';
 let DATE_RANGE = 'May 11–17, 2026';
@@ -1239,9 +1254,10 @@ function loadLive() {
         MATCHUPS = data.matchups.map(m => [m.away, m.home]);
       }
 
-      // Update H2H history
+      // Update H2H history and recompute per-week league averages
       if (data.history && data.history.length) {
         HISTORY = data.history;
+        LEAGUE_AVGS = computeLeagueAvgs(HISTORY);
       }
 
       // Update week label vars
@@ -1262,6 +1278,10 @@ function loadLive() {
       // Update section label
       const sl = document.getElementById('week-section-label');
       if (sl) sl.textContent = `Matchup ${WEEK_LABEL}  ·  ${DATE_RANGE}`;
+
+      // Update disclaimer period (matchupPeriod - 1 = last completed week)
+      const tp = document.getElementById('lines-through-period');
+      if (tp) tp.textContent = data.matchupPeriod - 1;
 
       renderAll();
     })

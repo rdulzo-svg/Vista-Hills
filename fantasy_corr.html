@@ -150,14 +150,19 @@
 </div>
 
 <script>
-// ── Password check ────────────────────────────────────────────────────────────
+// ── Password gate ─────────────────────────────────────────────────────────────
 const _k = btoa('vistahills26');
+let _liveData = null;
+let _unlocked = false;
+
 function tryUnlock() {
   const val = document.getElementById('pwInput').value;
   if (btoa(val) === _k) {
     document.getElementById('gate').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     sessionStorage.setItem('vh_auth', _k);
+    _unlocked = true;
+    maybeRender();
   } else {
     const err = document.getElementById('pwErr');
     err.textContent = 'Incorrect password.';
@@ -168,48 +173,10 @@ function tryUnlock() {
 if (sessionStorage.getItem('vh_auth') === _k) {
   document.getElementById('gate').style.display = 'none';
   document.getElementById('content').style.display = 'block';
+  _unlocked = true;
 }
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-const RAW = [
-  { name:"Ima Ride For My MF McGGonicle", wins:6,
-    r:346,s:368,d:88,t:40,hr:101,rbi:394,gw:23,bbB:132,kB:315,hbp:16,sac:17,sb:70,cs:40,
-    ip:552.0,hP:473,er:233,bbP:200,hb:25,kP:512,qs:41,so:0,w:38,l:20,sv:7,bs:6,hd:42 },
-  { name:"Mike and Mike In The Mornin'",  wins:5,
-    r:306,s:293,d:101,t:33,hr:77,rbi:315,gw:20,bbB:107,kB:229,hbp:5,sac:15,sb:62,cs:34,
-    ip:650.0,hP:536,er:250,bbP:205,hb:6,kP:695,qs:34,so:0,w:35,l:29,sv:23,bs:2,hd:44 },
-  { name:"Thicc Bois",                    wins:4,
-    r:275,s:247,d:98,t:25,hr:64,rbi:376,gw:32,bbB:108,kB:213,hbp:9,sac:18,sb:53,cs:28,
-    ip:590.0,hP:507,er:249,bbP:227,hb:6,kP:522,qs:34,so:0,w:44,l:19,sv:28,bs:7,hd:36 },
-  { name:"Back 2 Back CY Young",          wins:4,
-    r:338,s:364,d:102,t:23,hr:91,rbi:379,gw:28,bbB:110,kB:280,hbp:6,sac:9,sb:47,cs:42,
-    ip:666.0,hP:652,er:342,bbP:277,hb:28,kP:619,qs:29,so:0,w:52,l:28,sv:9,bs:9,hd:35 },
-  { name:"WITTnessing Greatness",         wins:4,
-    r:306,s:312,d:100,t:19,hr:84,rbi:404,gw:19,bbB:122,kB:233,hbp:8,sac:15,sb:36,cs:47,
-    ip:637.0,hP:597,er:290,bbP:212,hb:18,kP:569,qs:39,so:0,w:38,l:33,sv:21,bs:9,hd:35 },
-  { name:"Jung H King",                   wins:3,
-    r:302,s:326,d:99,t:26,hr:81,rbi:380,gw:17,bbB:99,kB:281,hbp:13,sac:17,sb:48,cs:33,
-    ip:583.3,hP:489,er:260,bbP:238,hb:5,kP:598,qs:41,so:0,w:36,l:28,sv:26,bs:5,hd:32 },
-  { name:"All ARRAEZ for the JUDGE",      wins:3,
-    r:305,s:334,d:100,t:17,hr:78,rbi:379,gw:29,bbB:123,kB:294,hbp:8,sac:10,sb:42,cs:34,
-    ip:632.7,hP:606,er:311,bbP:222,hb:20,kP:566,qs:41,so:0,w:45,l:30,sv:20,bs:8,hd:34 },
-  { name:"Stop looking at me Kwan",       wins:3,
-    r:293,s:325,d:99,t:25,hr:77,rbi:390,gw:24,bbB:105,kB:246,hbp:4,sac:14,sb:44,cs:37,
-    ip:598.3,hP:574,er:282,bbP:227,hb:20,kP:641,qs:35,so:1,w:35,l:18,sv:12,bs:7,hd:37 },
-  { name:"Dom's House of Fun",            wins:3,
-    r:257,s:312,d:97,t:37,hr:68,rbi:349,gw:19,bbB:106,kB:244,hbp:6,sac:6,sb:46,cs:33,
-    ip:623.0,hP:577,er:283,bbP:256,hb:29,kP:527,qs:39,so:0,w:43,l:20,sv:11,bs:6,hd:32 },
-  { name:"Raleighing My Way",             wins:3,
-    r:271,s:299,d:95,t:29,hr:79,rbi:353,gw:21,bbB:118,kB:264,hbp:9,sac:16,sb:38,cs:37,
-    ip:567.0,hP:523,er:257,bbP:200,hb:8,kP:564,qs:39,so:1,w:33,l:37,sv:28,bs:6,hd:31 },
-  { name:"MANNY MEN",                     wins:2,
-    r:302,s:373,d:101,t:36,hr:90,rbi:398,gw:19,bbB:118,kB:308,hbp:14,sac:25,sb:76,cs:36,
-    ip:647.3,hP:554,er:287,bbP:254,hb:8,kP:638,qs:40,so:1,w:38,l:35,sv:28,bs:10,hd:41 },
-  { name:"16 percent",                    wins:2,
-    r:307,s:352,d:98,t:22,hr:99,rbi:376,gw:14,bbB:94,kB:298,hbp:10,sac:17,sb:67,cs:35,
-    ip:651.0,hP:606,er:297,bbP:265,hb:12,kP:649,qs:48,so:0,w:39,l:16,sv:25,bs:8,hd:30 },
-];
-
+// ── Column definitions ────────────────────────────────────────────────────────
 const COLS = [
   { id:'r',   label:'R',     mult:1,    group:'bat+', desc:'Runs' },
   { id:'s',   label:'1B',    mult:1,    group:'bat+', desc:'Singles' },
@@ -258,108 +225,134 @@ function pearson(x, y) {
   return dx*dy===0 ? 0 : num/(dx*dy);
 }
 
-const wins = RAW.map(t => t.wins);
-
-// Compute points per category per team, then correlate with wins
-const results = COLS.map(col => {
-  const pts = RAW.map(t => t[col.id] * col.mult);
-  const r   = pearson(pts, wins);
-  return { ...col, r, absR: Math.abs(r) };
-});
-
-// Sort by absolute correlation descending
-results.sort((a,b) => b.absR - a.absR);
-
 const SIG_THRESHOLD = 0.576; // |r| for p<0.05, df=10
 
-// ── Chart ─────────────────────────────────────────────────────────────────────
-const barColors = results.map(c => {
-  if (c.r >= SIG_THRESHOLD)  return 'rgba(74,222,128,0.75)';
-  if (c.r <= -SIG_THRESHOLD) return 'rgba(248,113,113,0.75)';
-  return c.r >= 0 ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)';
-});
+// ── Render (runs once both data is loaded and page is unlocked) ───────────────
+function maybeRender() {
+  if (!_liveData || !_unlocked) return;
 
-const ctx = document.getElementById('corrChart').getContext('2d');
-new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: results.map(c => `${c.desc} (${c.label})`),
-    datasets: [{
-      data: results.map(c => +c.r.toFixed(3)),
-      backgroundColor: barColors,
-      borderColor: barColors.map(c => c.replace('0.75','1').replace('0.25','0.5')),
-      borderWidth: 1,
-    }]
-  },
-  options: {
-    responsive: true,
-    indexAxis: 'y',
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: ctx => {
-            const c = results[ctx.dataIndex];
-            const sig = c.absR >= SIG_THRESHOLD ? ' ✓ significant' : ' (not significant)';
-            return [`r = ${c.r.toFixed(3)}${sig}`, `Category: ${c.desc}`];
-          }
-        }
-      },
-      annotation: {
-        annotations: {
-          sigPos: {
-            type: 'line', scaleID: 'x', value: SIG_THRESHOLD,
-            borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1.5, borderDash: [5,4],
-            label: { content: 'p<.05', display: true, position: 'end',
-                     color: '#aaa', font: { size: 9 }, padding: 2,
-                     backgroundColor: 'rgba(0,0,0,0.4)' }
-          },
-          sigNeg: {
-            type: 'line', scaleID: 'x', value: -SIG_THRESHOLD,
-            borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1.5, borderDash: [5,4],
-            label: { content: 'p<.05', display: true, position: 'end',
-                     color: '#aaa', font: { size: 9 }, padding: 2,
-                     backgroundColor: 'rgba(0,0,0,0.4)' }
-          },
-          zero: {
-            type: 'line', scaleID: 'x', value: 0,
-            borderColor: 'rgba(255,255,255,0.15)', borderWidth: 1,
-          }
-        }
-      }
+  const teams    = _liveData.teams    || {};
+  const catStats = _liveData.catStats || {};
+  const maxPeriod = (_liveData.matchupPeriod || 1) - 1;
+
+  // Build RAW from live catStats
+  const RAW = Object.entries(catStats).map(([key, cats]) => ({
+    name: teams[key]?.name || key,
+    wins: teams[key]?.wins || 0,
+    ...cats,
+  }));
+
+  // Update caveat with current matchup period
+  const caveat = document.querySelector('.caveat');
+  if (caveat) caveat.innerHTML =
+    `n = 12 teams &nbsp;|&nbsp; Significance threshold: |r| &ge; 0.576 (p &lt; 0.05, two-tailed) &nbsp;|&nbsp; Through Matchup ${maxPeriod}`;
+
+  const wins = RAW.map(t => t.wins);
+
+  // Compute and sort correlations
+  const results = COLS.map(col => {
+    const pts = RAW.map(t => (t[col.id] || 0) * col.mult);
+    const r   = pearson(pts, wins);
+    return { ...col, r, absR: Math.abs(r) };
+  });
+  results.sort((a,b) => b.absR - a.absR);
+
+  // ── Chart ──────────────────────────────────────────────────────────────────
+  const barColors = results.map(c => {
+    if (c.r >= SIG_THRESHOLD)  return 'rgba(74,222,128,0.75)';
+    if (c.r <= -SIG_THRESHOLD) return 'rgba(248,113,113,0.75)';
+    return c.r >= 0 ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)';
+  });
+
+  const ctx = document.getElementById('corrChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: results.map(c => `${c.desc} (${c.label})`),
+      datasets: [{
+        data: results.map(c => +c.r.toFixed(3)),
+        backgroundColor: barColors,
+        borderColor: barColors.map(c => c.replace('0.75','1').replace('0.25','0.5')),
+        borderWidth: 1,
+      }]
     },
-    scales: {
-      x: {
-        min: -1, max: 1,
-        title: { display: true, text: 'Pearson r  (correlation with wins)', color: '#aaa', font: { size: 11 } },
-        grid: { color: 'rgba(255,255,255,0.06)' },
-        ticks: { color: '#aaa', callback: v => v.toFixed(1) }
+    options: {
+      responsive: true,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const c = results[ctx.dataIndex];
+              const sig = c.absR >= SIG_THRESHOLD ? ' ✓ significant' : ' (not significant)';
+              return [`r = ${c.r.toFixed(3)}${sig}`, `Category: ${c.desc}`];
+            }
+          }
+        },
+        annotation: {
+          annotations: {
+            sigPos: {
+              type: 'line', scaleID: 'x', value: SIG_THRESHOLD,
+              borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1.5, borderDash: [5,4],
+              label: { content: 'p<.05', display: true, position: 'end',
+                       color: '#aaa', font: { size: 9 }, padding: 2,
+                       backgroundColor: 'rgba(0,0,0,0.4)' }
+            },
+            sigNeg: {
+              type: 'line', scaleID: 'x', value: -SIG_THRESHOLD,
+              borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1.5, borderDash: [5,4],
+              label: { content: 'p<.05', display: true, position: 'end',
+                       color: '#aaa', font: { size: 9 }, padding: 2,
+                       backgroundColor: 'rgba(0,0,0,0.4)' }
+            },
+            zero: {
+              type: 'line', scaleID: 'x', value: 0,
+              borderColor: 'rgba(255,255,255,0.15)', borderWidth: 1,
+            }
+          }
+        }
       },
-      y: {
-        ticks: { color: '#ccc', font: { size: 11 } },
-        grid: { color: 'rgba(255,255,255,0.04)' }
+      scales: {
+        x: {
+          min: -1, max: 1,
+          title: { display: true, text: 'Pearson r  (correlation with wins)', color: '#aaa', font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          ticks: { color: '#aaa', callback: v => v.toFixed(1) }
+        },
+        y: {
+          ticks: { color: '#ccc', font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,0.04)' }
+        }
       }
     }
-  }
-});
+  });
 
-// ── Table ─────────────────────────────────────────────────────────────────────
-const tbody = document.getElementById('corrBody');
-results.forEach(c => {
-  const sig = c.absR >= SIG_THRESHOLD;
-  const barW = Math.round(c.absR * 80);
-  const barColor = c.r >= 0 ? '#4ade80' : '#f87171';
-  const barOpacity = sig ? '1' : '0.35';
-  tbody.innerHTML += `<tr>
-    <td>${c.desc}</td>
-    <td><span class="group-tag ${GROUP_TAG[c.group]}">${GROUP_LABEL[c.group]}</span></td>
-    <td style="color:${c.r>=0?'#4ade80':'#f87171'};font-weight:bold">${c.r.toFixed(3)}</td>
-    <td>
-      <span class="bar-inline" style="width:${barW}px;background:${barColor};opacity:${barOpacity}"></span>
-    </td>
-    <td class="${sig?'sig-yes':'sig-no'}">${sig ? '✓ Yes' : 'No'}</td>
-  </tr>`;
-});
+  // ── Table ──────────────────────────────────────────────────────────────────
+  const tbody = document.getElementById('corrBody');
+  tbody.innerHTML = '';
+  results.forEach(c => {
+    const sig = c.absR >= SIG_THRESHOLD;
+    const barW = Math.round(c.absR * 80);
+    const barColor = c.r >= 0 ? '#4ade80' : '#f87171';
+    const barOpacity = sig ? '1' : '0.35';
+    tbody.innerHTML += `<tr>
+      <td>${c.desc}</td>
+      <td><span class="group-tag ${GROUP_TAG[c.group]}">${GROUP_LABEL[c.group]}</span></td>
+      <td style="color:${c.r>=0?'#4ade80':'#f87171'};font-weight:bold">${c.r.toFixed(3)}</td>
+      <td>
+        <span class="bar-inline" style="width:${barW}px;background:${barColor};opacity:${barOpacity}"></span>
+      </td>
+      <td class="${sig?'sig-yes':'sig-no'}">${sig ? '✓ Yes' : 'No'}</td>
+    </tr>`;
+  });
+}
+
+// ── Fetch live data ───────────────────────────────────────────────────────────
+fetch('live_data.json').then(r => r.json()).then(d => {
+  _liveData = d;
+  maybeRender();
+}).catch(() => {});
 </script>
 </body>
 </html>

@@ -96,9 +96,11 @@ def fetch_cat_stats(team_data):
     mTeam response.  ESPN aggregates season-to-date raw stats in team.valuesByStat,
     keyed by the same stat IDs used in player-level mRoster responses.
 
-    Returns {team_key: {stat_key: value, ...}} or {} if valuesByStat is absent.
+    Returns ({team_key: {stat_key: value}}, debug_vbs) where debug_vbs is the
+    raw {int_id: value} dict for the first team (for ID mapping diagnostics).
     """
     cat_stats = {}
+    debug_vbs = {}
     for t in team_data.get("teams", []):
         key = ID_TO_KEY.get(t["id"])
         if not key:
@@ -108,11 +110,9 @@ def fetch_cat_stats(team_data):
         if not vbs:
             continue
 
-        # TEMP: dump all vbs keys for first team to identify missing stat IDs
-        if not cat_stats:  # only once, for the first team
-            print(f"  [VBS] team {key} keys: {sorted(int(k) for k in vbs)}")
-            unmapped = {int(k): v for k, v in vbs.items() if int(k) not in ESPN_STAT_TO_CAT}
-            print(f"  [VBS] unmapped id→val: {dict(sorted(unmapped.items()))}")
+        # Capture raw vbs for first team so caller can embed it in live_data.json
+        if not cat_stats:
+            debug_vbs = {int(k): v for k, v in vbs.items()}
 
         cats = {c: 0.0 for c in set(ESPN_STAT_TO_CAT.values())}
         for sid_str, val in vbs.items():
@@ -125,7 +125,7 @@ def fetch_cat_stats(team_data):
 
         cat_stats[key] = {k: round(v, 1) for k, v in cats.items()}
 
-    return cat_stats
+    return cat_stats, debug_vbs
 
 
 def grade_single(bet, away_final, home_final):
@@ -338,7 +338,7 @@ def main():
     print("Fetching ESPN data…")
     score_data = espn_get("mMatchupScore", cookies)
     team_data  = espn_get("mTeam",         cookies)
-    cat_stats  = fetch_cat_stats(team_data)
+    cat_stats, debug_vbs = fetch_cat_stats(team_data)
     if cat_stats:
         print(f"  Got category stats for {len(cat_stats)} teams.")
     else:
@@ -484,6 +484,7 @@ def main():
         "matchups":         matchup_pairs,
         "history":          history,
         "catStats":         cat_stats,
+        "_debugVbs":        debug_vbs,   # TEMP: raw ESPN stat IDs for first team
         "teams":            {},
     }
 

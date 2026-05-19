@@ -90,6 +90,36 @@ def fmt_date_range(start: datetime, end: datetime) -> str:
     return f"{start.strftime('%b')} {start.day}–{end.strftime('%b')} {end.day}, {end.year}"
 
 
+def probe_standings(cookies):
+    """Temporary: dump mStandings team[0] structure to find pre-aggregated stats."""
+    for view in ("mStandings", "mTeam"):
+        try:
+            r = requests.get(BASE_URL, params={"view": view}, cookies=cookies, timeout=20)
+            r.raise_for_status()
+            data = r.json()
+        except Exception as e:
+            print(f"[PROBE] {view} failed: {e}", file=sys.stderr)
+            continue
+        teams = data.get("teams", [])
+        print(f"[PROBE] {view}: {len(teams)} teams", file=sys.stderr)
+        if not teams:
+            print(f"[PROBE] {view} top-level keys: {list(data.keys())}", file=sys.stderr)
+            continue
+        t = teams[0]
+        print(f"[PROBE] {view} team[0] id={t.get('id')} keys={list(t.keys())}", file=sys.stderr)
+        for k in ("valuesByStat", "values", "stats", "cumulativeScore",
+                  "record", "totalPoints", "acquisitionBudgetSpent"):
+            if k in t:
+                v = t[k]
+                snippet = json.dumps(v)[:400] if not isinstance(v, str) else v[:400]
+                print(f"[PROBE]   t['{k}']: {snippet}", file=sys.stderr)
+        # Also check schedule for scoring data
+        if "schedule" in data:
+            sched = data["schedule"]
+            if sched:
+                print(f"[PROBE] {view} schedule[0] keys: {list(sched[0].keys())}", file=sys.stderr)
+
+
 def fetch_cat_stats(cookies):
     """
     Fetch per-category raw stat totals per team using the mRoster view.
@@ -97,6 +127,8 @@ def fetch_cat_stats(cookies):
     for active (non-bench) roster players only.
     Returns {team_key: {stat_key: value, ...}} or {} on failure.
     """
+    probe_standings(cookies)   # TEMP: remove after finding the right endpoint
+
     try:
         resp = requests.get(
             BASE_URL, params={"view": "mRoster"}, cookies=cookies, timeout=20

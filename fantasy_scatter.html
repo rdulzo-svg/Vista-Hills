@@ -13,12 +13,17 @@
   .bubble { border-radius: 50%; display: inline-block; opacity: 0.8; }
   #downloadBtn { margin-top: 14px; padding: 8px 22px; background: #457b9d; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
   #downloadBtn:hover { background: #2a9d8f; }
+  a.back-link { color: #557b9d; font-size: 12px; text-decoration: none; margin-bottom: 16px; display: inline-block; }
+  a.back-link:hover { color: #60a5fa; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
+<a class="back-link" href="index.html">← Back to Vista Hills</a>
+
+
 <div id="capture" style="background:#1a1a2e; padding: 24px 40px; display:inline-flex; flex-direction:column; align-items:center;">
 <h2 id="scatter-title">Vista Hills — Hitting vs. Pitching (2026)</h2>
 <p class="subtitle" id="scatter-subtitle">Axes = z-scores (SDs from league mean) &nbsp;|&nbsp; Bubble size = wins &nbsp;|&nbsp; n=12 (descriptive only)</p>

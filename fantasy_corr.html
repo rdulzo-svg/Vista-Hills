@@ -233,7 +233,6 @@ function maybeRender() {
 
   const teams    = _liveData.teams    || {};
   const catStats = _liveData.catStats || {};
-  const maxPeriod = (_liveData.matchupPeriod || 1) - 1;
 
   // Build RAW from live catStats
   const RAW = Object.entries(catStats).map(([key, cats]) => ({
@@ -245,7 +244,7 @@ function maybeRender() {
   // Update caveat with current matchup period
   const caveat = document.querySelector('.caveat');
   if (caveat) caveat.innerHTML =
-    `n = 12 teams &nbsp;|&nbsp; Significance threshold: |r| &ge; 0.576 (p &lt; 0.05, two-tailed) &nbsp;|&nbsp; Through Matchup ${maxPeriod}`;
+    `n = 12 teams &nbsp;|&nbsp; Significance threshold: |r| &ge; 0.576 (p &lt; 0.05, two-tailed) &nbsp;|&nbsp; Updated ${_liveData.updated}`;
 
   const wins = RAW.map(t => t.wins);
 

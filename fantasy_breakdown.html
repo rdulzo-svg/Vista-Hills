@@ -249,9 +249,8 @@ function computeFromRaw(RAW) {
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 fetch('live_data.json').then(r => r.json()).then(liveData => {
-  const maxPeriod = (liveData.matchupPeriod || 1) - 1;
   document.querySelector('h2').textContent =
-    `Vista Hills — Points Breakdown by Category (Matchups 1–${maxPeriod}, 2026)`;
+    `Vista Hills — Points Breakdown by Category · Updated ${liveData.updated}`;
 
   const catStats = liveData.catStats || {};
   const teams    = liveData.teams   || {};

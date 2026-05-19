@@ -21,7 +21,7 @@
 <body>
 <div id="capture" style="background:#1a1a2e; padding: 24px 40px; display:inline-flex; flex-direction:column; align-items:center;">
 <h2 id="scatter-title">Vista Hills — Hitting vs. Pitching (2026)</h2>
-<p class="subtitle">Axes = z-scores (SDs from league mean) &nbsp;|&nbsp; Bubble size = wins &nbsp;|&nbsp; n=12 (descriptive only)</p>
+<p class="subtitle" id="scatter-subtitle">Axes = z-scores (SDs from league mean) &nbsp;|&nbsp; Bubble size = wins &nbsp;|&nbsp; n=12 (descriptive only)</p>
 <div id="chart-container">
   <canvas id="myChart"></canvas>
 </div>
@@ -43,9 +43,8 @@ const BAT_MULTS = {r:1,s:1,d:2,t:3,hr:4,rbi:2,gw:1,bbB:1,hbp:1,sac:1,sb:2,kB:-1,
 const PIT_MULTS = {ip:3,kP:1,qs:2,so:3,w:8,sv:4.5,hd:2,hP:-1,er:-2,bbP:-1,hb:-1,l:-2,bs:-2};
 
 fetch('live_data.json').then(r => r.json()).then(liveData => {
-  const maxPeriod = (liveData.matchupPeriod || 1) - 1;
-  document.getElementById('scatter-title').textContent =
-    `Vista Hills — Hitting vs. Pitching (Matchups 1–${maxPeriod}, 2026)`;
+  document.getElementById('scatter-subtitle').innerHTML =
+    `Updated ${liveData.updated} &nbsp;|&nbsp; Axes = z-scores (SDs from league mean) &nbsp;|&nbsp; Bubble size = wins &nbsp;|&nbsp; n=12 (descriptive only)`;
 
   const catStats = liveData.catStats || {};
   const teams    = liveData.teams   || {};

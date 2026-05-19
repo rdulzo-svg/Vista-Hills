@@ -336,9 +336,8 @@ function buildTable(tbodyId, mode) {
 }
 
 fetch('live_data.json').then(r => r.json()).then(liveData => {
-  const maxPeriod = (liveData.matchupPeriod || 1) - 1;
   document.getElementById('subtitle').textContent =
-    `Best and worst team in each scoring category through Matchup ${maxPeriod}`;
+    `Best and worst team in each scoring category · Updated ${liveData.updated}`;
 
   const catStats = liveData.catStats || {};
   const teams    = liveData.teams   || {};

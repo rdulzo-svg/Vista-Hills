@@ -370,7 +370,7 @@
   <div class="section-label" style="margin-top:26px">Model's Best Bets</div>
   <div class="best-bets-grid" id="best-bets"></div>
   <p class="disclaimer">Vista Hills Fantasy Sportsbook is for entertainment purposes only. No real money wagering occurs.<br>
-  Lines generated from season scoring data through Matchup <span id="lines-through-period">7</span>. Injury and roster changes not reflected.</p>
+  Lines generated from season scoring data · Updated <span id="lines-through-period">…</span>. Injury and roster changes not reflected.</p>
 </div>
 
 <!-- Bet slip bar -->
@@ -1279,9 +1279,9 @@ function loadLive() {
       const sl = document.getElementById('week-section-label');
       if (sl) sl.textContent = `Matchup ${WEEK_LABEL}  ·  ${DATE_RANGE}`;
 
-      // Update disclaimer period (matchupPeriod - 1 = last completed week)
+      // Update disclaimer with actual data timestamp
       const tp = document.getElementById('lines-through-period');
-      if (tp) tp.textContent = data.matchupPeriod - 1;
+      if (tp) tp.textContent = data.updated;
 
       renderAll();
     })

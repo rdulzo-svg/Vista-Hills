@@ -496,7 +496,10 @@ def main():
         }
 
     # ── Supabase config ───────────────────────────────────────────────────────
-    supabase_url  = os.environ.get("SUPABASE_URL", "")
+    supabase_url  = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    # Strip trailing /rest/v1 if the secret was saved with it included
+    if supabase_url.endswith("/rest/v1"):
+        supabase_url = supabase_url[: -len("/rest/v1")]
     supabase_anon = os.environ.get("SUPABASE_ANON_KEY", "")
     service_key   = os.environ.get("SUPABASE_SERVICE_KEY", "")
     output["supabaseUrl"]     = supabase_url

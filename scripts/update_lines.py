@@ -31,25 +31,26 @@ BENCH_SLOTS = {15, 16, 17}   # 15=BE, 16=IL, 17=NA/TS
 # Batting IDs confirmed via cross-time-split analysis (7-day vs 15-day vs 30-day vs YTD).
 # Pitching IDs (67+ range) TBD — debug output will reveal them.
 ESPN_STAT_TO_CAT = {
-    # Batting — confirmed correct
-    6:  "r",    20: "s",   11: "d",   12: "t",    5: "hr",
-    7:  "rbi",  15: "gw",   3: "bbB", 14: "cs",   4: "hbp",
-    24: "sac",  13: "sb",  10: "kB",
-    # Pitching — verified via debug runs (May 18 2026)
-    # ID 34 stores outs (IP × 3); divided by 3 during accumulation → actual IP
-    34: "ip",   # innings pitched (raw outs; see IP normalisation below)
-    48: "kP",   # pitcher strikeouts   (K/9 = ID 49 cross-checks perfectly)
+    # ── Batting (confirmed from mTeam.valuesByStat debug run, May 19 2026) ──────
+    #   IDs 6/11/13/14 do NOT appear in valuesByStat; correct IDs below.
+    21: "r",    20: "s",   33: "d",   12: "t",    5: "hr",
+    7:  "rbi",  15: "gw",   3: "bbB", 23: "cs",   4: "hbp",
+    24: "sac",  22: "sb",  10: "kB",
+    # ── Pitching ─────────────────────────────────────────────────────────────────
+    # ID 34 stores outs (IP × 3); divided by 3 in fetch_cat_stats → actual IP.
+    34: "ip",   # innings pitched (raw outs)
+    48: "kP",   # pitcher strikeouts
     53: "qs",   # quality starts
-    51: "so",   # shutouts
-    76: "w",    # wins
-    56: "sv",   # saves
-    83: "hd",   # holds
-    37: "hP",   # hits allowed         (WHIP verified)
-    45: "er",   # earned runs          (ERA verified)
-    39: "bbP",  # walks issued         (WHIP verified)
-    77: "hb",   # hit batters
+    64: "so",   # shutouts
+    54: "w",    # wins
+    57: "sv",   # saves
+    63: "hd",   # holds
+    37: "hP",   # hits allowed
+    45: "er",   # earned runs
+    39: "bbP",  # walks issued
+    60: "hb",   # hit batters
     42: "l",    # losses
-    59: "bs",   # blown saves
+    58: "bs",   # blown saves
 }
 
 # Static display data — only changes if teams rename themselves
@@ -93,14 +94,13 @@ def fmt_date_range(start: datetime, end: datetime) -> str:
 def fetch_cat_stats(team_data):
     """
     Extract per-category cumulative stat totals per team from an already-fetched
-    mTeam response.  ESPN aggregates season-to-date raw stats in team.valuesByStat,
-    keyed by the same stat IDs used in player-level mRoster responses.
+    mTeam response.  ESPN aggregates season-to-date raw stats in team.valuesByStat.
+    Stat IDs were identified empirically on May 19 2026 via a debug run that
+    embedded the raw valuesByStat dict into live_data.json.
 
-    Returns ({team_key: {stat_key: value}}, debug_vbs) where debug_vbs is the
-    raw {int_id: value} dict for the first team (for ID mapping diagnostics).
+    Returns {team_key: {stat_key: value, ...}} or {} if valuesByStat is absent.
     """
     cat_stats = {}
-    debug_vbs = {}
     for t in team_data.get("teams", []):
         key = ID_TO_KEY.get(t["id"])
         if not key:
@@ -109,10 +109,6 @@ def fetch_cat_stats(team_data):
         vbs = t.get("valuesByStat", {})
         if not vbs:
             continue
-
-        # Capture raw vbs for first team so caller can embed it in live_data.json
-        if not cat_stats:
-            debug_vbs = {int(k): v for k, v in vbs.items()}
 
         cats = {c: 0.0 for c in set(ESPN_STAT_TO_CAT.values())}
         for sid_str, val in vbs.items():
@@ -125,7 +121,7 @@ def fetch_cat_stats(team_data):
 
         cat_stats[key] = {k: round(v, 1) for k, v in cats.items()}
 
-    return cat_stats, debug_vbs
+    return cat_stats
 
 
 def grade_single(bet, away_final, home_final):
@@ -338,7 +334,7 @@ def main():
     print("Fetching ESPN data…")
     score_data = espn_get("mMatchupScore", cookies)
     team_data  = espn_get("mTeam",         cookies)
-    cat_stats, debug_vbs = fetch_cat_stats(team_data)
+    cat_stats = fetch_cat_stats(team_data)
     if cat_stats:
         print(f"  Got category stats for {len(cat_stats)} teams.")
     else:
@@ -484,7 +480,6 @@ def main():
         "matchups":         matchup_pairs,
         "history":          history,
         "catStats":         cat_stats,
-        "_debugVbs":        debug_vbs,   # TEMP: raw ESPN stat IDs for first team
         "teams":            {},
     }
 

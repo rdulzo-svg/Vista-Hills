@@ -54,7 +54,7 @@
     <canvas id="bar" width="470" height="440"></canvas>
   </div>
 </div>
-<p class="note">P(A beats B) = apW%_A ÷ (apW%_A + apW%_B) each matchup. All-play W% computed from 6 weeks of head-to-head scoring vs all 11 opponents. Actual matchup schedule (M7–M19) used — not random draw.</p>
+<p class="note" id="sim-note">P(A beats B) = apW%_A ÷ (apW%_A + apW%_B) each matchup. All-play W% computed from 6 weeks of head-to-head scoring vs all 11 opponents. Actual matchup schedule (M7–M19) used — not random draw.</p>
 </div>
 <button id="downloadBtn" onclick="downloadChart()">⬇ Download PNG</button>
 
@@ -129,6 +129,8 @@ fetch('live_data.json').then(r => r.json()).then(data => {
   // Update subtitles dynamically
   document.querySelector('.subtitle').textContent =
     `10,000-season Monte Carlo simulation · Matchups ${currentPeriod}–${TOTAL_WEEKS} simulated using actual schedule · Win probability from all-play W%`;
+  document.getElementById('sim-note').textContent =
+    `P(A beats B) = apW%_A ÷ (apW%_A + apW%_B) each matchup. All-play W% computed from ${completedWeeks} weeks of head-to-head scoring vs all 11 opponents. Actual matchup schedule (M${currentPeriod}–M${TOTAL_WEEKS}) used — not random draw.`;
 
   const { playoffCount, winSum, keys } = runSimulation(TEAMS, AP_TOTAL, currentPeriod);
 

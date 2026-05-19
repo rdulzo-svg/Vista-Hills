@@ -370,7 +370,7 @@
   <div class="section-label" style="margin-top:26px">Model's Best Bets</div>
   <div class="best-bets-grid" id="best-bets"></div>
   <p class="disclaimer">Vista Hills Fantasy Sportsbook is for entertainment purposes only. No real money wagering occurs.<br>
-  Lines generated from season scoring data through Matchup 6. Injury and roster changes not reflected.</p>
+  Lines generated from season scoring data through Matchup 7. Injury and roster changes not reflected.</p>
 </div>
 
 <!-- Bet slip bar -->
@@ -523,8 +523,8 @@ let HISTORY = [
 ];
 
 // ── League average scores by week ─────────────────────────────────────────────
-const LEAGUE_AVGS = [628.0, 427.1, 436.0, 433.4, 418.0, 401.4];
-const WEEK_LABELS = ['Wk1','Wk2','Wk3','Wk4','Wk5','Wk6'];
+const LEAGUE_AVGS = [628.0, 427.1, 436.0, 433.5, 417.2, 402.2, 424.2];
+const WEEK_LABELS = ['Wk1','Wk2','Wk3','Wk4','Wk5','Wk6','Wk7'];
 
 let WEEK_LABEL = '7';
 let DATE_RANGE = 'May 11–17, 2026';
@@ -775,7 +775,7 @@ function openPreview(idx) {
 
     <!-- H2H -->
     <div class="pv-section">
-      <div class="pv-section-title">Head-to-head history (M1–M6)</div>
+      <div class="pv-section-title">Head-to-head history (M1–M${Math.max(...HISTORY.map(h=>h[3]))})</div>
       ${h2h.length > 0 ? h2hRows + h2hSeries : '<div class="h2h-none">These teams have not faced each other yet this season.</div>'}
     </div>
 

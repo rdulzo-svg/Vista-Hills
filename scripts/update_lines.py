@@ -108,6 +108,12 @@ def fetch_cat_stats(team_data):
         if not vbs:
             continue
 
+        # TEMP: dump all vbs keys for first team to identify missing stat IDs
+        if not cat_stats:  # only once, for the first team
+            print(f"  [VBS] team {key} keys: {sorted(int(k) for k in vbs)}")
+            unmapped = {int(k): v for k, v in vbs.items() if int(k) not in ESPN_STAT_TO_CAT}
+            print(f"  [VBS] unmapped id→val: {dict(sorted(unmapped.items()))}")
+
         cats = {c: 0.0 for c in set(ESPN_STAT_TO_CAT.values())}
         for sid_str, val in vbs.items():
             cat = ESPN_STAT_TO_CAT.get(int(sid_str))

@@ -86,7 +86,7 @@
 <header>
   <h1>Vista Hills Fantasy Baseball</h1>
   <p>2026 Season Analytics</p>
-  <span class="badge">Through Matchup 7 &nbsp;·&nbsp; 12 Teams</span>
+  <span class="badge" id="idx-badge">Through Matchup 7 &nbsp;·&nbsp; 12 Teams</span>
 </header>
 
 <div class="grid">
@@ -95,14 +95,14 @@
     <div class="card-icon">🏆</div>
     <div class="card-title">Playoff Odds</div>
     <div class="card-desc">10,000-season Monte Carlo simulation using the actual remaining schedule. See each team's probability of making the top 6.</div>
-    <div class="card-tag">Simulation · Matchups 8–19</div>
+    <div class="card-tag" id="idx-playoffs-tag">Simulation · Matchups 8–19</div>
   </a>
 
   <a class="card blue" href="fantasy_heatmap.html">
     <div class="card-icon">🔥</div>
     <div class="card-title">Weekly Score Heatmap</div>
     <div class="card-desc">Week-by-week scoring grid for all 12 teams, color-coded green to red by weekly rank. Spot streaks and slumps at a glance.</div>
-    <div class="card-tag">Heatmap · Weeks 1–7</div>
+    <div class="card-tag" id="idx-heatmap-tag">Heatmap · Weeks 1–7</div>
   </a>
 
   <a class="card yellow" href="fantasy_luck.html">
@@ -129,8 +129,8 @@
   <a class="card blue" href="fantasy_bump.html">
     <div class="card-icon">📈</div>
     <div class="card-title">Weekly Rank Bump Chart</div>
-    <div class="card-desc">Line chart tracing each team's weekly scoring rank from Week 1 through Week 7. Spot who's rising, who's falling, and who's all over the place.</div>
-    <div class="card-tag">Ranks · Weeks 1–7</div>
+    <div class="card-desc" id="idx-bump-desc">Line chart tracing each team's weekly scoring rank from Week 1 through Week 7. Spot who's rising, who's falling, and who's all over the place.</div>
+    <div class="card-tag" id="idx-bump-tag">Ranks · Weeks 1–7</div>
   </a>
 
   <a class="card green" href="fantasy_powerrank.html">
@@ -157,7 +157,7 @@
   <a class="card green" href="fantasy_lines.html">
     <div class="card-icon">🎰</div>
     <div class="card-title">Matchup Lines</div>
-    <div class="card-desc">Pre-match betting lines for every Matchup 8 game. Spread, total, and moneyline odds styled like a real sportsbook. For entertainment only.</div>
+    <div class="card-desc" id="idx-lines-desc">Pre-match betting lines for every Matchup 8 game. Spread, total, and moneyline odds styled like a real sportsbook. For entertainment only.</div>
     <div class="card-tag">Spread · Total · Moneyline</div>
   </a>
 
@@ -172,14 +172,14 @@
     <div class="card-icon">🔁</div>
     <div class="card-title">Matchup Simulator</div>
     <div class="card-desc">Pick any two teams and see what the record would look like if they played each other every single week. Week-by-week score breakdown included.</div>
-    <div class="card-tag">Interactive · Weeks 1–7</div>
+    <div class="card-tag" id="idx-sim-tag">Interactive · Weeks 1–7</div>
   </a>
 
   <a class="card purple" href="fantasy_h2h.html">
     <div class="card-icon">🆚</div>
     <div class="card-title">Head-to-Head Matrix</div>
-    <div class="card-desc">12×12 grid showing every matchup result through Week 7. See who you've beaten, who's beaten you, and who you haven't faced yet.</div>
-    <div class="card-tag">M1–M7 Results · W/L by Matchup</div>
+    <div class="card-desc" id="idx-h2h-desc">12×12 grid showing every matchup result through Week 7. See who you've beaten, who's beaten you, and who you haven't faced yet.</div>
+    <div class="card-tag" id="idx-h2h-tag">M1–M7 Results · W/L by Matchup</div>
   </a>
 
   <a class="card red" href="fantasy_bets.html">
@@ -191,7 +191,26 @@
 
 </div>
 
-<footer>Vista Hills Fantasy Baseball · 2026 · Updated through Matchup 7</footer>
+<footer id="idx-footer">Vista Hills Fantasy Baseball · 2026 · Updated through Matchup 7</footer>
 
+<script>
+fetch('live_data.json').then(r => r.json()).then(d => {
+  const mp    = d.matchupPeriod;   // current week in progress
+  const cw    = mp - 1;            // last completed week
+  const TOTAL = 19;
+  const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+
+  set('idx-badge',        `Through Matchup ${cw} &nbsp;·&nbsp; 12 Teams`);
+  set('idx-playoffs-tag', `Simulation · Matchups ${mp}–${TOTAL}`);
+  set('idx-heatmap-tag',  `Heatmap · Weeks 1–${cw}`);
+  set('idx-bump-desc',    `Line chart tracing each team's weekly scoring rank from Week 1 through Week ${cw}. Spot who's rising, who's falling, and who's all over the place.`);
+  set('idx-bump-tag',     `Ranks · Weeks 1–${cw}`);
+  set('idx-sim-tag',      `Interactive · Weeks 1–${cw}`);
+  set('idx-h2h-desc',     `12×12 grid showing every matchup result through Week ${cw}. See who you've beaten, who's beaten you, and who you haven't faced yet.`);
+  set('idx-h2h-tag',      `M1–M${cw} Results · W/L by Matchup`);
+  set('idx-lines-desc',   `Pre-match betting lines for every Matchup ${mp} game. Spread, total, and moneyline odds styled like a real sportsbook. For entertainment only.`);
+  set('idx-footer',       `Vista Hills Fantasy Baseball · 2026 · Updated through Matchup ${cw}`);
+}).catch(() => {});
+</script>
 </body>
 </html>

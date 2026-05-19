@@ -90,99 +90,31 @@ def fmt_date_range(start: datetime, end: datetime) -> str:
     return f"{start.strftime('%b')} {start.day}–{end.strftime('%b')} {end.day}, {end.year}"
 
 
-def probe_standings(cookies):
-    """Temporary: dump mStandings team[0] structure to find pre-aggregated stats."""
-    for view in ("mStandings", "mTeam"):
-        try:
-            r = requests.get(BASE_URL, params={"view": view}, cookies=cookies, timeout=20)
-            r.raise_for_status()
-            data = r.json()
-        except Exception as e:
-            print(f"[PROBE] {view} failed: {e}", file=sys.stderr)
-            continue
-        teams = data.get("teams", [])
-        print(f"[PROBE] {view}: {len(teams)} teams", file=sys.stderr)
-        if not teams:
-            print(f"[PROBE] {view} top-level keys: {list(data.keys())}", file=sys.stderr)
-            continue
-        t = teams[0]
-        print(f"[PROBE] {view} team[0] id={t.get('id')} keys={list(t.keys())}", file=sys.stderr)
-        for k in ("valuesByStat", "values", "stats", "cumulativeScore",
-                  "record", "totalPoints", "acquisitionBudgetSpent"):
-            if k in t:
-                v = t[k]
-                snippet = json.dumps(v)[:400] if not isinstance(v, str) else v[:400]
-                print(f"[PROBE]   t['{k}']: {snippet}", file=sys.stderr)
-        # Also check schedule for scoring data
-        if "schedule" in data:
-            sched = data["schedule"]
-            if sched:
-                print(f"[PROBE] {view} schedule[0] keys: {list(sched[0].keys())}", file=sys.stderr)
-
-
-def fetch_cat_stats(cookies):
+def fetch_cat_stats(team_data):
     """
-    Fetch per-category raw stat totals per team using the mRoster view.
-    Sums season-to-date actual stats (scoringPeriodId=0, statSourceId=0)
-    for active (non-bench) roster players only.
-    Returns {team_key: {stat_key: value, ...}} or {} on failure.
+    Extract per-category cumulative stat totals per team from an already-fetched
+    mTeam response.  ESPN aggregates season-to-date raw stats in team.valuesByStat,
+    keyed by the same stat IDs used in player-level mRoster responses.
+
+    Returns {team_key: {stat_key: value, ...}} or {} if valuesByStat is absent.
     """
-    probe_standings(cookies)   # TEMP: remove after finding the right endpoint
-
-    try:
-        resp = requests.get(
-            BASE_URL, params={"view": "mRoster"}, cookies=cookies, timeout=20
-        )
-        resp.raise_for_status()
-        roster_json = resp.json()
-    except Exception as exc:
-        print(f"  Warning: mRoster fetch failed — {exc}", file=sys.stderr)
-        return {}
-
     cat_stats = {}
-    for t in roster_json.get("teams", []):
+    for t in team_data.get("teams", []):
         key = ID_TO_KEY.get(t["id"])
         if not key:
             continue
 
-        cats = {c: 0.0 for c in ESPN_STAT_TO_CAT.values()}
+        vbs = t.get("valuesByStat", {})
+        if not vbs:
+            continue
 
-        for entry in (t.get("roster") or {}).get("entries", []):
-            if entry.get("lineupSlotId") in BENCH_SLOTS:
-                continue  # skip bench / IL / NA slots
+        cats = {c: 0.0 for c in set(ESPN_STAT_TO_CAT.values())}
+        for sid_str, val in vbs.items():
+            cat = ESPN_STAT_TO_CAT.get(int(sid_str))
+            if cat:
+                cats[cat] = float(val)
 
-            ppe = entry.get("playerPoolEntry") or {}
-
-            # Stats may be on playerPoolEntry.stats OR playerPoolEntry.player.stats
-            stat_sources = []
-            if ppe.get("stats"):
-                stat_sources.append(ppe["stats"])
-            player_stats = (ppe.get("player") or {}).get("stats")
-            if player_stats:
-                stat_sources.append(player_stats)
-
-            for stat_list in stat_sources:
-                # "Last wins": ESPN returns prior-season entry first, then current-season entry.
-                # Both share the same filter (sp=0, src=0, spl=0), so we must keep updating
-                # best_stats until the loop ends — the final match is the 2026 season.
-                best_stats = None
-                for se in stat_list:
-                    sp  = se.get("scoringPeriodId")
-                    src = se.get("statSourceId")
-                    spl = se.get("statSplitTypeId")
-                    if sp == 0 and src == 0 and spl == 0:
-                        candidate = se.get("stats") or {}
-                        if candidate:
-                            best_stats = candidate  # keep overwriting → last match wins
-                if best_stats:
-                    for sid_str, val in best_stats.items():
-                        cat = ESPN_STAT_TO_CAT.get(int(sid_str))
-                        if cat and val:
-                            cats[cat] += float(val)
-                    break  # don't double-count from both sources
-
-        # ID 34 accumulates raw outs (ESPN stores IP × 3 internally).
-        # Divide by 3 to get actual innings pitched for scoring.
+        # ESPN stores IP as raw outs internally (IP × 3).  Divide to get real innings.
         cats["ip"] = round(cats.get("ip", 0.0) / 3, 1)
 
         cat_stats[key] = {k: round(v, 1) for k, v in cats.items()}
@@ -400,7 +332,7 @@ def main():
     print("Fetching ESPN data…")
     score_data = espn_get("mMatchupScore", cookies)
     team_data  = espn_get("mTeam",         cookies)
-    cat_stats  = fetch_cat_stats(cookies)
+    cat_stats  = fetch_cat_stats(team_data)
     if cat_stats:
         print(f"  Got category stats for {len(cat_stats)} teams.")
     else:

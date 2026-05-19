@@ -124,28 +124,6 @@ const GROUP_META = {
   'pit-': { label: 'Pitching — Negative', cls: 'group-pit-neg', span: 6 },
 };
 
-// ── Compute points for each team ──────────────────────────────────────────────
-const data = RAW.map(t => {
-  const pts = {};
-  COLS.forEach(c => { pts[c.id] = +(t[c.id] * c.mult).toFixed(1); });
-  pts.batPos = COLS.filter(c=>c.group==='bat+').reduce((s,c)=>s+pts[c.id],0);
-  pts.batNeg = COLS.filter(c=>c.group==='bat-').reduce((s,c)=>s+pts[c.id],0);
-  pts.pitPos = COLS.filter(c=>c.group==='pit+').reduce((s,c)=>s+pts[c.id],0);
-  pts.pitNeg = COLS.filter(c=>c.group==='pit-').reduce((s,c)=>s+pts[c.id],0);
-  pts.batTot = pts.batPos + pts.batNeg;
-  pts.pitTot = pts.pitPos + pts.pitNeg;
-  pts.total  = pts.batTot + pts.pitTot;
-  return { ...t, pts };
-});
-
-// ── Compute ranks for each column ─────────────────────────────────────────────
-const ranks = {};
-[...COLS.map(c=>c.id), 'batPos','batNeg','batTot','pitPos','pitNeg','pitTot','total'].forEach(id => {
-  const vals = data.map(t => t.pts[id]);
-  const sorted = [...vals].sort((a,b) => b - a);
-  ranks[id] = vals.map(v => sorted.indexOf(v) + 1);
-});
-
 function getRankClass(r) { return `rnk-${Math.min(12,Math.max(1,r))}`; }
 function getRankBadge(r) {
   const cls = r === 1 ? 'r1' : r === 12 ? 'r12' : '';
